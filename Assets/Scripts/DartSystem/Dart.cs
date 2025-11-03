@@ -5,9 +5,6 @@ using UnityEngine.XR.Interaction.Toolkit.Interactables;
 
 public class Dart : MonoBehaviour
 {
-    // 이 다트가 속한 오브젝트 풀
-    public IObjectPool<GameObject> Pool { get; set; }
-
     [Tooltip("다트가 던져진 후 풀에 자동으로 반환될 때까지의 최대 시간 (초)")]
     public float MaxLifetime = 10.0f;
 
@@ -100,9 +97,9 @@ public class Dart : MonoBehaviour
     private void ReturnToPool()
     {
         // 풀이 할당되어 있고, 게임 오브젝트가 아직 활성 상태일 때만 반납 시도
-        if (Pool != null && gameObject.activeInHierarchy)
+        if (DartPoolManager.Instance != null && gameObject.activeInHierarchy)
         {
-            Pool.Release(gameObject);
+            DartPoolManager.Instance.ReleaseDart(gameObject);
         }
     }
 }

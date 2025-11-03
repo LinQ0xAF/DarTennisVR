@@ -17,51 +17,10 @@ public class DartReloadManager : MonoBehaviour
     private bool _IsInReloadZone = false;
     [SerializeField] private float SocketReactivationDelay = 0.8f;
 
-    public int InitialPoolSize = 10;
-    public int MaxPoolSize = 20;
-
-    private IObjectPool<GameObject> _DartPool;
-
     void Awake()
     {
         _InteractionManager = FindFirstObjectByType<XRInteractionManager>();
-
-        // ObjectPool 초기화
-        _DartPool = new ObjectPool<GameObject>(
-            createFunc: CreateDart,
-            actionOnGet: OnGetFromPool,
-            actionOnRelease: OnReleaseToPool,
-            actionOnDestroy: OnDestroyInPool,
-            collectionCheck: true, // 중복 반납 체크
-            defaultCapacity: InitialPoolSize,
-            maxSize: MaxPoolSize
-        );
     }
-
-    #region Pool_Callbacks
-    private GameObject CreateDart()
-    {
-        GameObject dartInstance = Instantiate(DartPrefab);
-        // 생성된 다트에게 자신이 속한 풀을 알려줌
-        dartInstance.GetComponent<Dart>().Pool = _DartPool;
-        return dartInstance;
-    }
-
-    private void OnGetFromPool(GameObject dart)
-    {
-        dart.SetActive(true);
-    }
-
-    private void OnReleaseToPool(GameObject dart)
-    {
-        dart.SetActive(false);
-    }
-
-    private void OnDestroyInPool(GameObject dart)
-    {
-        Destroy(dart);
-    }
-    #endregion
 
     private void OnEnable()
     {
@@ -120,13 +79,12 @@ public class DartReloadManager : MonoBehaviour
             {
                 continue;
             }
-            
+
             // 오브젝트 풀에서 다트 인스턴스 받아오기
-            GameObject newDart = _DartPool.Get();
-            newDart.transform.position = socket.transform.position;
-            newDart.transform.rotation = socket.transform.rotation;
-            //GameObject newDart = Instantiate(DartPrefab, socket.transform.position, socket.transform.rotation);
-            
+            GameObject newDart = DartPoolManager.Instance.GetDart(
+                socket.transform.position,
+                socket.transform.rotation
+            );
             IXRSelectInteractable newDartInteractable = newDart.GetComponent<IXRSelectInteractable>();
             if (newDartInteractable != null)
             {
