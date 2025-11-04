@@ -686,6 +686,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 324920606355701379, guid: 11d6c6e6d5e678b41a65e3881c2b9906, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value: 
+      objectReference: {fileID: 2100000, guid: 30ca787b01455dc47805ccd5ddacec8d, type: 2}
     - target: {fileID: 4849120879825663470, guid: 11d6c6e6d5e678b41a65e3881c2b9906, type: 3}
       propertyPath: m_Name
       value: XR Custom Origin (XR Rig)
