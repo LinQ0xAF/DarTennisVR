@@ -12,7 +12,7 @@ GameObject:
   - component: {fileID: 5857802382846682086}
   - component: {fileID: 3037108825122722065}
   m_Layer: 0
-  m_Name: Balloon_Sample
+  m_Name: BalloonSample
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
