@@ -46,9 +46,9 @@ public class DartPoolManager : MonoBehaviour
     {
         _DartPool.Release(dart);
     }
-    #endregion
+#endregion
 
-    #region Pool_Callbacks
+#region Pool_Callbacks
     private GameObject CreateDart()
     {
         GameObject dartInstance = Instantiate(DartPrefab);
@@ -69,5 +69,6 @@ public class DartPoolManager : MonoBehaviour
     {
         Destroy(dart);
     }
-    #endregion
+#endregion
+
 }
