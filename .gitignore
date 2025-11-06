@@ -98,3 +98,6 @@ InitTestScene*.unity*
 
 # Auto-generated scenes by play mode tests
 /[Aa]ssets/[Ii]nit[Tt]est[Ss]cene*.unity*
+
+# Auto-generated Burst debug info
+/DarTennisVR_BurstDebugInformation_DoNotShip/
