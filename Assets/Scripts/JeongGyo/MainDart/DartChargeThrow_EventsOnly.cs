@@ -137,10 +137,10 @@ public class DartChargeThrow_EventsOnly : MonoBehaviour
         TryThrowOnAnyRelease();
     }
 
-    // ---------------------- B Button ----------------------
+    // ---------------------- Scenond Button ----------------------
 
     /// <summary>
-    /// B 버튼이 눌린 상태로 표시하고 두 입력이 모두 활성화되었는지 확인하여 차징을 시작합니다.
+    /// Second 버튼이 눌린 상태로 표시하고 두 입력이 모두 활성화되었는지 확인하여 차징을 시작합니다.
     /// </summary>
     private void OnBPerformed(InputAction.CallbackContext _)
     {
@@ -149,7 +149,7 @@ public class DartChargeThrow_EventsOnly : MonoBehaviour
     }
 
     /// <summary>
-    /// B 버튼 해제를 감지하고 차징 상태였다면 던지기를 시도합니다.
+    /// Second 버튼 해제를 감지하고 차징 상태였다면 던지기를 시도합니다.
     /// </summary>
     private void OnBCanceled(InputAction.CallbackContext _)
     {
@@ -160,14 +160,14 @@ public class DartChargeThrow_EventsOnly : MonoBehaviour
     // ---------------------- Core Logic ----------------------
 
     /// <summary>
-    /// 트리거와 B 버튼이 동시에 눌린 경우에만 차징 상태를 시작합니다.
+    /// 트리거와 Second 버튼이 동시에 눌린 경우에만 차징 상태를 시작합니다.
     /// </summary>
     private void TryStartCharging()
     {
         if (!charging && isTrigger && isSecond)
         {
             charging = true;
-            // 🔸 여기서 “차징 이펙트 시작” 같은 피드백을 넣을 수 있음.
+            // “차징 이펙트 시작” 같은 피드백을 넣을 수 있음.
             // ex) StartChargeVFX();
         }
     }
@@ -187,7 +187,7 @@ public class DartChargeThrow_EventsOnly : MonoBehaviour
                 grab.interactionManager?.SelectExit(currentInteractor, grab);
             }
 
-            // 🔸 차징 종료 이펙트/사운드 종료 가능
+            //차징 종료 이펙트/사운드 종료 가능
             // ex) StopChargeVFX();
         }
     }

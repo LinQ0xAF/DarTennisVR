@@ -7,6 +7,7 @@ TagManager:
   - Anchor
   - ReloadZone
   - Environment
+  - Balloons
   layers:
   - Default
   - TransparentFX
@@ -34,7 +35,7 @@ TagManager:
   - 
   - 
   - 
-  - 
+  - Balloons
   - 
   - 
   - 
