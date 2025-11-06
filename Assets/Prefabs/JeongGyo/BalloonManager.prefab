@@ -67,7 +67,7 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 8070551685984103444, guid: c386cbf506b5c4662ab8fab9f619430b, type: 3}
       propertyPath: m_Name
-      value: Balloon_Balloon5
+      value: Balloon5
       objectReference: {fileID: 0}
     - target: {fileID: 8070551685984103444, guid: c386cbf506b5c4662ab8fab9f619430b, type: 3}
       propertyPath: m_IsActive
@@ -144,7 +144,7 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 8070551685984103444, guid: c386cbf506b5c4662ab8fab9f619430b, type: 3}
       propertyPath: m_Name
-      value: Balloon_Balloon3
+      value: Balloon3
       objectReference: {fileID: 0}
     - target: {fileID: 8070551685984103444, guid: c386cbf506b5c4662ab8fab9f619430b, type: 3}
       propertyPath: m_IsActive
@@ -221,7 +221,7 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 8070551685984103444, guid: c386cbf506b5c4662ab8fab9f619430b, type: 3}
       propertyPath: m_Name
-      value: Balloon_Balloon2
+      value: Balloon2
       objectReference: {fileID: 0}
     - target: {fileID: 8070551685984103444, guid: c386cbf506b5c4662ab8fab9f619430b, type: 3}
       propertyPath: m_IsActive
@@ -298,7 +298,7 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 8070551685984103444, guid: c386cbf506b5c4662ab8fab9f619430b, type: 3}
       propertyPath: m_Name
-      value: Balloon_Balloon4
+      value: Balloon4
       objectReference: {fileID: 0}
     - target: {fileID: 8070551685984103444, guid: c386cbf506b5c4662ab8fab9f619430b, type: 3}
       propertyPath: m_IsActive
@@ -379,7 +379,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 8070551685984103444, guid: c386cbf506b5c4662ab8fab9f619430b, type: 3}
       propertyPath: m_Name
-      value: Balloon_Balloon1
+      value: Balloon1
       objectReference: {fileID: 0}
     - target: {fileID: 8070551685984103444, guid: c386cbf506b5c4662ab8fab9f619430b, type: 3}
       propertyPath: m_IsActive
@@ -387,7 +387,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 8774990843814887403, guid: c386cbf506b5c4662ab8fab9f619430b, type: 3}
       propertyPath: m_LocalPosition.x
-      value: -3.364
+      value: -3
       objectReference: {fileID: 0}
     - target: {fileID: 8774990843814887403, guid: c386cbf506b5c4662ab8fab9f619430b, type: 3}
       propertyPath: m_LocalPosition.y
