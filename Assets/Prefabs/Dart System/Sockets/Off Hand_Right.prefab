@@ -203,7 +203,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   GripAction: {fileID: 187161793506945269, guid: c348712bda248c246b8c49b3db54643f, type: 3}
-  DartPrefab: {fileID: 3226277956266155861, guid: b0e627e9860d28045a300a114de8fd85, type: 3}
+  DartPrefab: {fileID: 6891486028327192877, guid: 03c59633e9eb57840b09924b38e13f45, type: 3}
   ReloadZoneTag: ReloadZone
   DartSockets:
   - {fileID: 6740126585792615049}
