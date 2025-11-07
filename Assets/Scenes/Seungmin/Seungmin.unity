@@ -725,6 +725,18 @@ PrefabInstance:
       propertyPath: m_Name
       value: XR Avatar Origin (XR Rig)
       objectReference: {fileID: 0}
+    - target: {fileID: 5940816278385256742, guid: 86449b5eae83694408710bbd6ae98f5a, type: 3}
+      propertyPath: m_IsActive
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 8041589710301185218, guid: 86449b5eae83694408710bbd6ae98f5a, type: 3}
+      propertyPath: m_IsActive
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 8148228471619532872, guid: 86449b5eae83694408710bbd6ae98f5a, type: 3}
+      propertyPath: m_IsActive
+      value: 1
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
