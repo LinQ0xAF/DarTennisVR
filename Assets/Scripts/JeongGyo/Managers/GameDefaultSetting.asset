@@ -1,0 +1,35 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 447c3e1e422a34c6e8febe09fdcee555, type: 3}
+  m_Name: GameDefaultSetting
+  m_EditorClassIdentifier: 
+  backgroundMusic: {fileID: 0}
+  masterVolume: 1
+  musicVolume: 0.8
+  sfxVolume: 0.8
+  muteAll: 0
+  targetFPS: 90
+  uiScale: 1
+  uiDistance: 2
+  uiFadeDuration: 0.5
+  defaultBalloonCount: 3
+  roundSetting: 3
+  rightHandMainBindings:
+    shootPrimary: {fileID: 0}
+    shootSecondary: {fileID: 0}
+    grab: {fileID: 0}
+  leftHandMainBindings:
+    shootPrimary: {fileID: 0}
+    shootSecondary: {fileID: 0}
+    grab: {fileID: 0}
+  mainHand: 1
+  smoothTurnEnabled: 1
