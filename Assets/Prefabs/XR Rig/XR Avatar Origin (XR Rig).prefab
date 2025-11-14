@@ -5183,6 +5183,10 @@ PrefabInstance:
       value: UpperBody
       objectReference: {fileID: 0}
     - target: {fileID: 4880238627791011463, guid: e0e38d997d86d6149b4a962f5b17e725, type: 3}
+      propertyPath: m_TranslationOffset.y
+      value: -1.66
+      objectReference: {fileID: 0}
+    - target: {fileID: 4880238627791011463, guid: e0e38d997d86d6149b4a962f5b17e725, type: 3}
       propertyPath: m_Sources.Array.data[0].sourceTransform
       value: 
       objectReference: {fileID: 5182869041300899643}

@@ -71,6 +71,10 @@ namespace UnityEngine.XR.Interaction.Toolkit.Samples.StarterAssets
         [Tooltip("The reference to the action of scrolling UI with this controller.")]
         InputActionReference m_UIScroll;
 
+        [SerializeField]
+        [Tooltip("The reference to the action of scrolling UI with this controller.")]
+        public InputActionReference  m_OpenUserSettingUI;
+        
         [Space]
         [Header("Locomotion Settings")]
 
@@ -190,8 +194,10 @@ namespace UnityEngine.XR.Interaction.Toolkit.Samples.StarterAssets
                 snapTurnAction.started += OnStartLocomotion;
                 snapTurnAction.canceled += OnStopLocomotion;
             }
+              
         }
-
+ 
+        
         void TeardownInteractorEvents()
         {
             m_BindingsGroup.Clear();
@@ -245,6 +251,7 @@ namespace UnityEngine.XR.Interaction.Toolkit.Samples.StarterAssets
                 snapTurnAction.started -= OnStartLocomotion;
                 snapTurnAction.canceled -= OnStopLocomotion;
             }
+
         }
 
         void OnStartTeleport(InputAction.CallbackContext context)
@@ -417,6 +424,7 @@ namespace UnityEngine.XR.Interaction.Toolkit.Samples.StarterAssets
             // Called in Start so it is done after the InputActionManager enables all input actions earlier in OnEnable.
             UpdateLocomotionActions();
             UpdateUIActions();
+
         }
 
         protected void Update()

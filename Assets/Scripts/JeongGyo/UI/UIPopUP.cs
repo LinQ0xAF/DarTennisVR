@@ -14,7 +14,7 @@ public class UIPopUp : MonoBehaviour
 
     void OnCollisionEnter(Collision collision)
     {
-        if(collision.gameObject.CompareTag("Dart"))
+        if(collision.gameObject.layer == LayerMask.NameToLayer("Darts"))
         {
             HitUI();
         }
