@@ -102,3 +102,4 @@ InitTestScene*.unity*
 # Auto-generated Burst debug info
 /DarTennisVR_BurstDebugInformation_DoNotShip/
 *.ttf
+Assets/Fonts/Roboto/static/
