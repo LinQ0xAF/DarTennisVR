@@ -984,6 +984,15 @@
                     "processors": "",
                     "interactions": "",
                     "initialStateCheck": false
+                },
+                {
+                    "name": "User Setting Button",
+                    "type": "Button",
+                    "id": "84ab835b-c3d0-4c06-b893-309901648eb7",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
                 }
             ],
             "bindings": [
@@ -1303,6 +1312,17 @@
                     "processors": "",
                     "groups": "",
                     "action": "Secondary Button",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "a97304dd-0111-4026-ab1b-711d0b936e1a",
+                    "path": "<XRController>{LeftHand}/{MenuButton}",
+                    "interactions": "Press",
+                    "processors": "",
+                    "groups": "",
+                    "action": "User Setting Button",
                     "isComposite": false,
                     "isPartOfComposite": false
                 }
