@@ -13,12 +13,16 @@ public class UIUserSettingOpen : MonoBehaviour
     const float verticalOffset = 1f;
 
     Camera cam;
-    void Start()
-    {   
+    
+    void Awake()
+    {
         controllerInputActionManager = FindFirstObjectByType<ControllerInputActionManager>();
         m_OpenUserSettingUI = controllerInputActionManager.m_OpenUserSettingUI;
         cam = Camera.main;
+    }
 
+    void Start()
+    {   
         InputAction openUserSettingAction = m_OpenUserSettingUI.action;
 
         if (openUserSettingAction != null)
