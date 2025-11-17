@@ -10,6 +10,7 @@ public class UIInputPanel : MonoBehaviour
     [SerializeField] private Slider timeLimitSlider;
     [SerializeField] private int timeStepSeconds = 30;
     [SerializeField] private GameSceneLoadManager sceneLoadManager;
+    [SerializeField] private Button createRoomButton;
     
     int setCount; // 맵 세트 개수
     string setLabel; // 맵 세트 라벨
@@ -22,6 +23,9 @@ public class UIInputPanel : MonoBehaviour
         setLabel = setCountDropdown.options.Count > setCount ? setCountDropdown.options[setCount].text : string.Empty;// 맵 세트 라벨
         balloonCount = (int)balloonCountSlider.value;
         timeLimit = (int)(timeLimitSlider.value * timeStepSeconds);
+        
+        createRoomButton.onClick.AddListener(CreateRoom);
+
     }
 
 
@@ -47,5 +51,10 @@ public class UIInputPanel : MonoBehaviour
            
         };
             sceneLoadManager.LoadGameScene(config);
+    }
+
+    void OnDestroy()
+    {
+        createRoomButton.onClick.RemoveListener(CreateRoom);
     }
 }
