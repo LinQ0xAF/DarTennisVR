@@ -60,6 +60,8 @@ public class UIUserSettingOpen : MonoBehaviour
     {   
         ApplyButton.gameObject.SetActive(false);
 
+    void Start()
+    {   
         InputAction openUserSettingAction = m_OpenUserSettingUI.action;
 
         if (openUserSettingAction != null)

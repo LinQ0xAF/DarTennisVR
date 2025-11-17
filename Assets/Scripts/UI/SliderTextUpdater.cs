@@ -9,7 +9,8 @@ public class SliderTextUpdater : MonoBehaviour
     public enum DisplayFormat
     {
         Integer,
-        Time_30Sec_Steps
+        Time_30Sec_Steps,
+        Percentage
     }
 
     [Header("Format Settings")]
@@ -57,6 +58,10 @@ public class SliderTextUpdater : MonoBehaviour
                 }
                 TimeSpan timeSpan = TimeSpan.FromSeconds(totalSeconds);
                 _SliderValueText.text = timeSpan.ToString(@"m\:ss");
+                break;
+            
+            case DisplayFormat.Percentage:
+                _SliderValueText.text = Mathf.RoundToInt(value * 100).ToString();   // 볼륨 용도
                 break;
 
             default:
