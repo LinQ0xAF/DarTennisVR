@@ -53,7 +53,7 @@ public class UIUserSettingOpen : MonoBehaviour
             return;
         }
         
-        defaultData.TryLoadPersonalSettings(); // 개인 설정 불러오기 또는 디볼트 초기화
+        defaultData.LoadOrInitializePersonalSettings(); // 개인 설정 불러오기 또는 디폴트 초기화
 
         VolumeSlider.onValueChanged.AddListener(OnVolumeSliderChanged);
         SmoothTurnToggle.onValueChanged.AddListener(OnToggleChanged);
@@ -80,7 +80,7 @@ public class UIUserSettingOpen : MonoBehaviour
         
         if (shouldEnable) // 열릴 때
         {   
-            defaultData.TryLoadPersonalSettings(); // 개인 설정 불러오기 또는 디볼트 초기화
+            defaultData.LoadOrInitializePersonalSettings(); // 개인 설정 불러오기 또는 디폴트 초기화
             ApplyDefaultDataToUI(); // UI 에 디폴트 값 적용
         }
     
