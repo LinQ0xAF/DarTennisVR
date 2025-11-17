@@ -4,11 +4,9 @@ using UnityEngine;
 using UnityEngine.InputSystem.OnScreen;
 using UnityEngine.UIElements;
 
+
 public class UIManager : MonoBehaviour
 {
-
-    [SerializeField]
-    private GameObject UIManagerObj;
 
     [SerializeField]
     public List<UIPopUp> PopUpList = new List<UIPopUp>(); // 서로 세트가 되는 팝업UI들을 관리하는 리스트
@@ -24,9 +22,6 @@ public class UIManager : MonoBehaviour
         
        
     }
-
-
-
     private void HandleUIHit(UIPopUp hitUI)
     {
     
