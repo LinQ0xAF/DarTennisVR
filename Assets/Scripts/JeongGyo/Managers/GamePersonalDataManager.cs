@@ -17,7 +17,10 @@ public enum Hand { Right, Left }
 public class GamePersonalDataManager : ScriptableObject
 {
     const string JsonFileName = "user-settings.json"; // Persistent save file name
+#if UNITY_EDITOR
     const string JsonFolderRelativePath = "Scripts/JeongGyo/Managers"; // Assets 폴더 기준 상대 경로
+#endif
+    const string JsonFolderName = "UserSettings"; // PersistentDataPath 하위 저장 폴더
 
     // 제이슨으로 저장할 개인 설정
     [System.Serializable]
@@ -60,9 +63,13 @@ public class GamePersonalDataManager : ScriptableObject
     public HandBindings MainBindings => mainHand == Hand.Right ? rightHandMainBindings : leftHandMainBindings; // 현재 주손 입력
     public HandBindings SubBindings => mainHand == Hand.Right ? leftHandMainBindings : rightHandMainBindings;   // 현재 보조손 입력
 
-    static string GetJsonPath() // Assets 폴더 하위(스크립트 위치)로 저장 경로 설정
+    static string GetJsonPath() // 에디터/빌드 환경에 맞는 경로 설정
     {
-        string folder = Path.Combine(Application.dataPath, JsonFolderRelativePath);
+#if UNITY_EDITOR
+        string folder = Path.Combine(Application.dataPath, JsonFolderRelativePath); // 에디터: Assets 하위
+#else
+        string folder = Path.Combine(Application.persistentDataPath, JsonFolderName); // 빌드: 쓰기 가능한 PersistentDataPath
+#endif
         if (!Directory.Exists(folder))
             Directory.CreateDirectory(folder);
         return Path.Combine(folder, JsonFileName);
