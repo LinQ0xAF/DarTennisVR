@@ -39,7 +39,7 @@ public class UIInputPanel : MonoBehaviour
         timeLimit = (int)(timeLimitSlider.value * timeStepSeconds);
       
         var config = new GameSceneLoadManager.RoomConfig
-        {
+        {   gamePlaySceneName = gamePlaySceneName,
             setIndex = setCount,
             setLabel = setLabel,
             balloonCount = balloonCount,
