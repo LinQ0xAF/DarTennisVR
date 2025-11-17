@@ -55,6 +55,10 @@ public class UIUserSettingOpen : MonoBehaviour
         
         defaultData.TryLoadPersonalSettings(); // 개인 설정 불러오기 또는 디볼트 초기화
 
+        VolumeSlider.onValueChanged.AddListener(OnVolumeSliderChanged);
+        SmoothTurnToggle.onValueChanged.AddListener(OnToggleChanged);
+        HandedToggle.onValueChanged.AddListener(OnToggleChanged);
+        ApplyButton.onClick.AddListener(OnApplyButtonClicked);
     }
 
     void Start()
@@ -166,5 +170,12 @@ public class UIUserSettingOpen : MonoBehaviour
         defaultData.SaveCurrentSettingsAsPersonal(); // 현재 설정을 개인 설정으로 저장
 
         CacheDefaultValues();
+    }
+
+    void OnDestroy()
+    {
+        VolumeSlider.onValueChanged.RemoveListener(OnVolumeSliderChanged);
+        SmoothTurnToggle.onValueChanged.RemoveListener(OnToggleChanged);
+        HandedToggle.onValueChanged.RemoveListener(OnToggleChanged);
     }
 }

@@ -42,6 +42,11 @@ public class ToggleTextUpdater : MonoBehaviour
         UpdateToggleText(_Toggle.isOn);
     }
 
+    void OnEnable()
+    {
+        UpdateToggleText(_Toggle.isOn);
+    }
+
     private void UpdateToggleText(bool ToggleValue)
     {
         _ToggleText.text = ToggleValue ? _OnText : _OffText;

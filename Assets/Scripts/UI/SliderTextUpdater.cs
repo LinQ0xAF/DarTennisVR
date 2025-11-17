@@ -41,6 +41,11 @@ public class SliderTextUpdater : MonoBehaviour
         UpdateSliderText(_Slider.value);
     }
 
+    void OnEnable()
+    {
+        UpdateSliderText(_Slider.value);
+    }
+
     private void UpdateSliderText(float value)
     {
         switch (_DisplayFormat)
