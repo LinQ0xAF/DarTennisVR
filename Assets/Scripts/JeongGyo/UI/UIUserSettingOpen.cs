@@ -56,12 +56,9 @@ public class UIUserSettingOpen : MonoBehaviour
         defaultData.TryLoadPersonalSettings(); // 개인 설정 불러오기 또는 디볼트 초기화
 
     }
-    void Start()
-    {   
-        ApplyButton.gameObject.SetActive(false);
 
     void Start()
-    {   
+    {   ApplyButton.gameObject.SetActive(false);
         InputAction openUserSettingAction = m_OpenUserSettingUI.action;
 
         if (openUserSettingAction != null)
