@@ -4,6 +4,7 @@ using UnityEngine.UI;
 
 public class UIInputPanel : MonoBehaviour
 {
+    [SerializeField] private string gamePlaySceneName = "DefaultGameScene";
     [SerializeField] private TMP_Dropdown setCountDropdown;
     [SerializeField] private Slider balloonCountSlider;
     [SerializeField] private Slider timeLimitSlider;
