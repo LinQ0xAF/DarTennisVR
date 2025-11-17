@@ -85,7 +85,7 @@ public class GamePersonalDataManager : ScriptableObject
         SavePersonalSettings();
     }
 
-    bool TryLoadPersonalSettings() // JSON 파일을 읽어 덮어쓰기
+    public bool TryLoadPersonalSettings() // JSON 파일을 읽어 덮어쓰기
     {
         string path = GetJsonPath();
         if (!File.Exists(path))
@@ -100,7 +100,6 @@ public class GamePersonalDataManager : ScriptableObject
         string json = JsonUtility.ToJson(personalSettings);
         File.WriteAllText(GetJsonPath(), json);
     }
-
 
     
 }
