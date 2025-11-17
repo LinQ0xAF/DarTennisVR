@@ -24,10 +24,13 @@ public class UIInputPanel : MonoBehaviour
         balloonCount = (int)balloonCountSlider.value;
         timeLimit = (int)(timeLimitSlider.value * timeStepSeconds);
         
-        createRoomButton.onClick.AddListener(CreateRoom);
 
     }
 
+    void OnEnable()
+    {
+        createRoomButton.onClick.AddListener(CreateRoom);
+    }
 
     public void CreateRoom()
     {
