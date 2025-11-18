@@ -2,6 +2,7 @@ using System.IO;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.XR.Interaction.Toolkit.Attachment;
+using System;
 
 [System.Serializable]
 public class HandBindings
@@ -16,6 +17,10 @@ public enum Hand { Right, Left }
 [CreateAssetMenu(fileName = "GameDefaultSetting", menuName = "Scriptable Objects/GameDefaultSetting")]
 public class GamePersonalDataManager : ScriptableObject
 {
+    public event Action<float> OnMasterVolumeChanged;
+    public event Action<Hand> OnMainHandChanged;
+    public event Action<bool> OnSmoothTurnEnabledChanged;
+    
     const string JsonFileName = "user-settings.json"; // Persistent save file name
 #if UNITY_EDITOR
     const string JsonFolderRelativePath = "Scripts/JeongGyo/Managers"; // Assets 폴더 기준 상대 경로
@@ -47,15 +52,45 @@ public class GamePersonalDataManager : ScriptableObject
 
     [Header("Audio")]
     public AudioClip  backgroundMusic;             // 기본 배경음 클립
-    [Range(0f, 1f)] public float masterVolume = 1f;// 전체 볼륨
+    [SerializeField,Range(0f, 1f)] private float _masterVolume = 1f;// 전체 볼륨
+    public float masterVolume
+    {
+        get => _masterVolume;
+        set
+        {
+            if (Mathf.Approximately(_masterVolume, value)) return; // 값이 거의 같으면 무시
+            _masterVolume = value;
+            OnMasterVolumeChanged?.Invoke(_masterVolume); // 볼륨 변경 이벤트 발생
+        }
+    }
 
     [Header("Control Bindings")]
     public HandBindings rightHandMainBindings;     // 오른손 기본 입력
     public HandBindings leftHandMainBindings;      // 왼손 기본 입력
 
     [Header("Player Settings")]
-    public Hand mainHand = Hand.Right;             // 주손 설정
-    public bool smoothTurnEnabled = true;          // 부드러운 회전 여부
+    [SerializeField] private Hand _mainHand = Hand.Right;             // 주손 설정
+    public Hand mainHand
+    {
+        get => _mainHand;
+        set
+        {
+            if (_mainHand == value) return; // 값이 같으면 무시
+            _mainHand = value;
+            OnMainHandChanged?.Invoke(_mainHand); // 주손 변경 이벤트 발생
+        }
+    }
+    [SerializeField] private bool _smoothTurnEnabled = true;          // 부드러운 회전 여부
+    public bool smoothTurnEnabled
+    {
+        get => _smoothTurnEnabled;
+        set
+        {
+            if (_smoothTurnEnabled == value) return; // 값이 같으면 무시
+            _smoothTurnEnabled = value;
+            OnSmoothTurnEnabledChanged?.Invoke(_smoothTurnEnabled); // 부드러운 회전 변경 이벤트 발생
+        }
+    }
 
     [Header("Persisted User Settings")]
     [SerializeField, HideInInspector] PersonalSettings personalSettings = new PersonalSettings(); 

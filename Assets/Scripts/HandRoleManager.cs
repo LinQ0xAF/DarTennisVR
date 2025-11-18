@@ -23,44 +23,26 @@ public class HandRoleManager : MonoBehaviour
     [SerializeField] private InteractionLayerMask _MainHandInteractionLayerMask;
     [SerializeField] private InteractionLayerMask _OffHandInteractionLayerMask;
 
-    [Header("Handedness Setting UI")]
-    public UnityEngine.UI.Toggle HandRoleToggle;
+    [SerializeField]
+    private GamePersonalDataManager _GameSettings;
 
-    private bool _IsRightHanded = true;
-
-    public bool IsRightHanded
+    private void Awake()
     {
-        get => _IsRightHanded;
-        set
+        if (_GameSettings != null)
         {
-            if (_IsRightHanded != value)
-            {
-                _IsRightHanded = value;
-                UpdateHandRoles();
-            }
+            _GameSettings.OnMainHandChanged += UpdateHandRoles;
         }
     }
 
     private void Start()
     {
-        if (HandRoleToggle != null)
-        {
-            HandRoleToggle.onValueChanged.AddListener(value =>
-            {
-                IsRightHanded = value;
-            });
-        }
-
-        UpdateHandRoles();
-        if (HandRoleToggle != null)
-        {
-            HandRoleToggle.isOn = _IsRightHanded;
-        }
+        UpdateHandRoles(_GameSettings.mainHand);
     }
 
-    private void UpdateHandRoles()
+    private void UpdateHandRoles(Hand mainHand)
     {
-        if (_IsRightHanded)
+        bool isRightHanded = (mainHand == Hand.Right);
+        if (isRightHanded)
         {
             // 오른손잡이 설정
             _RightHandNearFarInteractor.interactionLayers = _MainHandInteractionLayerMask;
@@ -83,6 +65,14 @@ public class HandRoleManager : MonoBehaviour
 
             _RightHandDartChargingHandler.enabled = false;
             _LeftHandDartChargingHandler.enabled = true;
+        }
+    }
+
+    private void OnDestroy()
+    {
+        if (_GameSettings != null)
+        {
+            _GameSettings.OnMainHandChanged -= UpdateHandRoles;
         }
     }
 }
