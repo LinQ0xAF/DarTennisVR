@@ -15,7 +15,8 @@ public class UIUserSettingOpen : MonoBehaviour
     
     [SerializeField]
     bool UserSettingUIActive = false;
-    private ControllerInputActionManager controllerInputActionManager;
+    // private ControllerInputActionManager controllerInputActionManager;
+    [SerializeField]
     private InputActionReference m_OpenUserSettingUI;
     const float distance = 1.5f;
     const float verticalOffset = 1f;
@@ -39,8 +40,8 @@ public class UIUserSettingOpen : MonoBehaviour
 
     void Awake()
     {        
-        controllerInputActionManager = FindFirstObjectByType<ControllerInputActionManager>();
-        m_OpenUserSettingUI = controllerInputActionManager.m_OpenUserSettingUI;
+        // controllerInputActionManager = FindFirstObjectByType<ControllerInputActionManager>();
+        // m_OpenUserSettingUI = controllerInputActionManager.m_OpenUserSettingUI;
         cam = Camera.main;
         if (ApplyButton != null)
         {
@@ -62,7 +63,8 @@ public class UIUserSettingOpen : MonoBehaviour
     }
 
     void Start()
-    {   ApplyButton.gameObject.SetActive(false);
+    {   
+        ApplyButton.gameObject.SetActive(false);
         InputAction openUserSettingAction = m_OpenUserSettingUI.action;
 
         if (openUserSettingAction != null)

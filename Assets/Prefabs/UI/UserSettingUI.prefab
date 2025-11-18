@@ -172,7 +172,6 @@ GameObject:
   m_Component:
   - component: {fileID: 3935187716381893163}
   - component: {fileID: 3489945304471759993}
-  - component: {fileID: 6636399657702422209}
   m_Layer: 5
   m_Name: UserSettingUI
   m_TagString: Untagged
@@ -203,26 +202,18 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 160631948849872975}
-  m_Enabled: 0
+  m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: e2dae72c0c75b47f495c50da6cb765cd, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  UserSettingUIActive: 0
---- !u!114 &6636399657702422209
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 160631948849872975}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 1c685d2eca6914d42a9974551baa9418, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
+  defaultData: {fileID: 11400000, guid: 44c76b51bc24b3c4dbdcdc327d2a5052, type: 2}
   UserSettingUIActive: 0
   m_OpenUserSettingUI: {fileID: -673670510484675587, guid: c348712bda248c246b8c49b3db54643f, type: 3}
+  VolumeSlider: {fileID: 3934856595746376215}
+  SmoothTurnToggle: {fileID: 8727672861228010982}
+  HandedToggle: {fileID: 16829622198425070}
+  ApplyButton: {fileID: 8215279100768044418}
 --- !u!1 &1094419655710744880
 GameObject:
   m_ObjectHideFlags: 0
@@ -2446,7 +2437,7 @@ GameObject:
   - component: {fileID: 3554877693701800913}
   - component: {fileID: 1313483775096855969}
   m_Layer: 5
-  m_Name: Music Volume Slider
+  m_Name: Master Volume Slider
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -3004,7 +2995,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: 'Music
+  m_text: 'Master
 
     Volume'
   m_isRightToLeft: 0
