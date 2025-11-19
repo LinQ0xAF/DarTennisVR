@@ -13,6 +13,7 @@ public class NetworkVRPlayerDriver : NetworkBehaviour
 
     // cached XR Origin reference for local player
     private XROrigin _LocalXROrigin;
+    private LocalVRRigRefs _LocalRigRefs;
 
     [Header("Local Source(XR Origin) IK Target Transforms")]
     // will Automatically assigned
@@ -29,12 +30,12 @@ public class NetworkVRPlayerDriver : NetworkBehaviour
             _LocalXROrigin = FindFirstObjectByType<Unity.XR.CoreUtils.XROrigin>();
             if (_LocalXROrigin != null)
             {
-                // find head, left and right hand IK Targets by name
-                foreach (var t in _LocalXROrigin.GetComponentsInChildren<Transform>())
+                _LocalRigRefs = _LocalXROrigin.GetComponent<LocalVRRigRefs>();
+                if (_LocalRigRefs != null)
                 {
-                    if (t.name.Contains("Head") && t.name.Contains("Target")) _LocalHeadIKTarget = t;
-                    if (t.name.Contains("LeftArm") && t.name.Contains("Target")) _LocalLeftHandIKTarget = t;
-                    if (t.name.Contains("RightArm") && t.name.Contains("Target")) _LocalRightHandIKTarget = t;
+                    _LocalHeadIKTarget = _LocalRigRefs.HeadIKTarget;
+                    _LocalLeftHandIKTarget = _LocalRigRefs.LeftHandIKTarget;
+                    _LocalRightHandIKTarget = _LocalRigRefs.RightHandIKTarget;
                 }
             }
             
