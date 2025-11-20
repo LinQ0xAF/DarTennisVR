@@ -1,15 +1,16 @@
 using Unity.Netcode;
 using Unity.XR.CoreUtils;
 using UnityEngine;
-// XR 관련 네임스페이스 (프로젝트 설정에 따라 다를 수 있음. 보통 필요 없음)
 
 public class NetworkVRPlayerDriver : NetworkBehaviour
 {
-
     [Header("Network IK Target Transforms")]
     public Transform NetHeadIKTarget;
     public Transform NetLeftHandIKTarget;
     public Transform NetRightHandIKTarget;
+
+    [Header("Network Avatar Meshes")]
+    [SerializeField] public SkinnedMeshRenderer[] NetworkAvatarMeshes;
 
     // cached XR Origin reference for local player
     private XROrigin _LocalXROrigin;
@@ -39,12 +40,12 @@ public class NetworkVRPlayerDriver : NetworkBehaviour
                 }
             }
             
-            // set own avatar meshes invisible
+            // set own network avatar meshes invisible
             SetMeshesVisible(false); 
         }
         else
         {
-            // set other players' avatar meshes visible
+            // set other players' network avatar meshes visible
             SetMeshesVisible(true);
         }
     }
@@ -78,11 +79,11 @@ public class NetworkVRPlayerDriver : NetworkBehaviour
         }
     }
 
-    void SetMeshesVisible(bool visible)
+    void SetMeshesVisible(bool isVisible)
     {
-        foreach (var renderer in GetComponentsInChildren<MeshRenderer>())
+        foreach (var renderer in NetworkAvatarMeshes)
         {
-            renderer.enabled = visible;
+            renderer.enabled = isVisible;
         }
     }
 }

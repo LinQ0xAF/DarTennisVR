@@ -1002,7 +1002,7 @@ MonoBehaviour:
   m_MaxConnectAttempts: 60
   m_DisconnectTimeoutMS: 30000
   ConnectionData:
-    Address: 192.168.1.174
+    Address: 192.168.1.39
     Port: 7777
     ServerListenAddress: 0.0.0.0
   DebugSimulator:
@@ -1295,6 +1295,14 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 4471787106778149531, guid: 9bef222c034a4ea4ba20f6f1efaf2a38, type: 3}
+      propertyPath: m_TranslationAtRest.z
+      value: -0.04
+      objectReference: {fileID: 0}
+    - target: {fileID: 4471787106778149531, guid: 9bef222c034a4ea4ba20f6f1efaf2a38, type: 3}
+      propertyPath: m_TranslationOffset.z
+      value: -0.04
+      objectReference: {fileID: 0}
     - target: {fileID: 4564411688338637755, guid: 9bef222c034a4ea4ba20f6f1efaf2a38, type: 3}
       propertyPath: m_Name
       value: XR Network Origin (XR Rig)
@@ -1338,6 +1346,10 @@ PrefabInstance:
     - target: {fileID: 8031568456917811543, guid: 9bef222c034a4ea4ba20f6f1efaf2a38, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8163258398247660378, guid: 9bef222c034a4ea4ba20f6f1efaf2a38, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: -0.04
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []

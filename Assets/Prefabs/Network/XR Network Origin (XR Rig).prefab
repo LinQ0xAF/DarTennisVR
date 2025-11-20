@@ -5544,7 +5544,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 935998587454039878, guid: e0e38d997d86d6149b4a962f5b17e725, type: 3}
       propertyPath: m_LocalPosition.z
-      value: -0.1
+      value: -0.04
       objectReference: {fileID: 0}
     - target: {fileID: 935998587454039878, guid: e0e38d997d86d6149b4a962f5b17e725, type: 3}
       propertyPath: m_LocalRotation.w
@@ -5583,13 +5583,25 @@ PrefabInstance:
       value: UpperBody
       objectReference: {fileID: 0}
     - target: {fileID: 4880238627791011463, guid: e0e38d997d86d6149b4a962f5b17e725, type: 3}
+      propertyPath: m_TranslationAtRest.z
+      value: -0.04
+      objectReference: {fileID: 0}
+    - target: {fileID: 4880238627791011463, guid: e0e38d997d86d6149b4a962f5b17e725, type: 3}
       propertyPath: m_TranslationOffset.y
       value: -1.66
+      objectReference: {fileID: 0}
+    - target: {fileID: 4880238627791011463, guid: e0e38d997d86d6149b4a962f5b17e725, type: 3}
+      propertyPath: m_TranslationOffset.z
+      value: -0.04
       objectReference: {fileID: 0}
     - target: {fileID: 4880238627791011463, guid: e0e38d997d86d6149b4a962f5b17e725, type: 3}
       propertyPath: m_Sources.Array.data[0].sourceTransform
       value: 
       objectReference: {fileID: 2076275494614932720}
+    - target: {fileID: 5299630130111923938, guid: e0e38d997d86d6149b4a962f5b17e725, type: 3}
+      propertyPath: m_CastShadows
+      value: 3
+      objectReference: {fileID: 0}
     - target: {fileID: 6913649186606540104, guid: e0e38d997d86d6149b4a962f5b17e725, type: 3}
       propertyPath: m_Data.m_Target
       value: 
@@ -5602,6 +5614,10 @@ PrefabInstance:
       propertyPath: m_Data.m_Target
       value: 
       objectReference: {fileID: 8973436614635586488}
+    - target: {fileID: 8580351310631908481, guid: e0e38d997d86d6149b4a962f5b17e725, type: 3}
+      propertyPath: m_Layer
+      value: 0
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects:
