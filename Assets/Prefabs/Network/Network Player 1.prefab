@@ -313,6 +313,9 @@ MonoBehaviour:
   NetHeadIKTarget: {fileID: 7512560555726544096}
   NetLeftHandIKTarget: {fileID: 6017473808401819865}
   NetRightHandIKTarget: {fileID: 4891607394437660036}
+  NetworkAvatarMeshes:
+  - {fileID: 3137811437270251570}
+  - {fileID: 727629012397160623}
 --- !u!1 &9128934196558112866
 GameObject:
   m_ObjectHideFlags: 0
@@ -409,11 +412,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 935998587454039878, guid: b0adf0c0d477c7d45a32faea4d6d8f16, type: 3}
       propertyPath: m_LocalPosition.y
-      value: -1.66
+      value: -1.6
       objectReference: {fileID: 0}
     - target: {fileID: 935998587454039878, guid: b0adf0c0d477c7d45a32faea4d6d8f16, type: 3}
       propertyPath: m_LocalPosition.z
-      value: -0.1
+      value: -0.04
       objectReference: {fileID: 0}
     - target: {fileID: 935998587454039878, guid: b0adf0c0d477c7d45a32faea4d6d8f16, type: 3}
       propertyPath: m_LocalRotation.w
@@ -465,11 +468,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4880238627791011463, guid: b0adf0c0d477c7d45a32faea4d6d8f16, type: 3}
       propertyPath: m_TranslationAtRest.y
-      value: -1.66
+      value: -1.6
       objectReference: {fileID: 0}
     - target: {fileID: 4880238627791011463, guid: b0adf0c0d477c7d45a32faea4d6d8f16, type: 3}
       propertyPath: m_TranslationAtRest.z
-      value: -0.1
+      value: -0.04
       objectReference: {fileID: 0}
     - target: {fileID: 4880238627791011463, guid: b0adf0c0d477c7d45a32faea4d6d8f16, type: 3}
       propertyPath: m_TranslationOffset.x
@@ -477,11 +480,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4880238627791011463, guid: b0adf0c0d477c7d45a32faea4d6d8f16, type: 3}
       propertyPath: m_TranslationOffset.y
-      value: -1.66
+      value: -1.6
       objectReference: {fileID: 0}
     - target: {fileID: 4880238627791011463, guid: b0adf0c0d477c7d45a32faea4d6d8f16, type: 3}
       propertyPath: m_TranslationOffset.z
-      value: -0.1
+      value: -0.04
       objectReference: {fileID: 0}
     - target: {fileID: 4880238627791011463, guid: b0adf0c0d477c7d45a32faea4d6d8f16, type: 3}
       propertyPath: m_Sources.Array.data[0].sourceTransform
@@ -504,6 +507,16 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: b0adf0c0d477c7d45a32faea4d6d8f16, type: 3}
+--- !u!137 &727629012397160623 stripped
+SkinnedMeshRenderer:
+  m_CorrespondingSourceObject: {fileID: 7502612002034058879, guid: b0adf0c0d477c7d45a32faea4d6d8f16, type: 3}
+  m_PrefabInstance: {fileID: 7063807396545691344}
+  m_PrefabAsset: {fileID: 0}
+--- !u!137 &3137811437270251570 stripped
+SkinnedMeshRenderer:
+  m_CorrespondingSourceObject: {fileID: 5299630130111923938, guid: b0adf0c0d477c7d45a32faea4d6d8f16, type: 3}
+  m_PrefabInstance: {fileID: 7063807396545691344}
+  m_PrefabAsset: {fileID: 0}
 --- !u!4 &7996979685052832150 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 935998587454039878, guid: b0adf0c0d477c7d45a32faea4d6d8f16, type: 3}
