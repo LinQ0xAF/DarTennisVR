@@ -502,6 +502,10 @@ PrefabInstance:
       propertyPath: m_Data.m_Target
       value: 
       objectReference: {fileID: 4891607394437660036}
+    - target: {fileID: 8580351310631908481, guid: b0adf0c0d477c7d45a32faea4d6d8f16, type: 3}
+      propertyPath: m_Layer
+      value: 0
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
