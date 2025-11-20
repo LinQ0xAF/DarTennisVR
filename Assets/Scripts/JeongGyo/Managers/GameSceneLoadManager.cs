@@ -51,5 +51,7 @@ public class GameSceneLoadManager : MonoBehaviour
         }
 
         SceneManager.LoadScene(sceneName);
+       
+        
     }
 }
