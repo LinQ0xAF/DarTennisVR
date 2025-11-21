@@ -109,7 +109,7 @@ public class NetworkDartPoolManager : NetworkBehaviour, INetworkPrefabInstanceHa
     private void OnGetDart(NetworkObject netObj)
     {
         netObj.gameObject.SetActive(true);
-        // 물리 초기화 등은 Dart.cs의 OnEnable에서 처리하는 것이 좋음
+        // 물리 초기화 등은 NetworkDart.cs의 OnEnable에서 처리
     }
 
     private void OnReleaseDart(NetworkObject netObj)

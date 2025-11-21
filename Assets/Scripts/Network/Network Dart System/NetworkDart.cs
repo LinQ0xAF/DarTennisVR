@@ -15,9 +15,9 @@ public class NetworkDart : NetworkBehaviour
 
     public override void OnNetworkSpawn()
     {
-        _DartRigidbody.isKinematic = true;
+        // _DartRigidbody.isKinematic = true;
         _IsFlying = false;
-        _DartRigidbody.useGravity = false;
+        // _DartRigidbody.useGravity = false;
         _DartRigidbody.linearVelocity = Vector3.zero;
         _DartRigidbody.angularVelocity = Vector3.zero;
     }
