@@ -11,13 +11,15 @@ using Unity.Netcode;
 public class NetworkDartReloadManager : MonoBehaviour
 {
     [Header("Dart Reload Settings")]
-    public InputActionReference GripAction;
-    public GameObject DartPrefab;
-    public string ReloadZoneTag = "ReloadZone";
     public bool IsRightHand = false;
+    public InputActionReference GripAction;
+    public string ReloadZoneTag = "ReloadZone";
     [SerializeField] private float SocketReactivationDelay = 0.8f;
-    public List<XRSocketInteractor> DartSockets;
+
     [SerializeField] private DartSpawnChannelSO _SpawnChannel;
+
+    public List<XRSocketInteractor> DartSockets;
+
     private XRInteractionManager _InteractionManager;
     private bool _IsInReloadZone = false;
 
@@ -65,16 +67,16 @@ public class NetworkDartReloadManager : MonoBehaviour
     {
         if (_IsInReloadZone)
         {
-            StartCoroutine(AttemptReloadCoroutine());
+            StartCoroutine(RequestReloadCoroutine());
         }
     }
 
     private void OnGripReleased(InputAction.CallbackContext context)
     {
-        ForceDropAllDarts();
+        ForceDropLocal();
     }
 
-    private IEnumerator AttemptReloadCoroutine()
+    private IEnumerator RequestReloadCoroutine()
     {
         // 채널이 없으면 에러
         if (_SpawnChannel == null)
@@ -88,10 +90,7 @@ public class NetworkDartReloadManager : MonoBehaviour
             // 소켓이 비어있을 때만 요청
             if (socket != null && !socket.hasSelection)
             {
-                // [핵심 변경]
-                // 직접 Instantiate 하지 않고, 이벤트 채널에 요청을 보냅니다.
-                // (서버의 DartPoolManager가 이 이벤트를 듣고 스폰해줄 것입니다.)
-                
+                // 직접 Instantiate 하지 않고, 이벤트 채널에 요청 전송
                 _SpawnChannel.RaiseEvent(
                     NetworkManager.Singleton.LocalClientId, // 내 ID
                     socket.transform.position,              // 소켓 위치
@@ -105,7 +104,7 @@ public class NetworkDartReloadManager : MonoBehaviour
         }
     }
 
-    private void ForceDropAllDarts()
+    private void ForceDropLocal()
     {
         if (_InteractionManager == null) return;
         foreach (var socket in DartSockets)
@@ -120,15 +119,8 @@ public class NetworkDartReloadManager : MonoBehaviour
             {
                 continue;
             }
-            // XRGrabInteractable heldDart = heldDartInteractableInterface as XRGrabInteractable;
 
-            // // 안전하게 Rigidbody 컴포넌트 가져오기
-            // Rigidbody dartRigidbody = heldDart.GetComponent<Rigidbody>();
-
-            // // 소켓에서 해제되었을 때 던져지지 않도록 Throw on Detach 비활성화
-            // heldDart.throwOnDetach = false;
-
-            // 1. 소켓을 일시적으로 비활성화하여 즉시 재장착되는 것을 방지
+            // 소켓을 일시적으로 비활성화하여 즉시 재장착되는 것을 방지
             socket.socketActive = false;
 
             // 잠재적인 문제 방지를 위해 interaction 종료 호출
@@ -141,13 +133,6 @@ public class NetworkDartReloadManager : MonoBehaviour
                 _InteractionManager.SelectExit(socket, heldDartInteractableInterface);
             }
 
-            // if (dartRigidbody != null)
-            // {
-            //     dartRigidbody.isKinematic = false;
-            //     dartRigidbody.useGravity = true;
-            // }
-
-            // 2. 짧은 시간 후에 소켓을 다시 활성화하는 코루틴 시작
             StartCoroutine(ReactivateSocket(socket, SocketReactivationDelay));
         }
     }

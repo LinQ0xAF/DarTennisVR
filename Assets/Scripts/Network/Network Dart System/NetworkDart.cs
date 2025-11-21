@@ -17,6 +17,9 @@ public class NetworkDart : NetworkBehaviour
     {
         _DartRigidbody.isKinematic = true;
         _IsFlying = false;
+        _DartRigidbody.useGravity = false;
+        _DartRigidbody.linearVelocity = Vector3.zero;
+        _DartRigidbody.angularVelocity = Vector3.zero;
     }
 
     // 부모가 바뀔 때 호출되는 콜백 오버라이드
@@ -28,6 +31,7 @@ public class NetworkDart : NetworkBehaviour
             // 부모가 설정되었을 때 (플레이어 손에 잡혔을 때)
             _DartRigidbody.isKinematic = true;
             _IsFlying = false;
+            // 자연스러운 위치 설정을 위해 offset 조정 필요시 추가
         }
         // else
         // {
@@ -85,18 +89,18 @@ public class NetworkDart : NetworkBehaviour
     {
         if (!IsServer || !_IsFlying) return;
 
+        // 충돌 위치 보정
+        SyncImpactClientRpc(transform.position, transform.rotation);
+
         // "Environment" 태그를 가진 오브젝트와 충돌했을 때
         if (collision.gameObject.CompareTag("Environment"))
         {
             _IsFlying = false;
             _DartRigidbody.isKinematic = true;
+
+            // 충돌 일정 시간 후 반납 코루틴
+            StartCoroutine(ReturnToPoolAfterDelay(2.0f));
         }
-
-        // 충돌 위치 보정
-        SyncImpactClientRpc(transform.position, transform.rotation);
-
-        // 충돌 일정 시간 후 반납 코루틴
-        StartCoroutine(ReturnToPoolAfterDelay(2.0f));
     }
 
     [ClientRpc]

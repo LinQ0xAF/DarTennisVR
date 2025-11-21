@@ -202,6 +202,7 @@ GameObject:
   - component: {fileID: 7347879154393837099}
   - component: {fileID: 8187116649210746873}
   - component: {fileID: -8536120178395408322}
+  - component: {fileID: 281310413737791529}
   m_Layer: 0
   m_Name: Network Player 1
   m_TagString: Untagged
@@ -316,6 +317,20 @@ MonoBehaviour:
   NetworkAvatarMeshes:
   - {fileID: 3137811437270251570}
   - {fileID: 727629012397160623}
+--- !u!114 &281310413737791529
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8848014949407761967}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0d5188accb0a7a1448eeca116085bc3b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  ShowTopMostFoldoutHeaderGroup: 1
+  _DartSpawnChannel: {fileID: 11400000, guid: d4964234da067244d829abe032fb49d6, type: 2}
 --- !u!1 &9128934196558112866
 GameObject:
   m_ObjectHideFlags: 0

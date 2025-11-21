@@ -8,7 +8,7 @@ public class NetworkDartPoolManager : NetworkBehaviour, INetworkPrefabInstanceHa
 
     [SerializeField] private GameObject _DartPrefab; 
     public int DefaultCapacity = 20;
-    public int MaxPoolSize = 40;
+    public int MaxPoolSize = 60;
     public DartSpawnChannelSO _DartSpawnChannel; 
     
     private IObjectPool<NetworkObject> _NetworkDartPool;
@@ -37,25 +37,25 @@ public class NetworkDartPoolManager : NetworkBehaviour, INetworkPrefabInstanceHa
     {
         NetworkManager.Singleton.PrefabHandler.AddHandler(_DartPrefab, this);
 
-        if (IsServer && _DartSpawnChannel != null)
-        {
-            _DartSpawnChannel.OnSpawnRequested += Server_OnSpawnRequested;
-        }
+        // if (IsServer && _DartSpawnChannel != null)
+        // {
+        //     _DartSpawnChannel.OnSpawnRequested += Server_OnSpawnRequested;
+        // }
     }
 
     public override void OnNetworkDespawn()
     {
         NetworkManager.Singleton.PrefabHandler.RemoveHandler(_DartPrefab);
         
-        if (IsServer && _DartSpawnChannel != null)
-        {
-            _DartSpawnChannel.OnSpawnRequested -= Server_OnSpawnRequested;
-        }
+        // if (IsServer && _DartSpawnChannel != null)
+        // {
+        //     _DartSpawnChannel.OnSpawnRequested -= Server_OnSpawnRequested;
+        // }
     }
 
 #region 1. Server Logic (request handling & spawn command)
 
-    private void Server_OnSpawnRequested(ulong clientId, Vector3 pos, Quaternion rot, bool isRightHand)
+    public void Server_OnSpawnRequested(ulong clientId, Vector3 pos, Quaternion rot, bool isRightHand)
     {
         if (!IsServer) return; 
 
@@ -66,16 +66,14 @@ public class NetworkDartPoolManager : NetworkBehaviour, INetworkPrefabInstanceHa
 
         netDart.Spawn();
 
-        // 4. 요청한 플레이어의 손에 붙여주기 (Parenting)
-        // (NetworkManager.ConnectedClients[requesterId].PlayerObject... 로 손을 찾아서)
         if (NetworkManager.Singleton.ConnectedClients.TryGetValue(clientId, out var client))
         {
-            // 플레이어 구조에 따라 손 오브젝트를 찾는 로직이 필요할 수 있음
-            // 예시: 일단 플레이어 루트에 붙이거나, 특정 태그/이름으로 손을 찾아서 부착
-            // netDart.TrySetParent(foundHandTransform); 
-            
-            // *주의: 정확한 손 위치에 붙이려면 HandRoleManager가 
-            // 요청 시 손의 NetworkObjectId를 같이 보내주는 것이 더 정확할 수 있습니다.
+           var playerSetup = client.PlayerObject.GetComponent<NetworkVRPlayerDriver>();
+           if (playerSetup != null)
+            {
+                Transform targetHand = isRightHand ? playerSetup.NetRightHandIKTarget : playerSetup.NetLeftHandIKTarget;
+                netDart.TrySetParent(targetHand);
+            }
         }
     }
 
