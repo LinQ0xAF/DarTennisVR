@@ -13,6 +13,7 @@ public class MultiRoomNetController : NetworkBehaviour
         public string gamePlaySceneName;
         public int balloonCount;
         public int timeLimitSeconds;
+        public int setCount;
     }
 
     private static RoomConfig pendingConfig; // 씬 진입 후 초기화용으로 소비할 설정
@@ -37,14 +38,15 @@ public class MultiRoomNetController : NetworkBehaviour
     }
 
     [ClientRpc]
-    void ConfigBroadcastClientRpc(string sceneName, int balloonCount, int timeLimitSeconds)
+    void ConfigBroadcastClientRpc(string sceneName, int balloonCount, int timeLimitSeconds, int setCount)
     {
         // 각 클라이언트에 RoomConfig를 저장한다. 씬 진입 후 MultiGameplayInitializer가 소비한다.
         var cfg = new RoomConfig
         {
             gamePlaySceneName = sceneName,
             balloonCount = balloonCount,
-            timeLimitSeconds = timeLimitSeconds
+            timeLimitSeconds = timeLimitSeconds,
+            setCount = setCount
         };
         SetPendingConfig(cfg);
     }
@@ -75,7 +77,7 @@ public class MultiRoomNetController : NetworkBehaviour
         }
 
         // 1) 룸 설정 전파
-        ConfigBroadcastClientRpc(cfg.gamePlaySceneName, cfg.balloonCount, cfg.timeLimitSeconds);
+        ConfigBroadcastClientRpc(cfg.gamePlaySceneName, cfg.balloonCount, cfg.timeLimitSeconds, cfg.setCount);
 
         // 2) 시작 시각 동기화 전파(서버 시간 사용)
         double now = NetworkManager.ServerTime.Time;

@@ -15288,7 +15288,7 @@ GameObject:
   - component: {fileID: 2051867479}
   - component: {fileID: 2051867480}
   m_Layer: 0
-  m_Name: MultiRoomNetController
+  m_Name: MultiRoomNetController(MultiSceneLoadManager)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

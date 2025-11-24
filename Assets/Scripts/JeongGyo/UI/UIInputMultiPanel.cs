@@ -1,6 +1,8 @@
 using UnityEngine;
 using TMPro;
+using Unity.Netcode;
 using UnityEngine.UI;
+using System.Collections;
 
 public class UIInputMultiPanel : MonoBehaviour
 {
@@ -37,12 +39,47 @@ public class UIInputMultiPanel : MonoBehaviour
 
     public void CreateRoom()
     {
+        var nm = NetworkManager.Singleton;
+        if (nm == null)
+        {
+            Debug.LogError("UIInputMultiPanel: NetworkManager Singleton을 찾을 수 없습니다.", this);
+            return;
+        }
+
         if (roomNetController == null || localMatchmaker == null)
         {
             Debug.LogError("UIInputMultiPanel: roomNetController 또는 localMatchmaker 참조가 없습니다. 인스펙터에서 할당해 주세요.", this);
             return;
         }
-        
+
+        // 첫 번째 진입자는 Host 시도, 실패 시 Client로 자동 전환
+        if (!nm.IsListening && !nm.IsServer && !nm.IsClient)
+        {
+            if (!nm.StartHost())
+            {
+                Debug.LogWarning("[UIInputMultiPanel] StartHost 실패, Client로 재시도", this);
+                if (!nm.StartClient())
+                {
+                    Debug.LogError("UIInputMultiPanel: StartClient까지 실패", this);
+                    return;
+                }
+                Debug.Log("[UIInputMultiPanel] Client로 시작합니다.", this);
+            }
+            else
+            {
+                Debug.Log("[UIInputMultiPanel] Host로 시작합니다.", this);
+            }
+        }
+        else if (!nm.IsServer && !nm.IsClient)
+        {
+            if (!nm.StartClient())
+            {
+                Debug.LogError("UIInputMultiPanel: StartClient 실패", this);
+                return;
+            }
+            Debug.Log("[UIInputMultiPanel] Client로 시작합니다.", this);
+        }
+
         // 입력값 새로 읽기
         setCount = setCountDropdown.value;
         setLabel = setCountDropdown.options.Count > setCount ? setCountDropdown.options[setCount].text : string.Empty;
@@ -53,8 +90,30 @@ public class UIInputMultiPanel : MonoBehaviour
         {   
             gamePlaySceneName = gamePlaySceneName,
             balloonCount = balloonCount,
-            timeLimitSeconds = timeLimit
+            timeLimitSeconds = timeLimit,
+            setCount = setCount
         };
+
+        // LocalMatchmaker가 아직 스폰되지 않았다면 스폰될 때까지 대기 후 Ready 전송
+        if (localMatchmaker != null && !localMatchmaker.IsSpawned)
+        {
+            Debug.LogWarning("UIInputMultiPanel: LocalMatchmaker NetworkObject 스폰 대기 중입니다. 스폰 이후 Ready를 전송합니다.", this);
+            StartCoroutine(WaitAndSendReady(config));
+            return;
+        }
+
+        SendReady(config);
+    }
+
+    void OnDestroy()
+    {
+        createRoomButton.onClick.RemoveListener(CreateRoom);
+    }
+
+    private void SendReady(MultiRoomNetController.RoomConfig config)
+    {
+        // 내 Ready만 취소하고 새 설정으로 등록
+        localMatchmaker.CancelReadyServerRpc();
 
         // 매칭 시스템 호출 전, 설정을 보관해 두고 ReadyServerRpc로 대기열에 등록한다.
         pendingConfig = config;
@@ -62,11 +121,22 @@ public class UIInputMultiPanel : MonoBehaviour
         Debug.Log($"[UIInputMultiPanel] 로컬 매칭 대기 등록 - Scene:{config.gamePlaySceneName}, Balloons:{config.balloonCount}, Time:{config.timeLimitSeconds}s", this);
 
         // 호스트/서버에 Ready 신호 전송(로컬 두 클라 테스트용 임시 매칭)
-        localMatchmaker.ReadyServerRpc(balloonCount, timeLimit, gamePlaySceneName);
+        localMatchmaker.ReadyServerRpc(config.balloonCount, config.timeLimitSeconds, config.gamePlaySceneName, config.setCount);
     }
 
-    void OnDestroy()
+    private IEnumerator WaitAndSendReady(MultiRoomNetController.RoomConfig config)
     {
-        createRoomButton.onClick.RemoveListener(CreateRoom);
+        while (localMatchmaker != null && !localMatchmaker.IsSpawned)
+        {
+            yield return null;
+        }
+
+        if (localMatchmaker == null || !localMatchmaker.IsSpawned)
+        {
+            Debug.LogWarning("UIInputMultiPanel: LocalMatchmaker 스폰을 기다렸지만 실패했습니다.", this);
+            yield break;
+        }
+
+        SendReady(config);
     }
 }

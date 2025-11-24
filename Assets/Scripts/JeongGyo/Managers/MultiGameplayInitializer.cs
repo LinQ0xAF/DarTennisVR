@@ -17,8 +17,8 @@ public class MultiGameplayInitializer : MonoBehaviour
 
     void Start()
     {
-        MultiRoomNetController.RoomConfig cfg = null;
-        MultiRoomNetController.TryConsumePendingConfig(out cfg);
+        MultiRoomNetController.RoomConfig cfg = null; // 설정 객체, MultiRoomNetController.RoomConfig 에 각 클라이언트에 전달된 설정이 이미 저장된 상태
+        MultiRoomNetController.TryConsumePendingConfig(out cfg); // 전달된 설정 가져오기, 필요한 룸에 대한 정보는 cfg에 저장됨
         if (cfg == null)
         {
             // config가 없으면 기본값으로 진행
@@ -28,6 +28,10 @@ public class MultiGameplayInitializer : MonoBehaviour
             TimeLimitSeconds = defaultTimeLimitSeconds;
             Debug.LogWarning("MultiGameplayInitializer: RoomConfig를 받지 못해 기본값으로 진행합니다.", this);
             return;
+        }
+        else
+        {
+            Debug.Log("MultiGameplayInitializer: RoomConfig를 정상적으로 받았습니다.", this);
         }
 
         // 풍선 개수 적용
