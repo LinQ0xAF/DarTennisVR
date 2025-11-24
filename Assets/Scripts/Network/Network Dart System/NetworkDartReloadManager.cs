@@ -85,8 +85,10 @@ public class NetworkDartReloadManager : MonoBehaviour
             yield break;
         }
 
-        foreach (var socket in DartSockets)
+        for (int i = 0; i < DartSockets.Count; i++)
         {
+            var socket = DartSockets[i];
+
             // 소켓이 비어있을 때만 요청
             if (socket != null && !socket.hasSelection)
             {
@@ -95,10 +97,11 @@ public class NetworkDartReloadManager : MonoBehaviour
                     NetworkManager.Singleton.LocalClientId, // 내 ID
                     socket.transform.position,              // 소켓 위치
                     socket.transform.rotation,              // 소켓 회전
-                    IsRightHand                             // 어느 손인지
+                    IsRightHand,                           // 어느 손인지
+                    i                                      // 소켓 인덱스
                 );
 
-                // 서버 처리를 위해 약간의 텀을 둠 (선택사항, 너무 빠른 연속 요청 방지)
+                // 서버 처리를 위해 약간의 텀을 둠 (너무 빠른 연속 요청 방지)
                 yield return null; 
             }
         }
@@ -134,6 +137,20 @@ public class NetworkDartReloadManager : MonoBehaviour
             }
 
             StartCoroutine(ReactivateSocket(socket, SocketReactivationDelay));
+        }
+    }
+
+    public void EquipDartToAssignedSocket(IXRSelectInteractable dartInteractable, int socketIndex)
+    {
+        if (socketIndex >= 0 && socketIndex < DartSockets.Count)
+        {
+            var socket = DartSockets[socketIndex];
+
+            // 해당 소켓이 비어있다면 장착
+            if (socket != null && !socket.hasSelection)
+            {
+                socket.StartManualInteraction(dartInteractable);
+            }
         }
     }
 

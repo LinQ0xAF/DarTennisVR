@@ -21,20 +21,20 @@ public class PlayerNetworkBridge : NetworkBehaviour
         }
     }
 
-    private void Client_OnSpawnRequested(ulong clientId, Vector3 pos, Quaternion rot, bool isRightHand)
+    private void Client_OnSpawnRequested(ulong clientId, Vector3 pos, Quaternion rot, bool isRightHand, int socketIndex)
     {
         if (clientId != OwnerClientId) return;
 
-        RequestReloadServerRpc(pos, rot, isRightHand);
+        RequestReloadServerRpc(pos, rot, isRightHand, socketIndex);
     }
 
     [ServerRpc]
-    private void RequestReloadServerRpc(Vector3 pos, Quaternion rot, bool isRightHand)
+    private void RequestReloadServerRpc(Vector3 pos, Quaternion rot, bool isRightHand, int socketIndex)
     {
         var dartPoolManager = FindFirstObjectByType<NetworkDartPoolManager>();
         if (dartPoolManager != null)
         {
-            dartPoolManager.Server_OnSpawnRequested(OwnerClientId, pos, rot, isRightHand);
+            dartPoolManager.Server_OnSpawnRequested(OwnerClientId, pos, rot, isRightHand, socketIndex);
         }
     }
 }

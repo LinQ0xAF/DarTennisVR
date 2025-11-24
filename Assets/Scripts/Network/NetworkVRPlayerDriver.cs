@@ -28,7 +28,7 @@ public class NetworkVRPlayerDriver : NetworkBehaviour
         if (IsOwner)
         {
             // Find XR Origin in the scene
-            _LocalXROrigin = FindFirstObjectByType<Unity.XR.CoreUtils.XROrigin>();
+            _LocalXROrigin = FindFirstObjectByType<XROrigin>();
             if (_LocalXROrigin != null)
             {
                 _LocalRigRefs = _LocalXROrigin.GetComponent<LocalVRRigRefs>();
