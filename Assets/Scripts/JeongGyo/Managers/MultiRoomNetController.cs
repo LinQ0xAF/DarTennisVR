@@ -17,7 +17,9 @@ public class MultiRoomNetController : NetworkBehaviour
     }
 
     private static RoomConfig pendingConfig; // 씬 진입 후 초기화용으로 소비할 설정
-    private float serverMatchStartTime;
+    private static float pendingServerMatchStartTime; // 씬 진입 후 초기화용으로 소비할 서버 시작 시각
+    private static bool hasPendingServerMatchStartTime; // 시작 시각이 유효한지 여부
+    private float serverMatchStartTime; // 서버가 브로드캐스트한 매치 시작 시각
 
     public static void SetPendingConfig(RoomConfig cfg)
     {
@@ -34,6 +36,19 @@ public class MultiRoomNetController : NetworkBehaviour
 
         cfg = pendingConfig;
         pendingConfig = null;
+        return true;
+    }
+
+    public static bool TryConsumePendingStartTime(out float startTime) // 서버가 브로드캐스트한 매치 시작 시각 가져오기
+    {
+        if (!hasPendingServerMatchStartTime)
+        {
+            startTime = 0f;
+            return false;
+        }
+
+        startTime = pendingServerMatchStartTime;
+        hasPendingServerMatchStartTime = false;
         return true;
     }
 
@@ -56,6 +71,8 @@ public class MultiRoomNetController : NetworkBehaviour
     {
         // 타이머 동기화용 시작 시각을 전달. 실제 타이머에서 NetworkManager.ServerTime과 비교해 사용.
         serverMatchStartTime = (float)startServerTime;
+        pendingServerMatchStartTime = serverMatchStartTime;
+        hasPendingServerMatchStartTime = true;
     }
 
     /// <summary>
@@ -82,6 +99,8 @@ public class MultiRoomNetController : NetworkBehaviour
         // 2) 시작 시각 동기화 전파(서버 시간 사용)
         double now = NetworkManager.ServerTime.Time;
         serverMatchStartTime = (float)now;
+        pendingServerMatchStartTime = serverMatchStartTime;
+        hasPendingServerMatchStartTime = true;
         MatchStartTimeClientRpc(now);
 
         // 3) 네트워크 씬 로드(모든 클라가 따라옴)

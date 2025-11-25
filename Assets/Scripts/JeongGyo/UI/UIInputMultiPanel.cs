@@ -14,7 +14,9 @@ public class UIInputMultiPanel : MonoBehaviour
     [SerializeField] private MultiRoomNetController roomNetController; // 서버/호스트에 붙은 컨트롤러
     [SerializeField] private LocalMatchmaker localMatchmaker; // 임시 로컬 매칭 컨트롤러
     [SerializeField] private Button createRoomButton;
-    
+    [Header("Set count mapping (dropdown index -> set count)")]
+    [SerializeField] private int[] setCountValues = new int[] { 1, 3, 5 }; // Best-of-one, Best-of-three, Best-of-five 순서
+
     int setCount; // 맵 세트 개수
     string setLabel; // 맵 세트 라벨
     int balloonCount; // 풍선 개수
@@ -22,8 +24,8 @@ public class UIInputMultiPanel : MonoBehaviour
   
     void Start()
     {
-        setCount = setCountDropdown.value;
-        setLabel = setCountDropdown.options.Count > setCount ? setCountDropdown.options[setCount].text : string.Empty;// 맵 세트 라벨
+        setCount = ResolveSetCount(setCountDropdown.value);
+        setLabel = setCountDropdown.options.Count > setCountDropdown.value ? setCountDropdown.options[setCountDropdown.value].text : string.Empty;// 맵 세트 라벨
         balloonCount = (int)balloonCountSlider.value;
         timeLimit = (int)(timeLimitSlider.value * timeStepSeconds);
         
@@ -81,8 +83,8 @@ public class UIInputMultiPanel : MonoBehaviour
         }
 
         // 입력값 새로 읽기
-        setCount = setCountDropdown.value;
-        setLabel = setCountDropdown.options.Count > setCount ? setCountDropdown.options[setCount].text : string.Empty;
+        setCount = ResolveSetCount(setCountDropdown.value);
+        setLabel = setCountDropdown.options.Count > setCountDropdown.value ? setCountDropdown.options[setCountDropdown.value].text : string.Empty;
         balloonCount = (int)balloonCountSlider.value;
         timeLimit = (int)(timeLimitSlider.value * timeStepSeconds);
       
@@ -138,5 +140,14 @@ public class UIInputMultiPanel : MonoBehaviour
         }
 
         SendReady(config);
+    }
+
+    private int ResolveSetCount(int dropdownIndex)
+    {
+        if (setCountValues != null && dropdownIndex >= 0 && dropdownIndex < setCountValues.Length)
+            return setCountValues[dropdownIndex];
+
+        // fallback: 드롭다운 인덱스+1을 사용(최소 1세트)
+        return Mathf.Max(1, dropdownIndex + 1);
     }
 }

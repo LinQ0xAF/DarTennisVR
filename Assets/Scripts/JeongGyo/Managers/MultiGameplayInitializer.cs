@@ -1,3 +1,4 @@
+using Unity.Netcode;
 using UnityEngine;
 
 /// <summary>
@@ -12,13 +13,29 @@ public class MultiGameplayInitializer : MonoBehaviour
     [Header("Fallback defaults")]
     [SerializeField, Range(1, 5)] private int defaultBalloonCount = 1; // config를 못 받았을 때 사용할 기본 풍선 수
     [SerializeField] private int defaultTimeLimitSeconds = 60; // config를 못 받았을 때 사용할 기본 제한 시간
+    [SerializeField, Min(1)] private int defaultSetCount = 1; // config를 못 받았을 때 사용할 기본 세트 수
 
     public int TimeLimitSeconds { get; private set; } // 다른 스크립트에서 참조할 수 있도록 노출
+    public int SetCount { get; private set; } = 1; // 설정된 세트 수(게임매니저 등에서 참조)
+    public float ServerMatchStartTime { get; private set; } // 서버 기준 매치 시작 시각
 
     void Start()
     {
         MultiRoomNetController.RoomConfig cfg = null; // 설정 객체, MultiRoomNetController.RoomConfig 에 각 클라이언트에 전달된 설정이 이미 저장된 상태
         MultiRoomNetController.TryConsumePendingConfig(out cfg); // 전달된 설정 가져오기, 필요한 룸에 대한 정보는 cfg에 저장됨
+        if (balloonManager == null)
+            balloonManager = FindAnyObjectByType<BalloonManager>();
+
+        // 서버가 브로드캐스트한 매치 시작 시각 저장. 이후에는 NetworkManager.ServerTime으로 흐르는 값을 계속 사용할 수 있다.
+        if (!MultiRoomNetController.TryConsumePendingStartTime(out var startTime))
+        {
+            // 못 받았다면 현재 서버 시간을 fallback으로 사용(로컬 타이머와 약간 오차가 날 수 있음)
+            startTime = NetworkManager.Singleton != null ? (float)NetworkManager.Singleton.ServerTime.Time : 0f;
+            Debug.LogWarning("MultiGameplayInitializer: StartTime을 받지 못해 현재 ServerTime으로 대체합니다.", this);
+        }
+
+        ServerMatchStartTime = startTime;
+
         if (cfg == null)
         {
             // config가 없으면 기본값으로 진행
@@ -26,6 +43,7 @@ public class MultiGameplayInitializer : MonoBehaviour
                 balloonManager.BalloonNumber = defaultBalloonCount;
 
             TimeLimitSeconds = defaultTimeLimitSeconds;
+            SetCount = defaultSetCount;
             Debug.LogWarning("MultiGameplayInitializer: RoomConfig를 받지 못해 기본값으로 진행합니다.", this);
             return;
         }
@@ -42,5 +60,25 @@ public class MultiGameplayInitializer : MonoBehaviour
 
         // 제한 시간 저장(실제 타이머 적용은 다른 타이머/게임매니저가 이 값을 참조하도록 연결)
         TimeLimitSeconds = cfg.timeLimitSeconds;
+        SetCount = cfg.setCount > 0 ? cfg.setCount : defaultSetCount;
+    }
+
+    /// <summary>
+    /// 서버 기준 흐른 시간(초)을 반환. NetworkManager.ServerTime은 자동 동기화된다.
+    /// </summary>
+    public float GetElapsedServerSeconds()
+    {
+        if (NetworkManager.Singleton == null)
+            return 0f;
+
+        return (float)(NetworkManager.Singleton.ServerTime.Time - ServerMatchStartTime);
+    }
+
+    /// <summary>
+    /// 서버에서 세트 시작 시각을 재동기화할 때 사용(다음 세트 시작 시 등).
+    /// </summary>
+    public void SetServerMatchStartTime(float startTime)
+    {
+        ServerMatchStartTime = startTime;
     }
 }

@@ -81,6 +81,7 @@ public class SpawnManager : NetworkBehaviour
 
         // 스폰 포인트 수(2)에 맞춰 모듈러 적용
         playerIndex = playerIndex % spawnPoints.Length;
+        bool shouldFlipUi = (playerIndex % 2) == 1; // 2P 이상은 UI 반전
 
         Transform spawnPoint = spawnPoints[playerIndex];
 
@@ -92,6 +93,7 @@ public class SpawnManager : NetworkBehaviour
         };
 
         TeleportClient_ClientRpc(spawnPoint.position, spawnPoint.rotation, clientRpcParams);
+        SetPlayerUiOrientation_ClientRpc(shouldFlipUi, clientRpcParams);
 
         // 3. [서버] 해당 위치에 NetworkPlayer(아바타) 생성 및 소유권 부여
         // (아바타는 생성되자마자 주인의 XR Origin 위치로 텔레포트 될 것입니다)
@@ -116,6 +118,16 @@ public class SpawnManager : NetworkBehaviour
             
             // (선택) 카메라 Y축 회전 보정 로직이 필요할 수 있음 (MatchOrientation)
             Debug.Log($"[GameManager] Spawned at {pos}");
+        }
+    }
+
+    [ClientRpc]
+    private void SetPlayerUiOrientation_ClientRpc(bool flipForThisClient, ClientRpcParams rpcParams = default)
+    {
+        var flipper = FindFirstObjectByType<UIOrientationFlipper>();
+        if (flipper != null)
+        {
+            flipper.SetFlipped(flipForThisClient);
         }
     }
 }
