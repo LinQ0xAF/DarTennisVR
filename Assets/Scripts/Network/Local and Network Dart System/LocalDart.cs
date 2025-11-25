@@ -91,7 +91,7 @@ public class LocalDart : MonoBehaviour
         }
     }
 
-    // [추가] 로컬 충돌 처리: 벽에 닿으면 즉시 반납
+    // 로컬 충돌 처리: 벽에 닿으면 즉시 반납
     private void OnCollisionEnter(Collision collision)
     {
         // 이미 잡혀있거나 키네마틱이면 무시

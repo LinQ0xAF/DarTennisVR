@@ -1,4 +1,5 @@
 using System.Collections;
+using NUnit.Framework;
 using Unity.Netcode;
 using UnityEngine;
 
@@ -7,6 +8,7 @@ public class NetworkDart : NetworkBehaviour
     [SerializeField] private DartSettingsSO _settings;
     private Rigidbody _rb;
     private MeshRenderer[] _renderers;
+    private bool _HasHit = false; // 중복 충돌 방지용 변수
 
     private void Awake()
     {
@@ -16,12 +18,13 @@ public class NetworkDart : NetworkBehaviour
 
     public override void OnNetworkSpawn()
     {
-        // [핵심] 클라이언트(Remote)의 물리는 무조건 끕니다.
+        // 클라이언트(Remote)의 물리는 무조건 끕니다.
         // 위치는 오직 NetworkTransform에 의해서만 움직여야 합니다.
         if (!IsServer)
         {
             _rb.isKinematic = true; 
         }
+        _HasHit = false;
     }
 
     // [Server Only] 서버가 직접 호출하는 초기화 함수
@@ -61,7 +64,28 @@ public class NetworkDart : NetworkBehaviour
         foreach (var r in _renderers) r.enabled = show;
     }
 
-    // 3. 충돌 처리 (Server Only)
+    // 풍선 충돌 처리 (Server Only)
+    private void OnTriggerEnter(Collider other)
+    {
+        if (!IsServer || _HasHit) return; // 서버만 처리 & 이미 맞았으면 무시
+
+        // 태그 확인
+        if (other.CompareTag("Balloons")) 
+        {
+            // Network Balloon 스크립트 찾기
+            NetworkBalloon collisionBalloon = other.gameObject.GetComponentInParent<NetworkBalloon>();
+
+            if (collisionBalloon != null)
+            {
+                _HasHit = true; // 중복 방지 (MyTargetObjTag = empty 역할)
+
+                // 풍선 로직 호출 (서버 -> 매니저 -> ClientRpc)
+                collisionBalloon.OnHitByDart();
+            }
+        }
+    }
+
+    // 환경 충돌 처리 (Server Only)
     private void OnCollisionEnter(Collision collision)
     {
         if (!IsServer) return; // 오직 서버만 충돌 감지
