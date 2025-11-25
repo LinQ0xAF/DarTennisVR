@@ -21,8 +21,9 @@ public class MultiGameplayInitializer : MonoBehaviour
 
     void Start()
     {
-        MultiRoomNetController.RoomConfig cfg = null; // 설정 객체, MultiRoomNetController.RoomConfig 에 각 클라이언트에 전달된 설정이 이미 저장된 상태
+        RoomConfigDto cfg = null; // 설정 객체, RoomConfigDto에 각 클라이언트에 전달된 설정이 이미 저장된 상태
         MultiRoomNetController.TryConsumePendingConfig(out cfg); // 전달된 설정 가져오기, 필요한 룸에 대한 정보는 cfg에 저장됨
+        
         if (balloonManager == null)
             balloonManager = FindAnyObjectByType<BalloonManager>();
 

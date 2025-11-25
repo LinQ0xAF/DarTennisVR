@@ -7,26 +7,23 @@ using UnityEngine;
 /// </summary>
 public class MultiRoomNetController : NetworkBehaviour
 {
-    [System.Serializable]
-    public class RoomConfig
-    {
-        public string gamePlaySceneName;
-        public int balloonCount;
-        public int timeLimitSeconds;
-        public int setCount;
-    }
-
-    private static RoomConfig pendingConfig; // 씬 진입 후 초기화용으로 소비할 설정
+    private static RoomConfigDto pendingConfig; // 씬 진입 후 초기화용으로 소비할 설정
     private static float pendingServerMatchStartTime; // 씬 진입 후 초기화용으로 소비할 서버 시작 시각
     private static bool hasPendingServerMatchStartTime; // 시작 시각이 유효한지 여부
     private float serverMatchStartTime; // 서버가 브로드캐스트한 매치 시작 시각
 
-    public static void SetPendingConfig(RoomConfig cfg)
+    private void SetStartTime(float startTime)
+    {
+        serverMatchStartTime = startTime;
+        pendingServerMatchStartTime = startTime;
+        hasPendingServerMatchStartTime = true;
+    }
+
+    public static void SetPendingConfig(RoomConfigDto cfg)
     {
         pendingConfig = cfg;
     }
-
-    public static bool TryConsumePendingConfig(out RoomConfig cfg)
+    public static bool TryConsumePendingConfig(out RoomConfigDto cfg)
     {
         if (pendingConfig == null)
         {
@@ -38,25 +35,11 @@ public class MultiRoomNetController : NetworkBehaviour
         pendingConfig = null;
         return true;
     }
-
-    public static bool TryConsumePendingStartTime(out float startTime) // 서버가 브로드캐스트한 매치 시작 시각 가져오기
-    {
-        if (!hasPendingServerMatchStartTime)
-        {
-            startTime = 0f;
-            return false;
-        }
-
-        startTime = pendingServerMatchStartTime;
-        hasPendingServerMatchStartTime = false;
-        return true;
-    }
-
     [ClientRpc]
     void ConfigBroadcastClientRpc(string sceneName, int balloonCount, int timeLimitSeconds, int setCount)
     {
         // 각 클라이언트에 RoomConfig를 저장한다. 씬 진입 후 MultiGameplayInitializer가 소비한다.
-        var cfg = new RoomConfig
+        var cfg = new RoomConfigDto
         {
             gamePlaySceneName = sceneName,
             balloonCount = balloonCount,
@@ -70,16 +53,25 @@ public class MultiRoomNetController : NetworkBehaviour
     void MatchStartTimeClientRpc(double startServerTime)
     {
         // 타이머 동기화용 시작 시각을 전달. 실제 타이머에서 NetworkManager.ServerTime과 비교해 사용.
-        serverMatchStartTime = (float)startServerTime;
-        pendingServerMatchStartTime = serverMatchStartTime;
-        hasPendingServerMatchStartTime = true;
+        SetStartTime((float)startServerTime);
     }
+    public static bool TryConsumePendingStartTime(out float startTime) // 서버가 브로드캐스트한 매치 시작 시각 가져오기
+    {
+        if (!hasPendingServerMatchStartTime)
+        {
+            startTime = 0f;
+            return false;
+        }
 
+        startTime = pendingServerMatchStartTime;
+        hasPendingServerMatchStartTime = false;
+        return true;
+    }
     /// <summary>
     /// 서버가 호출: 설정 전파 후 네트워크 씬 로드.
     /// 매칭이 완료되어 두 클라이언트가 준비된 상태에서만 호출한다.
     /// </summary>
-    public void StartMatch(RoomConfig cfg)
+    public void StartMatch(RoomConfigDto cfg)
     {
         if (!IsServer)
         {
@@ -98,9 +90,7 @@ public class MultiRoomNetController : NetworkBehaviour
 
         // 2) 시작 시각 동기화 전파(서버 시간 사용)
         double now = NetworkManager.ServerTime.Time;
-        serverMatchStartTime = (float)now;
-        pendingServerMatchStartTime = serverMatchStartTime;
-        hasPendingServerMatchStartTime = true;
+        SetStartTime((float)now);
         MatchStartTimeClientRpc(now);
 
         // 3) 네트워크 씬 로드(모든 클라가 따라옴)

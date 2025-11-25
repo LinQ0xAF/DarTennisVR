@@ -16,8 +16,7 @@ public class GameSceneLoadManager : MonoBehaviour
 
     private static RoomConfig pendingConfig;
 
-   
-    public static bool TryConsumePendingConfig(out RoomConfig config) // 대기중인 RoomConfig 가져오기
+       public static bool TryConsumePendingConfig(out RoomConfig config) // 대기중인 RoomConfig 가져오기
     {
         if (pendingConfig == null)
         {
