@@ -3,29 +3,33 @@ using UnityEngine;
 
 public class PlayerDartState : NetworkBehaviour
 {
-    // 손에 다트 들고 있는지
-    public NetworkVariable<bool> IsHoldingDart = new NetworkVariable<bool>(false, 
-        NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
+    public NetworkVariable<int> OffHandDartCount = new NetworkVariable<int>(0, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
+    public NetworkVariable<bool> IsHoldingDart = new NetworkVariable<bool>(false, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
 
     [Header("Dummy Visuals")]
-    public GameObject HandDartMesh; // 껍데기 모델
+    public GameObject[] OffHandDartMeshes;
+    public GameObject HandDartMesh;
 
     public override void OnNetworkSpawn()
     {
-        IsHoldingDart.OnValueChanged += (prev, curr) => UpdateVisuals();
+        OffHandDartCount.OnValueChanged += (p, c) => UpdateVisuals();
+        IsHoldingDart.OnValueChanged += (p, c) => UpdateVisuals();
         UpdateVisuals();
     }
 
     private void UpdateVisuals()
     {
-        // 나는 내 XRI 다트를 보니까 껍데기는 무조건 숨김
-        if (IsOwner)
+        if (IsOwner) // 나는 로컬 XRI를 보니까 껍데기는 끔
         {
-            if(HandDartMesh) HandDartMesh.SetActive(false);
+            foreach (var m in OffHandDartMeshes) m.SetActive(false);
+            if (HandDartMesh) HandDartMesh.SetActive(false);
             return;
         }
 
-        // 남들은 변수 값에 따라 껍데기 On/Off
+        // 상대방 처리
+        for (int i = 0; i < OffHandDartMeshes.Length; i++) 
+            OffHandDartMeshes[i].SetActive(i < OffHandDartCount.Value);
+            
         if (HandDartMesh) HandDartMesh.SetActive(IsHoldingDart.Value);
     }
 }

@@ -40,9 +40,13 @@ public class NetworkDartPoolManager : NetworkBehaviour, INetworkPrefabInstanceHa
         netDart.transform.rotation = rot;
         netDart.Spawn(); // 클라이언트들에게 스폰 명령
 
-        // 물리 초기화 명령 (던진 사람 ID 전달)
+        // 서버에서 직접 물리 초기화 함수 호출 (NetworkTransform이 위치를 동기화하므로, ClientRpc로 물리 값을 보낼 필요가 없음)
         var script = netDart.GetComponent<NetworkDart>();
-        if (script != null) script.InitializeClientRpc(throwerId, vel, angVel);
+        if (script != null)
+        {
+            // NetworkDart에 새로 만들 'Server_Initialize' 함수를 호출
+            script.Server_Initialize(throwerId, vel, angVel);
+        }
     }
 
     // Interface

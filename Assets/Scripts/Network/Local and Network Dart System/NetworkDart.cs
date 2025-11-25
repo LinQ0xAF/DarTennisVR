@@ -14,19 +14,46 @@ public class NetworkDart : NetworkBehaviour
         _renderers = GetComponentsInChildren<MeshRenderer>();
     }
 
-    [ClientRpc]
-    public void InitializeClientRpc(ulong throwerId, Vector3 vel, Vector3 angVel)
+    public override void OnNetworkSpawn()
     {
-        // 1. 물리 시작 (Fire-and-Forget)
+        // [핵심] 클라이언트(Remote)의 물리는 무조건 끕니다.
+        // 위치는 오직 NetworkTransform에 의해서만 움직여야 합니다.
+        if (!IsServer)
+        {
+            _rb.isKinematic = true; 
+        }
+    }
+
+    // [Server Only] 서버가 직접 호출하는 초기화 함수
+    public void Server_Initialize(ulong throwerId, Vector3 velocity, Vector3 angularVel)
+    {
+        // 부모 해제
+        GetComponent<NetworkObject>().TryRemoveParent();
+
+        // [서버에서만 물리 시작]
         _rb.isKinematic = false;
         _rb.useGravity = true;
-        _rb.linearVelocity = vel;
-        _rb.angularVelocity = angVel;
+        _rb.linearVelocity = velocity;
+        _rb.angularVelocity = angularVel;
 
-        // 2. [최적화 핵심] 던진 본인은 이미 LocalDart를 보고 있으므로,
-        //    이 네트워크 다트는 숨겨서 중복 렌더링 방지.
-        bool isMine = (NetworkManager.Singleton.LocalClientId == throwerId);
-        SetVisuals(!isMine);
+        // [중요] 던진 본인(Owner)에게 "너는 로컬 다트 보고 있으니까 이건 숨겨"라고 알려줌
+        HideVisualsClientRpc(throwerId);
+    }
+
+    // 2. 시각 처리 (본인 숨기기용)
+    [ClientRpc]
+    private void HideVisualsClientRpc(ulong throwerId)
+    {
+        // 던진 당사자라면, 네트워크 다트를 잠시 숨깁니다. (본인은 부드러운 LocalDart를 보고 있으니까)
+        if (NetworkManager.Singleton.LocalClientId == throwerId)
+        {
+            SetVisuals(false);
+        }
+        else
+        {
+            // 남들은 보여야 함
+            SetVisuals(true);
+        }
     }
 
     private void SetVisuals(bool show)
@@ -34,30 +61,35 @@ public class NetworkDart : NetworkBehaviour
         foreach (var r in _renderers) r.enabled = show;
     }
 
-    // [Server Only] 충돌 처리
+    // 3. 충돌 처리 (Server Only)
     private void OnCollisionEnter(Collision collision)
     {
-        if (!IsServer) return;
+        if (!IsServer) return; // 오직 서버만 충돌 감지
 
-        // Environment 레이어 체크
         if (collision.gameObject.CompareTag("Environment"))
         {
-            _rb.isKinematic = true; // 멈춤
+            // 서버에서 멈추면 NetworkTransform을 통해 클라이언트들도 멈춘 위치로 동기화됨
+            _rb.isKinematic = true; 
+            _rb.useGravity = false;
+            _rb.linearVelocity = Vector3.zero;
+            _rb.angularVelocity = Vector3.zero;
+
             SyncHitClientRpc(transform.position, transform.rotation);
             StartCoroutine(DespawnDelay());
         }
-        // (풍선 충돌 로직 추가 가능)
     }
 
     [ClientRpc]
     private void SyncHitClientRpc(Vector3 pos, Quaternion rot)
     {
-        if (IsServer) return;
-        // 위치 보정 (서버와 동일하게)
+        // 위치 보정
         transform.position = pos;
         transform.rotation = rot;
         _rb.isKinematic = true;
-        // 박히면 다시 보이게 할지 선택 (SetVisuals(true))
+        _rb.useGravity = false;
+
+        // 충돌한 순간에는 모든 클라이언트(본인 포함)에게 네트워크 다트를 보여줍니다.
+        SetVisuals(true);
     }
 
     private IEnumerator DespawnDelay()

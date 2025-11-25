@@ -9,13 +9,12 @@ public class LocalDartPool : MonoBehaviour
     public int DefaultCapacity = 10;
     public int MaxPoolSize = 20;
 
-    // 외부(DartHandler_Net)에서 접근할 수 있는 프로퍼티
-    public IObjectPool<GameObject> Pool { get; private set; }
+    private IObjectPool<GameObject> _Pool;
 
     private void Awake()
     {
         // 풀 초기화
-        Pool = new ObjectPool<GameObject>(
+        _Pool = new ObjectPool<GameObject>(
             createFunc: CreateDart,
             actionOnGet: OnGetDart,
             actionOnRelease: OnReleaseDart,
@@ -26,13 +25,27 @@ public class LocalDartPool : MonoBehaviour
         );
     }
 
+    // --- Public API ---
+    public GameObject GetDart(Vector3 position, Quaternion rotation)
+    {
+        GameObject dart = _Pool.Get();
+        dart.transform.SetPositionAndRotation(position, rotation);
+        return dart;
+    }
+
+    public void ReleaseDart(GameObject dart)
+    {
+        _Pool.Release(dart);
+    }
+
     // --- 풀링 콜백 함수들 ---
 
     private GameObject CreateDart()
     {
         // 1. 생성
         GameObject dart = Instantiate(LocalDartPrefab);
-        // (필요하다면 여기서 기본 컴포넌트 캐싱 등을 수행할 수 있음)
+        // 매니저 할당
+        dart.GetComponent<LocalDart>().SetPoolManager(this);
         return dart;
     }
 

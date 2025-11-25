@@ -1184,7 +1184,7 @@ MonoBehaviour:
   m_MaxConnectAttempts: 60
   m_DisconnectTimeoutMS: 30000
   ConnectionData:
-    Address: 192.168.1.39
+    Address: 127.0.0.1
     Port: 7777
     ServerListenAddress: 0.0.0.0
   DebugSimulator:
@@ -1532,24 +1532,16 @@ PrefabInstance:
     m_TransformParent: {fileID: 0}
     m_Modifications:
     - target: {fileID: 937682408359043588, guid: 9bef222c034a4ea4ba20f6f1efaf2a38, type: 3}
-      propertyPath: _SpawnChannel
+      propertyPath: LocalPool
       value: 
-      objectReference: {fileID: 11400000, guid: d4964234da067244d829abe032fb49d6, type: 2}
+      objectReference: {fileID: 3945910410622829706}
     - target: {fileID: 2605426421512259927, guid: 9bef222c034a4ea4ba20f6f1efaf2a38, type: 3}
-      propertyPath: _SpawnChannel
+      propertyPath: LocalPool
       value: 
-      objectReference: {fileID: 11400000, guid: d4964234da067244d829abe032fb49d6, type: 2}
+      objectReference: {fileID: 3945910410622829706}
     - target: {fileID: 4564411688338637755, guid: 9bef222c034a4ea4ba20f6f1efaf2a38, type: 3}
       propertyPath: m_Name
       value: XR Network Origin (XR Rig)
-      objectReference: {fileID: 0}
-    - target: {fileID: 7887318542385251299, guid: 9bef222c034a4ea4ba20f6f1efaf2a38, type: 3}
-      propertyPath: _LeftHandDartChargingHandler
-      value: 
-      objectReference: {fileID: 0}
-    - target: {fileID: 7887318542385251299, guid: 9bef222c034a4ea4ba20f6f1efaf2a38, type: 3}
-      propertyPath: _RightHandDartChargingHandler
-      value: 
       objectReference: {fileID: 0}
     - target: {fileID: 8031568456917811543, guid: 9bef222c034a4ea4ba20f6f1efaf2a38, type: 3}
       propertyPath: m_LocalPosition.x
@@ -1596,6 +1588,17 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 9bef222c034a4ea4ba20f6f1efaf2a38, type: 3}
+--- !u!114 &3945910410622829706 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 4177987290737189863, guid: 9bef222c034a4ea4ba20f6f1efaf2a38, type: 3}
+  m_PrefabInstance: {fileID: 3945910410622829704}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e2ea61892a03e6340b1b6a2d12dc5b37, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0

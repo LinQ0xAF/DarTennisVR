@@ -10,7 +10,7 @@ GameObject:
   m_Component:
   - component: {fileID: 5803474553863148088}
   - component: {fileID: 3778788004030049286}
-  - component: {fileID: 3720003983541604429}
+  - component: {fileID: 1528762504696450557}
   m_Layer: 0
   m_Name: Network Dart Pool Manager
   m_TagString: Untagged
@@ -45,20 +45,20 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d5a57f767e5e46a458fc5d3c628d0cbb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  GlobalObjectIdHash: 3344582831
-  InScenePlacedSourceGlobalObjectIdHash: 0
+  GlobalObjectIdHash: 2536119401
+  InScenePlacedSourceGlobalObjectIdHash: 3344582831
   DeferredDespawnTick: 0
   Ownership: 1
   AlwaysReplicateAsRoot: 0
   SynchronizeTransform: 1
   ActiveSceneSynchronization: 0
-  SceneMigrationSynchronization: 1
+  SceneMigrationSynchronization: 0
   SpawnWithObservers: 1
   DontDestroyWithOwner: 0
   AutoObjectParentSync: 1
   SyncOwnerTransformWhenParented: 1
   AllowOwnerToParent: 0
---- !u!114 &3720003983541604429
+--- !u!114 &1528762504696450557
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -67,11 +67,8 @@ MonoBehaviour:
   m_GameObject: {fileID: 2719206324410381326}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: b46e2763e6b5c8d4391c7e4023ba472a, type: 3}
+  m_Script: {fileID: 11500000, guid: f5084d1384955cc43b3d88fb1c641e1d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   ShowTopMostFoldoutHeaderGroup: 1
-  _DartPrefab: {fileID: 6891486028327192877, guid: aa85cadd78bb53441a667ba62822b710, type: 3}
-  DefaultCapacity: 20
-  MaxPoolSize: 60
-  _DartSpawnChannel: {fileID: 11400000, guid: d4964234da067244d829abe032fb49d6, type: 2}
+  NetworkDartPrefab: {fileID: 6891486028327192877, guid: aa85cadd78bb53441a667ba62822b710, type: 3}
