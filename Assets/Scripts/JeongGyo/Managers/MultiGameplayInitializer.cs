@@ -17,8 +17,10 @@ public class MultiGameplayInitializer : MonoBehaviour
 
     public int TimeLimitSeconds { get; private set; } // 다른 스크립트에서 참조할 수 있도록 노출
     public int SetCount { get; private set; } = 1; // 설정된 세트 수(게임매니저 등에서 참조)
+    public int BalloonCount { get; private set; } = 1; // 설정된 풍선 수
     public float ServerMatchStartTime { get; private set; } // 서버 기준 매치 시작 시각
     public NetworkBalloonManager LocalBalloonManager => balloonManager; // 로컬 아바타의 풍선 매니저 참조
+    public bool IsInitialized { get; private set; } = false; // 초기화 완료 여부
 
     void Start()
     {  
@@ -41,6 +43,7 @@ public class MultiGameplayInitializer : MonoBehaviour
         if (cfg == null)
         {
             // config가 없으면 기본값으로 진행
+            BalloonCount = defaultBalloonCount;
             if (balloonManager != null)
             {
                 balloonManager.MaxBalloonCount = defaultBalloonCount;
@@ -50,24 +53,25 @@ public class MultiGameplayInitializer : MonoBehaviour
             TimeLimitSeconds = defaultTimeLimitSeconds;
             SetCount = defaultSetCount;
             Debug.LogWarning("MultiGameplayInitializer: RoomConfig를 받지 못해 기본값으로 진행합니다.", this);
-            return;
         }
         else
         {
             Debug.Log("MultiGameplayInitializer: RoomConfig를 정상적으로 받았습니다.", this);
-        }
+            // 풍선 개수 적용
+            BalloonCount = cfg.balloonCount;
+            if (balloonManager != null)
+            {
+                balloonManager.MaxBalloonCount = cfg.balloonCount;
+                Debug.Log("받아온 자기 자신의 값으로 벌룬메니저 세팅 완료.");
+                ActivateBalloonManager();
+            }
 
-        // 풍선 개수 적용
-        if (balloonManager != null)
-        {
-            balloonManager.MaxBalloonCount = cfg.balloonCount;
-            Debug.Log("받아온 자기 자신의 값으로 벌룬메니저 세팅 완료.");
-            ActivateBalloonManager();
+            // 제한 시간 저장(실제 타이머 적용은 다른 타이머/게임매니저가 이 값을 참조하도록 연결)
+            TimeLimitSeconds = cfg.timeLimitSeconds;
+            SetCount = cfg.setCount > 0 ? cfg.setCount : defaultSetCount;
         }
-
-        // 제한 시간 저장(실제 타이머 적용은 다른 타이머/게임매니저가 이 값을 참조하도록 연결)
-        TimeLimitSeconds = cfg.timeLimitSeconds;
-        SetCount = cfg.setCount > 0 ? cfg.setCount : defaultSetCount;
+        
+        IsInitialized = true;
     }
 
     /// <summary>

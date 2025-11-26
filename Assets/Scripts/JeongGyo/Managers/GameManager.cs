@@ -38,6 +38,7 @@ public class GameManager : NetworkBehaviour
     private int currentSetIndex = 1;
     private ulong? lastSetWinnerClientId;
     private readonly Dictionary<ulong, int> balloonsRemaining = new Dictionary<ulong, int>(); // 서버에서만 사용
+    private List<NetworkBalloonManager> allBalloonManagers = new List<NetworkBalloonManager>(); // [Server] 캐싱된 풍선 매니저 목록
     private float currentSetStartTime; // 서버 기준 세트 시작 시각
 
     /// <summary>세트 결과를 알리는 이벤트(승자 clientId, 무승부면 null).</summary>
@@ -48,7 +49,7 @@ public class GameManager : NetworkBehaviour
     void Awake()
     {
         if (gameplayInitializer == null)
-            gameplayInitializer = FindObjectOfType<MultiGameplayInitializer>();
+            gameplayInitializer = FindFirstObjectByType<MultiGameplayInitializer>();
 
         if (balloonManager == null && gameplayInitializer != null)
             balloonManager = gameplayInitializer.LocalBalloonManager;
@@ -61,13 +62,11 @@ public class GameManager : NetworkBehaviour
     {
         if (balloonHitChannel != null)
             balloonHitChannel.OnPlayerHit += HandleBalloonHitFromChannel;
-
-        // balloonManager 이벤트 사용 시 복원
-        // if (balloonManager != null)
-        // {
-        //     balloonManager.OnAllBalloonsCleared += HandleAllBalloonsCleared;
-        //     balloonManager.OnBalloonPopRequest += HandleBalloonPopRequest;
-        // }
+        
+        if (NetworkManager.Singleton != null)
+        {
+            NetworkManager.Singleton.OnClientConnectedCallback += OnClientConnected;
+        }
     }
 
     void OnDisable()
@@ -75,25 +74,54 @@ public class GameManager : NetworkBehaviour
         if (balloonHitChannel != null)
             balloonHitChannel.OnPlayerHit -= HandleBalloonHitFromChannel;
 
-        // balloonManager 이벤트 사용 시 복원
-        // if (balloonManager != null)
-        // {
-        //     balloonManager.OnAllBalloonsCleared -= HandleAllBalloonsCleared;
-        //     balloonManager.OnBalloonPopRequest -= HandleBalloonPopRequest;
-        // }
+        if (NetworkManager.Singleton != null)
+        {
+            NetworkManager.Singleton.OnClientConnectedCallback -= OnClientConnected;
+        }
     }
 
     void Start()
     {
+        StartCoroutine(StartGameRoutine());
+    }
+
+    private IEnumerator StartGameRoutine()
+    {
+        // Initializer가 준비될 때까지 대기
+        while (gameplayInitializer != null && !gameplayInitializer.IsInitialized)
+        {
+            yield return null;
+        }
+
         TryConfigureSetsFromInitializer();
 
         if (IsServer)
         {
+            // 클라이언트들이 접속하고 PlayerObject가 생성될 때까지 잠시 대기 (안전장치)
+            yield return new WaitForSeconds(0.5f);
+
+            CacheBalloonManagers();
             ResetBalloonCountsForSet();
-            if (balloonManager != null)
-                balloonManager.Server_ResetBalloons(balloonsPerPlayer);
+            ResetAllBalloons(); // 모든 플레이어의 풍선 리셋
             SyncSetStartTime();
         }
+    }
+
+    private void OnClientConnected(ulong clientId)
+    {
+        if (!IsServer) return;
+        
+        // 늦게 들어온 클라이언트(또는 씬 로드 완료 후)를 위해 다시 캐싱 및 리셋 시도
+        StartCoroutine(DelayedResetForNewClient());
+    }
+
+    private IEnumerator DelayedResetForNewClient()
+    {
+        // PlayerObject가 생성될 시간을 줌
+        yield return new WaitForSeconds(0.5f);
+        CacheBalloonManagers();
+        ResetAllBalloons();
+        ResetBalloonCountsForSet();
     }
 
     void Update()
@@ -134,9 +162,7 @@ public class GameManager : NetworkBehaviour
             return;
 
         ConfigureSets(gameplayInitializer.SetCount);
-
-        if (balloonManager != null)
-            balloonsPerPlayer = balloonManager.MaxBalloonCount;
+        balloonsPerPlayer = gameplayInitializer.BalloonCount; // Initializer에서 직접 값 가져오기
     }
 
     /// <summary>내 풍선이 맞았을 때 로컬 NetworkBalloonManager에서 호출됨.</summary>
@@ -252,8 +278,7 @@ public class GameManager : NetworkBehaviour
         Debug.Log($"[GameManager] 다음 세트 준비 (set {nextSetIndex}/{totalSets})");
 
         onPrepareNextSet?.Invoke();
-        if (balloonManager != null)
-            balloonManager.Server_ResetBalloons(balloonsPerPlayer);
+        ResetAllBalloons(); // 모든 플레이어의 풍선 리셋
         ResetBalloonCountsForSet();
         SyncSetStartTime();
         PrepareNextSetClientRpc(nextSetIndex);
@@ -320,6 +345,43 @@ public class GameManager : NetworkBehaviour
         foreach (var clientId in NetworkManager.ConnectedClientsIds)
         {
             balloonsRemaining[clientId] = balloonsPerPlayer;
+        }
+    }
+
+    /// <summary>
+    /// [Server] 접속된 모든 클라이언트의 NetworkBalloonManager를 찾아 풍선을 리셋합니다.
+    /// </summary>
+    private void ResetAllBalloons()
+    {
+        if (!IsServer) return;
+
+        if (allBalloonManagers.Count == 0)
+            CacheBalloonManagers();
+
+        foreach (var bm in allBalloonManagers)
+        {
+            if (bm != null)
+            {
+                bm.Server_ResetBalloons(balloonsPerPlayer);
+            }
+        }
+    }
+
+    private void CacheBalloonManagers()
+    {
+        allBalloonManagers.Clear();
+        if (NetworkManager == null) return;
+
+        foreach (var client in NetworkManager.ConnectedClientsList)
+        {
+            if (client.PlayerObject != null)
+            {
+                var bm = client.PlayerObject.GetComponentInChildren<NetworkBalloonManager>();
+                if (bm != null)
+                {
+                    allBalloonManagers.Add(bm);
+                }
+            }
         }
     }
 

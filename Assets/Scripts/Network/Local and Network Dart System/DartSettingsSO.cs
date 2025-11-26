@@ -1,4 +1,3 @@
-using Meta.XR.Editor.Tags;
 using UnityEngine;
 
 [CreateAssetMenu(fileName = "DartSettings", menuName = "Dart Game/Dart Settings")]
