@@ -2,7 +2,7 @@ using UnityEngine;
 using TMPro;
 using UnityEngine.UI;
 
-public class UIInputPanel : MonoBehaviour
+public class UIInputPanel1 : MonoBehaviour
 {
     [SerializeField] private string gamePlaySceneName = "DefaultGameScene";
     [SerializeField] private TMP_Dropdown setCountDropdown;

@@ -1,6 +1,8 @@
 using Unity.Netcode;
 using UnityEngine;
 using Unity.XR.CoreUtils; // XR Origin 찾기 위해 필요
+using UnityEngine.SceneManagement;
+using System.Collections.Generic;
 
 public class SpawnManager : NetworkBehaviour
 {
@@ -18,32 +20,68 @@ public class SpawnManager : NetworkBehaviour
         Instance = this;
     }
 
-    public override void OnNetworkSpawn() //
+    public override void OnNetworkSpawn() // 네트워크 오브젝트가 스폰될 때 호출
     {
-        // 오직 서버(호스트)만 이 이벤트를 구독합니다.
-        if (IsServer)
+        // 씬 로드 완료 시점에 이미 접속해 있는 클라이언트들을 처리한다.
+        SubscribeSceneLoaded();
+    }
+
+    public override void OnNetworkDespawn() // 네트워크 오브젝트가 언스폰될 때 호출
+    {
+        UnsubscribeSceneLoaded();
+    }
+
+    private void SubscribeSceneLoaded()
+    {
+        var nm = NetworkManager.Singleton;
+        if (nm == null || !nm.IsServer) return;
+
+        nm.SceneManager.OnLoadEventCompleted += OnSceneLoadCompleted;
+    }
+
+    private void UnsubscribeSceneLoaded()
+    {
+        var nm = NetworkManager.Singleton;
+        if (nm == null || !nm.IsServer) return;
+
+        nm.SceneManager.OnLoadEventCompleted -= OnSceneLoadCompleted;
+    }
+
+    // 씬 로드가 완료된 후 서버에서 이미 접속해 있는 클라이언트들을 스폰 처리, 매개변수 자체는 이미 OnLoadEventCompleted 델리게이트에 정의된 형태로 고정
+    private void OnSceneLoadCompleted(string sceneName, LoadSceneMode loadSceneMode, List<ulong> clientsCompleted, List<ulong> clientsTimedOut)
+    {
+        if (!IsServer) return;
+
+        foreach (var clientId in clientsCompleted)
         {
-            NetworkManager.Singleton.OnClientConnectedCallback += OnClientConnected;
+            SpawnForClient(clientId);
         }
     }
 
-    public override void OnNetworkDespawn()
+    private void SpawnForClient(ulong clientId)
     {
-        if (IsServer)
+        if (spawnPoints == null || spawnPoints.Length == 0)
         {
-            NetworkManager.Singleton.OnClientConnectedCallback -= OnClientConnected;
+            Debug.LogError("SpawnManager: spawnPoints가 비어 있습니다.", this);
+            return;
         }
-    }
 
-    // 클라이언트가 접속했을 때 서버에서 실행되는 함수
-    private void OnClientConnected(ulong clientId)
-    {
         // 1. 몇 번째 접속자인지 확인 (0번: 1P, 1번: 2P ...)
-        // (전용 서버의 경우 서버 자신은 플레이어가 아니므로 리스트 카운트로 계산)
-        int playerIndex = NetworkManager.Singleton.ConnectedClientsIds.Count - 1;
-        
-        // 예외 처리: 스폰 포인트보다 사람이 많으면 0번으로
-        if (playerIndex >= spawnPoints.Length) playerIndex = 0;
+        // ConnectedClientsIds 순서를 기준으로 매핑(접속 순서대로 0,1,...)
+        int playerIndex = 0;
+        var ids = NetworkManager.Singleton.ConnectedClientsIds;
+        for (int i = 0; i < ids.Count; i++)
+        {
+            if (ids[i] == clientId)
+            {
+                playerIndex = i;
+                break;
+            }
+        }
+
+        // 스폰 포인트 수(2)에 맞춰 모듈러 적용
+        playerIndex = playerIndex % spawnPoints.Length;
+        bool shouldFlipUi = (playerIndex % 2) == 1; // 2P 이상은 UI 반전
 
         Transform spawnPoint = spawnPoints[playerIndex];
 
@@ -55,6 +93,7 @@ public class SpawnManager : NetworkBehaviour
         };
 
         TeleportClient_ClientRpc(spawnPoint.position, spawnPoint.rotation, clientRpcParams);
+        SetPlayerUiOrientation_ClientRpc(shouldFlipUi, clientRpcParams);
 
         // 3. [서버] 해당 위치에 NetworkPlayer(아바타) 생성 및 소유권 부여
         // (아바타는 생성되자마자 주인의 XR Origin 위치로 텔레포트 될 것입니다)
@@ -63,7 +102,7 @@ public class SpawnManager : NetworkBehaviour
     }
 
     [ClientRpc]
-    private void TeleportClient_ClientRpc(Vector3 pos, Quaternion rot, ClientRpcParams rpcParams = default)
+    private void TeleportClient_ClientRpc(Vector3 pos, Quaternion rot, ClientRpcParams rpcParams = default) // 클라이언트에게 자신의 XR Origin을 이동시키라는 명령
     {
         // 4. [클라이언트] 명령을 받으면 자신의 XR Origin을 찾아서 이동
         XROrigin xrOrigin = FindFirstObjectByType<XROrigin>();
@@ -79,6 +118,16 @@ public class SpawnManager : NetworkBehaviour
             
             // (선택) 카메라 Y축 회전 보정 로직이 필요할 수 있음 (MatchOrientation)
             Debug.Log($"[GameManager] Spawned at {pos}");
+        }
+    }
+
+    [ClientRpc]
+    private void SetPlayerUiOrientation_ClientRpc(bool flipForThisClient, ClientRpcParams rpcParams = default)
+    {
+        var flipper = FindFirstObjectByType<UIOrientationFlipper>();
+        if (flipper != null)
+        {
+            flipper.SetFlipped(flipForThisClient);
         }
     }
 }
