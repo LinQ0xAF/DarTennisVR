@@ -42,6 +42,9 @@ public class NetworkBalloonManager : NetworkBehaviour
             }
         }
 
+        // 설정된 개수만큼만 활성화
+        ApplyLocalActiveCount(_maxBalloonCount);
+
         // 자신의 풍선은 그림자만 보이도록 설정
         if (IsOwner)
         {
@@ -61,6 +64,21 @@ public class NetworkBalloonManager : NetworkBehaviour
         }
 
         ResetBalloonsClientRpc(_maxBalloonCount);
+    }
+
+    /// <summary>로컬에서 풍선 활성/비활성 수를 반영(서버 RPC 전에 초기 셋업용).</summary>
+    public void ApplyLocalActiveCount(int activeCount)
+    {
+        _maxBalloonCount = Mathf.Clamp(activeCount, 1, BalloonList.Count);
+
+        for (int i = 0; i < BalloonList.Count; i++)
+        {
+            if (BalloonList[i] != null)
+            {
+                bool shouldActive = i < _maxBalloonCount;
+                BalloonList[i].gameObject.SetActive(shouldActive);
+            }
+        }
     }
 
     [ClientRpc]

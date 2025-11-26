@@ -62,6 +62,9 @@ public class GameManager : NetworkBehaviour
         if (balloonHitChannel != null)
             balloonHitChannel.OnPlayerHit += HandleBalloonHitFromChannel;
 
+        if (gameplayInitializer != null)
+            gameplayInitializer.OnBalloonManagerReady += HandleBalloonManagerReady;
+
         // balloonManager 이벤트 사용 시 복원
         // if (balloonManager != null)
         // {
@@ -75,6 +78,9 @@ public class GameManager : NetworkBehaviour
         if (balloonHitChannel != null)
             balloonHitChannel.OnPlayerHit -= HandleBalloonHitFromChannel;
 
+        if (gameplayInitializer != null)
+            gameplayInitializer.OnBalloonManagerReady -= HandleBalloonManagerReady;
+
         // balloonManager 이벤트 사용 시 복원
         // if (balloonManager != null)
         // {
@@ -85,6 +91,13 @@ public class GameManager : NetworkBehaviour
 
     void Start()
     {
+        if (balloonManager == null && gameplayInitializer != null)
+        {
+            balloonManager = gameplayInitializer.LocalBalloonManager;
+            if (balloonManager != null)
+                balloonsPerPlayer = balloonManager.MaxBalloonCount;
+        }
+
         TryConfigureSetsFromInitializer();
 
         if (IsServer)
@@ -389,5 +402,13 @@ public class GameManager : NetworkBehaviour
             return;
 
         ProcessBalloonPop(ownerClientId);
+    }
+
+    /// <summary>이니셜라이저에서 풍선 매니저가 준비됐을 때 호출.</summary>
+    private void HandleBalloonManagerReady(NetworkBalloonManager manager)
+    {
+        balloonManager = manager;
+        if (balloonManager != null)
+            balloonsPerPlayer = balloonManager.MaxBalloonCount;
     }
 }

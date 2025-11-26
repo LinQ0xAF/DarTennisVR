@@ -1,3 +1,5 @@
+using System;
+using System.Collections;
 using Unity.Netcode;
 using UnityEngine;
 
@@ -19,6 +21,7 @@ public class MultiGameplayInitializer : MonoBehaviour
     public int SetCount { get; private set; } = 1; // 설정된 세트 수(게임매니저 등에서 참조)
     public float ServerMatchStartTime { get; private set; } // 서버 기준 매치 시작 시각
     public NetworkBalloonManager LocalBalloonManager => balloonManager; // 로컬 아바타의 풍선 매니저 참조
+    public event Action<NetworkBalloonManager> OnBalloonManagerReady;
 
     void Start()
     {  
@@ -27,6 +30,8 @@ public class MultiGameplayInitializer : MonoBehaviour
         
         if (balloonManager == null)
             balloonManager = FindLocalPlayersBalloonManager();
+
+        NotifyBalloonManagerReady();
 
         // 서버가 브로드캐스트한 매치 시작 시각 저장. 이후에는 NetworkManager.ServerTime으로 흐르는 값을 계속 사용할 수 있다.
         if (!MultiRoomNetController.TryConsumePendingStartTime(out var startTime))
@@ -45,6 +50,11 @@ public class MultiGameplayInitializer : MonoBehaviour
             {
                 balloonManager.MaxBalloonCount = defaultBalloonCount;
                 ActivateBalloonManager();
+                NotifyBalloonManagerReady();
+            }
+            else
+            {
+                StartCoroutine(WaitAndAssignBalloonManager(defaultBalloonCount));
             }
 
             TimeLimitSeconds = defaultTimeLimitSeconds;
@@ -63,6 +73,11 @@ public class MultiGameplayInitializer : MonoBehaviour
             balloonManager.MaxBalloonCount = cfg.balloonCount;
             Debug.Log("받아온 자기 자신의 값으로 벌룬메니저 세팅 완료.");
             ActivateBalloonManager();
+            NotifyBalloonManagerReady();
+        }
+        else
+        {
+            StartCoroutine(WaitAndAssignBalloonManager(cfg.balloonCount));
         }
 
         // 제한 시간 저장(실제 타이머 적용은 다른 타이머/게임매니저가 이 값을 참조하도록 연결)
@@ -106,7 +121,7 @@ public class MultiGameplayInitializer : MonoBehaviour
     }
 
     /// <summary>
-    /// 한 프레임 뒤 풍선 매니저를 활성화하고 초기화한다(텔레포트/리깅 후 위치 안정화용).
+    /// 풍선 매니저를 활성화하고 초기화한다.
     /// </summary>
     private void ActivateBalloonManager()
     {
@@ -117,5 +132,33 @@ public class MultiGameplayInitializer : MonoBehaviour
             balloonManager.gameObject.SetActive(true);
 
         balloonManager.Initialize();
+        balloonManager.ApplyLocalActiveCount(balloonManager.MaxBalloonCount);
+    }
+
+    /// <summary>
+    /// 로컬 플레이어 아바타 스폰 이후에 풍선 매니저가 생기는 경우를 대비해 대기 후 할당/초기화한다.
+    /// </summary>
+    private IEnumerator WaitAndAssignBalloonManager(int targetBalloonCount)
+    {
+        while (balloonManager == null)
+        {
+            balloonManager = FindLocalPlayersBalloonManager();
+            if (balloonManager != null)
+                break;
+            yield return null;
+        }
+
+        if (balloonManager == null)
+            yield break;
+
+        balloonManager.MaxBalloonCount = targetBalloonCount;
+        ActivateBalloonManager();
+        NotifyBalloonManagerReady();
+    }
+
+    private void NotifyBalloonManagerReady()
+    {
+        if (balloonManager != null)
+            OnBalloonManagerReady?.Invoke(balloonManager);
     }
 }
