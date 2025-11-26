@@ -5,8 +5,9 @@ using UnityEngine;
 public class NetworkBalloonManager : NetworkBehaviour
 {
     [Header("Settings")]
+    [SerializeField]
     [Range(1, 5)]
-    public int MaxBalloonCount = 5;
+    private int _maxBalloonCount = 5;
 
     [Header("References")]
     public List<NetworkBalloon> BalloonList = new List<NetworkBalloon>();
@@ -14,7 +15,16 @@ public class NetworkBalloonManager : NetworkBehaviour
     [Header("Event Channel")]
     public NetworkBalloonHitChannelSO HitChannel;
 
-    private void Awake()
+    public override void OnNetworkSpawn()
+    {
+#if UNITY_EDITOR
+        // 에디터 테스트 편의를 위해 자동 초기화
+        Initialize();
+#endif
+    }
+
+    /// 씬 로드 직후나 게임 시작 시점에 호출하여 풍선 시스템을 초기화합니다.
+    public void Initialize()
     {
         // 풍선들에게 번호표 부여 (초기화)
         for (int i = 0; i < BalloonList.Count; i++)
@@ -22,8 +32,53 @@ public class NetworkBalloonManager : NetworkBehaviour
             if (BalloonList[i] != null)
             {
                 BalloonList[i].Initialize(this, i);
-                // 처음엔 켜두고, 게임 시작 시 설정에 따라 끌 수도 있음
-                // BalloonList[i].gameObject.SetActive(true); 
+            }
+        }
+
+        // 자신의 풍선은 그림자만 보이도록 설정
+        if (IsOwner)
+        {
+            HideBalloonsForOwner();
+        }
+    }
+
+    /// [Server] 세트 시작 시 풍선들을 다시 활성화합니다.
+    /// count를 지정하면 해당 개수만큼 활성화하고, 지정하지 않으면 기존 설정을 따릅니다.
+    public void Server_ResetBalloons(int count = -1)
+    {
+        if (!IsServer) return;
+
+        if (count != -1)
+        {
+            _maxBalloonCount = Mathf.Clamp(count, 1, BalloonList.Count);
+        }
+
+        ResetBalloonsClientRpc(_maxBalloonCount);
+    }
+
+    [ClientRpc]
+    private void ResetBalloonsClientRpc(int activeCount)
+    {
+        for (int i = 0; i < BalloonList.Count; i++)
+        {
+            if (BalloonList[i] != null)
+            {
+                // 설정된 개수만큼만 활성화
+                bool shouldActive = i < activeCount;
+                BalloonList[i].gameObject.SetActive(shouldActive);
+            }
+        }
+    }
+
+    private void HideBalloonsForOwner()
+    {
+        // 자신의 풍선은 그림자만 보이도록 설정
+        foreach (var balloon in BalloonList)
+        {
+            var renderers = balloon.GetComponentsInChildren<Renderer>();
+            foreach (var rend in renderers)
+            {
+                rend.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.ShadowsOnly;
             }
         }
     }

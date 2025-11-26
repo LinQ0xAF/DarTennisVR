@@ -9,6 +9,7 @@ public class NetworkDart : NetworkBehaviour
     private Rigidbody _rb;
     private MeshRenderer[] _renderers;
     private bool _HasHit = false; // 중복 충돌 방지용 변수
+    private ulong _ThrowerId; // 던진 사람의 ClientId
 
     private void Awake()
     {
@@ -41,6 +42,7 @@ public class NetworkDart : NetworkBehaviour
 
         // [중요] 던진 본인(Owner)에게 "너는 로컬 다트 보고 있으니까 이건 숨겨"라고 알려줌
         HideVisualsClientRpc(throwerId);
+        _ThrowerId = throwerId;
     }
 
     // 2. 시각 처리 (본인 숨기기용)
@@ -75,9 +77,9 @@ public class NetworkDart : NetworkBehaviour
             // Network Balloon 스크립트 찾기
             NetworkBalloon collisionBalloon = other.gameObject.GetComponentInParent<NetworkBalloon>();
 
-            if (collisionBalloon != null)
+            if (collisionBalloon != null && collisionBalloon.OwnerClientId != _ThrowerId)
             {
-                _HasHit = true; // 중복 방지 (MyTargetObjTag = empty 역할)
+                _HasHit = true; // 중복 방지
 
                 // 풍선 로직 호출 (서버 -> 매니저 -> ClientRpc)
                 collisionBalloon.OnHitByDart();

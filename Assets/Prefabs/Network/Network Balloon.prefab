@@ -70,6 +70,7 @@ GameObject:
   - component: {fileID: 4993634796754866425}
   - component: {fileID: 3336171904819885362}
   - component: {fileID: 7215829309421277740}
+  - component: {fileID: 4310971082067349668}
   m_Layer: 0
   m_Name: Network Balloon
   m_TagString: Balloons
@@ -321,3 +322,19 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 180a652c48190d649a9646b61b2cdba0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+--- !u!114 &4310971082067349668
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8070551685984103444}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 48a88e7a28e9f2048b723d541bbe3b11, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  ShowTopMostFoldoutHeaderGroup: 1
+  SyncInterval: 0.5
+  CorrectionSpeed: 5
+  SnapDistance: 0.5
