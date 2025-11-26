@@ -18,14 +18,15 @@ public class MultiGameplayInitializer : MonoBehaviour
     public int TimeLimitSeconds { get; private set; } // 다른 스크립트에서 참조할 수 있도록 노출
     public int SetCount { get; private set; } = 1; // 설정된 세트 수(게임매니저 등에서 참조)
     public float ServerMatchStartTime { get; private set; } // 서버 기준 매치 시작 시각
+    public BalloonManager LocalBalloonManager => balloonManager; // 로컬 아바타의 풍선 매니저 참조
 
     void Start()
-    {
+    {  
         RoomConfigDto cfg = null; // 설정 객체, RoomConfigDto에 각 클라이언트에 전달된 설정이 이미 저장된 상태
         MultiRoomNetController.TryConsumePendingConfig(out cfg); // 전달된 설정 가져오기, 필요한 룸에 대한 정보는 cfg에 저장됨
         
         if (balloonManager == null)
-            balloonManager = FindAnyObjectByType<BalloonManager>();
+            balloonManager = FindLocalPlayersBalloonManager();
 
         // 서버가 브로드캐스트한 매치 시작 시각 저장. 이후에는 NetworkManager.ServerTime으로 흐르는 값을 계속 사용할 수 있다.
         if (!MultiRoomNetController.TryConsumePendingStartTime(out var startTime))
@@ -40,11 +41,11 @@ public class MultiGameplayInitializer : MonoBehaviour
         if (cfg == null)
         {
             // config가 없으면 기본값으로 진행
-            if (balloonManager != null)
-                balloonManager.BalloonNumber = defaultBalloonCount;
+            // if (balloonManager != null)
+            //     balloonManager.BalloonNumber = defaultBalloonCount;
 
-            TimeLimitSeconds = defaultTimeLimitSeconds;
-            SetCount = defaultSetCount;
+            // TimeLimitSeconds = defaultTimeLimitSeconds;
+            // SetCount = defaultSetCount;
             Debug.LogWarning("MultiGameplayInitializer: RoomConfig를 받지 못해 기본값으로 진행합니다.", this);
             return;
         }
@@ -57,6 +58,7 @@ public class MultiGameplayInitializer : MonoBehaviour
         if (balloonManager != null)
         {
             balloonManager.BalloonNumber = cfg.balloonCount;
+            Debug.Log("받아온 자기 자신의 값으로 벌룬메니저 세팅 완료.");
         }
 
         // 제한 시간 저장(실제 타이머 적용은 다른 타이머/게임매니저가 이 값을 참조하도록 연결)
@@ -81,5 +83,21 @@ public class MultiGameplayInitializer : MonoBehaviour
     public void SetServerMatchStartTime(float startTime)
     {
         ServerMatchStartTime = startTime;
+    }
+
+    /// <summary>
+    /// 로컬 플레이어가 소유한 아바타에서 BalloonManager를 찾아 반환한다.
+    /// </summary>
+    private BalloonManager FindLocalPlayersBalloonManager()
+    {
+        var nm = NetworkManager.Singleton;
+        if (nm == null || nm.LocalClient == null)
+            return null;
+
+        var playerObj = nm.LocalClient.PlayerObject;
+        if (playerObj == null)
+            return null;
+
+        return playerObj.GetComponentInChildren<BalloonManager>(true);
     }
 }

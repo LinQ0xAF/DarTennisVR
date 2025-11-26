@@ -16,6 +16,7 @@ public class GameManager : NetworkBehaviour
     [Header("Refs")]
     [SerializeField] private MultiGameplayInitializer gameplayInitializer; // 서버 시간/제한 시간을 제공
     [SerializeField] private BalloonManager balloonManager; // 풍선 상태 감시용
+    [SerializeField] private NetworkBalloonHitChannelSO balloonHitChannel; // 팀원 채널: 서버가 풍선 피격 보고 수신
 
     [Header("Set/Match Settings")]
     [SerializeField, Min(1)] private int totalSets = 1; // 인스펙터 기본 세트 수(초기화 시 룸 설정으로 대체)
@@ -28,7 +29,7 @@ public class GameManager : NetworkBehaviour
 
     [Header("Events (optional)")]
     [SerializeField] private UnityEvent onSetEnd; // 세트 종료 알림(점수 집계, UI 등)
-    [SerializeField] private UnityEvent onPrepareNextSet; // 다음 세트 준비 시 실행(풍선 리셋 등)
+    [SerializeField] public UnityEvent onPrepareNextSet; // 다음 세트 준비 시 실행(풍선 리셋 등)
     [SerializeField] private UnityEvent onTimeUp; // 매치 종료/타임업 시 실행
 
     private bool gameEnded;
@@ -49,8 +50,8 @@ public class GameManager : NetworkBehaviour
         if (gameplayInitializer == null)
             gameplayInitializer = FindObjectOfType<MultiGameplayInitializer>();
 
-        if (balloonManager == null)
-            balloonManager = FindObjectOfType<BalloonManager>();
+        if (balloonManager == null && gameplayInitializer != null)
+            balloonManager = gameplayInitializer.LocalBalloonManager;
 
         if (balloonManager != null)
             balloonsPerPlayer = balloonManager.BalloonNumber;
@@ -58,20 +59,28 @@ public class GameManager : NetworkBehaviour
 
     void OnEnable()
     {
-        if (balloonManager != null)
-        {
-            // balloonManager.OnAllBalloonsCleared += HandleAllBalloonsCleared;
-            // balloonManager.OnBalloonPopRequest += HandleBalloonPopRequest;
-        }
+        if (balloonHitChannel != null)
+            balloonHitChannel.OnHit += HandleBalloonHitFromChannel;
+
+        // balloonManager 이벤트 사용 시 복원
+        // if (balloonManager != null)
+        // {
+        //     balloonManager.OnAllBalloonsCleared += HandleAllBalloonsCleared;
+        //     balloonManager.OnBalloonPopRequest += HandleBalloonPopRequest;
+        // }
     }
 
     void OnDisable()
     {
-        if (balloonManager != null)
-        {
-            // balloonManager.OnAllBalloonsCleared -= HandleAllBalloonsCleared;
-            // balloonManager.OnBalloonPopRequest -= HandleBalloonPopRequest;
-        }
+        if (balloonHitChannel != null)
+            balloonHitChannel.OnHit -= HandleBalloonHitFromChannel;
+
+        // balloonManager 이벤트 사용 시 복원
+        // if (balloonManager != null)
+        // {
+        //     balloonManager.OnAllBalloonsCleared -= HandleAllBalloonsCleared;
+        //     balloonManager.OnBalloonPopRequest -= HandleBalloonPopRequest;
+        // }
     }
 
     void Start()
@@ -367,5 +376,14 @@ public class GameManager : NetworkBehaviour
             return;
 
         currentSetStartTime = (float)NetworkManager.ServerTime.Time; // 클라가 받을 때는 서버 RPC로 이미 전달됨. 이 줄은 안전용.
+    }
+
+    /// <summary>팀원 채널에서 풍선 피격 보고를 받았을 때 서버가 남은 풍선을 차감.</summary>
+    private void HandleBalloonHitFromChannel(ulong ownerClientId, int balloonIndex)
+    {
+        if (!IsServer || gameEnded || setEnding)
+            return;
+
+        ProcessBalloonPop(ownerClientId);
     }
 }
