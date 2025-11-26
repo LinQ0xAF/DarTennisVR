@@ -13,6 +13,7 @@ public class DartReloadManager : MonoBehaviour
     public GameObject DartPrefab;
     public string ReloadZoneTag = "ReloadZone";
     public List<XRSocketInteractor> DartSockets;
+    [SerializeField] private DartPoolManager _DartPoolManager;
     private XRInteractionManager _InteractionManager;
     private bool _IsInReloadZone = false;
     [SerializeField] private float SocketReactivationDelay = 0.8f;
@@ -20,6 +21,10 @@ public class DartReloadManager : MonoBehaviour
     void Awake()
     {
         _InteractionManager = FindFirstObjectByType<XRInteractionManager>();
+        if(_DartPoolManager == null)
+        {
+            _DartPoolManager = FindFirstObjectByType<DartPoolManager>();
+        }
     }
 
     private void OnEnable()
@@ -72,6 +77,12 @@ public class DartReloadManager : MonoBehaviour
 
     private void AttemptReload()
     {
+        if(_DartPoolManager == null)
+        {
+            Debug.LogError("DartPoolManager reference is missing!");
+            return;
+        }
+
         foreach (var socket in DartSockets)
         {
             // 리스트에 null 요소가 있는 경우를 대비
@@ -81,7 +92,7 @@ public class DartReloadManager : MonoBehaviour
             }
 
             // 오브젝트 풀에서 다트 인스턴스 받아오기
-            GameObject newDart = DartPoolManager.Instance.GetDart(
+            GameObject newDart = _DartPoolManager.GetDart(
                 socket.transform.position,
                 socket.transform.rotation
             );
