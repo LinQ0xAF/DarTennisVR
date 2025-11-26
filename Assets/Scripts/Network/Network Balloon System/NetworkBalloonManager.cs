@@ -15,6 +15,13 @@ public class NetworkBalloonManager : NetworkBehaviour
     [Header("Event Channel")]
     public NetworkBalloonHitChannelSO HitChannel;
 
+    /// <summary>현재 세트에서 사용할 풍선 최대 개수.</summary>
+    public int MaxBalloonCount
+    {
+        get => _maxBalloonCount;
+        set => _maxBalloonCount = Mathf.Clamp(value, 1, Mathf.Max(1, BalloonList.Count));
+    }
+
     public override void OnNetworkSpawn()
     {
 #if UNITY_EDITOR

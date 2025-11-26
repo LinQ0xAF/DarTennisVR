@@ -15,7 +15,7 @@ public class GameManager : NetworkBehaviour
 {
     [Header("Refs")]
     [SerializeField] private MultiGameplayInitializer gameplayInitializer; // 서버 시간/제한 시간을 제공
-    [SerializeField] private BalloonManager balloonManager; // 풍선 상태 감시용
+    [SerializeField] private NetworkBalloonManager balloonManager; // 풍선 상태 감시용
     [SerializeField] private NetworkBalloonHitChannelSO balloonHitChannel; // 팀원 채널: 서버가 풍선 피격 보고 수신
 
     [Header("Set/Match Settings")]
@@ -54,13 +54,13 @@ public class GameManager : NetworkBehaviour
             balloonManager = gameplayInitializer.LocalBalloonManager;
 
         if (balloonManager != null)
-            balloonsPerPlayer = balloonManager.BalloonNumber;
+            balloonsPerPlayer = balloonManager.MaxBalloonCount;
     }
 
     void OnEnable()
     {
         if (balloonHitChannel != null)
-            balloonHitChannel.OnHit += HandleBalloonHitFromChannel;
+            balloonHitChannel.OnPlayerHit += HandleBalloonHitFromChannel;
 
         // balloonManager 이벤트 사용 시 복원
         // if (balloonManager != null)
@@ -73,7 +73,7 @@ public class GameManager : NetworkBehaviour
     void OnDisable()
     {
         if (balloonHitChannel != null)
-            balloonHitChannel.OnHit -= HandleBalloonHitFromChannel;
+            balloonHitChannel.OnPlayerHit -= HandleBalloonHitFromChannel;
 
         // balloonManager 이벤트 사용 시 복원
         // if (balloonManager != null)
@@ -134,10 +134,10 @@ public class GameManager : NetworkBehaviour
         ConfigureSets(gameplayInitializer.SetCount);
 
         if (balloonManager != null)
-            balloonsPerPlayer = balloonManager.BalloonNumber;
+            balloonsPerPlayer = balloonManager.MaxBalloonCount;
     }
 
-    /// <summary>내 풍선이 맞았을 때 로컬 BalloonManager에서 호출됨.</summary>
+    /// <summary>내 풍선이 맞았을 때 로컬 NetworkBalloonManager에서 호출됨.</summary>
     private void HandleBalloonPopRequest(int balloonIndex)
     {
         if (gameEnded || setEnding)
