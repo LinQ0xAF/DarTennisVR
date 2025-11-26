@@ -8,7 +8,7 @@ using UnityEngine;
 public class MultiGameplayInitializer : MonoBehaviour
 {
     [Header("Optional targets")]
-    [SerializeField] private BalloonManager balloonManager; // 씬에 배치된 BalloonManager가 있으면 할당
+    [SerializeField] private NetworkBalloonManager balloonManager; // 씬에 배치된 BalloonManager가 있으면 할당
 
     [Header("Fallback defaults")]
     [SerializeField, Range(1, 5)] private int defaultBalloonCount = 1; // config를 못 받았을 때 사용할 기본 풍선 수
@@ -18,7 +18,7 @@ public class MultiGameplayInitializer : MonoBehaviour
     public int TimeLimitSeconds { get; private set; } // 다른 스크립트에서 참조할 수 있도록 노출
     public int SetCount { get; private set; } = 1; // 설정된 세트 수(게임매니저 등에서 참조)
     public float ServerMatchStartTime { get; private set; } // 서버 기준 매치 시작 시각
-    public BalloonManager LocalBalloonManager => balloonManager; // 로컬 아바타의 풍선 매니저 참조
+    public NetworkBalloonManager LocalBalloonManager => balloonManager; // 로컬 아바타의 풍선 매니저 참조
 
     void Start()
     {  
@@ -57,7 +57,7 @@ public class MultiGameplayInitializer : MonoBehaviour
         // 풍선 개수 적용
         if (balloonManager != null)
         {
-            balloonManager.BalloonNumber = cfg.balloonCount;
+            balloonManager.MaxBalloonCount = cfg.balloonCount;
             Debug.Log("받아온 자기 자신의 값으로 벌룬메니저 세팅 완료.");
         }
 
@@ -88,7 +88,7 @@ public class MultiGameplayInitializer : MonoBehaviour
     /// <summary>
     /// 로컬 플레이어가 소유한 아바타에서 BalloonManager를 찾아 반환한다.
     /// </summary>
-    private BalloonManager FindLocalPlayersBalloonManager()
+    private NetworkBalloonManager FindLocalPlayersBalloonManager()
     {
         var nm = NetworkManager.Singleton;
         if (nm == null || nm.LocalClient == null)
@@ -98,6 +98,6 @@ public class MultiGameplayInitializer : MonoBehaviour
         if (playerObj == null)
             return null;
 
-        return playerObj.GetComponentInChildren<BalloonManager>(true);
+        return playerObj.GetComponentInChildren<NetworkBalloonManager>(true);
     }
 }
