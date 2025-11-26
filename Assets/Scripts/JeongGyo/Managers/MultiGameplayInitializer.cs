@@ -41,11 +41,14 @@ public class MultiGameplayInitializer : MonoBehaviour
         if (cfg == null)
         {
             // config가 없으면 기본값으로 진행
-            // if (balloonManager != null)
-            //     balloonManager.BalloonNumber = defaultBalloonCount;
+            if (balloonManager != null)
+            {
+                balloonManager.MaxBalloonCount = defaultBalloonCount;
+                ActivateBalloonManager();
+            }
 
-            // TimeLimitSeconds = defaultTimeLimitSeconds;
-            // SetCount = defaultSetCount;
+            TimeLimitSeconds = defaultTimeLimitSeconds;
+            SetCount = defaultSetCount;
             Debug.LogWarning("MultiGameplayInitializer: RoomConfig를 받지 못해 기본값으로 진행합니다.", this);
             return;
         }
@@ -59,6 +62,7 @@ public class MultiGameplayInitializer : MonoBehaviour
         {
             balloonManager.MaxBalloonCount = cfg.balloonCount;
             Debug.Log("받아온 자기 자신의 값으로 벌룬메니저 세팅 완료.");
+            ActivateBalloonManager();
         }
 
         // 제한 시간 저장(실제 타이머 적용은 다른 타이머/게임매니저가 이 값을 참조하도록 연결)
@@ -99,5 +103,19 @@ public class MultiGameplayInitializer : MonoBehaviour
             return null;
 
         return playerObj.GetComponentInChildren<NetworkBalloonManager>(true);
+    }
+
+    /// <summary>
+    /// 한 프레임 뒤 풍선 매니저를 활성화하고 초기화한다(텔레포트/리깅 후 위치 안정화용).
+    /// </summary>
+    private void ActivateBalloonManager()
+    {
+        if (balloonManager == null)
+            return;
+
+        if (!balloonManager.gameObject.activeSelf)
+            balloonManager.gameObject.SetActive(true);
+
+        balloonManager.Initialize();
     }
 }

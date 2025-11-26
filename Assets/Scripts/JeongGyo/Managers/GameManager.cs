@@ -90,6 +90,8 @@ public class GameManager : NetworkBehaviour
         if (IsServer)
         {
             ResetBalloonCountsForSet();
+            if (balloonManager != null)
+                balloonManager.Server_ResetBalloons(balloonsPerPlayer);
             SyncSetStartTime();
         }
     }
@@ -250,6 +252,8 @@ public class GameManager : NetworkBehaviour
         Debug.Log($"[GameManager] 다음 세트 준비 (set {nextSetIndex}/{totalSets})");
 
         onPrepareNextSet?.Invoke();
+        if (balloonManager != null)
+            balloonManager.Server_ResetBalloons(balloonsPerPlayer);
         ResetBalloonCountsForSet();
         SyncSetStartTime();
         PrepareNextSetClientRpc(nextSetIndex);
