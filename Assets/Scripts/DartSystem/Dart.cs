@@ -2,11 +2,14 @@ using UnityEngine;
 using UnityEngine.Pool;
 using System.Collections;
 using UnityEngine.XR.Interaction.Toolkit.Interactables;
+using UnityEngine.XR.Interaction.Toolkit.Interactors;
 
 public class Dart : MonoBehaviour
 {
     [Tooltip("다트가 던져진 후 풀에 자동으로 반환될 때까지의 최대 시간 (초)")]
     public float MaxLifetime = 10.0f;
+
+    private DartPoolManager _DartPoolManager;
 
     private Rigidbody _DartRigidbody;
     private XRGrabInteractable _GrabInteractable;
@@ -31,7 +34,8 @@ public class Dart : MonoBehaviour
         _GrabInteractable.throwOnDetach = true;
 
         // 이벤트 리스너 등록
-        _GrabInteractable.selectExited.AddListener(OnThrown);
+        _GrabInteractable.selectEntered.AddListener(OnGrabbed);
+        _GrabInteractable.selectExited.AddListener(OnReleased);
     }
 
     private void OnDisable()
@@ -49,13 +53,39 @@ public class Dart : MonoBehaviour
         }
 
         // 이벤트 리스너 해제
-        _GrabInteractable.selectExited.RemoveListener(OnThrown);
+        _GrabInteractable.selectEntered.RemoveListener(OnGrabbed);
+        _GrabInteractable.selectExited.RemoveListener(OnReleased);
     }
 
-    private void OnThrown(UnityEngine.XR.Interaction.Toolkit.SelectExitEventArgs args)
+    public void SetPoolManager(DartPoolManager poolManager)
     {
-        // 다트가 던져졌을 때(플레이어의 손을 떠났을 때) 최대 수명 타이머 시작
+        _DartPoolManager = poolManager;
+    }
+
+    private void OnReleased(UnityEngine.XR.Interaction.Toolkit.SelectExitEventArgs args)
+    {
+        // 세상에 놓여졌으므로 '분실 위험' 상태로 간주하고 분실 타이머를 시작합니다.
+        // 이전에 실행되던 타이머가 있다면 중복 실행을 방지하기 위해 먼저 중지합니다.
+        if (_MaxLifetimeCoroutine != null)
+        {
+            StopCoroutine(_MaxLifetimeCoroutine);
+        }
         _MaxLifetimeCoroutine = StartCoroutine(ReturnToPoolAfterMaxLifetime());
+    }
+
+    private void OnGrabbed(UnityEngine.XR.Interaction.Toolkit.SelectEnterEventArgs args)
+    {
+        // 다트가 잡혔을 때 진행중인 코루틴이 있다면 중지
+        if (_ReturnCoroutine != null)
+        {
+            StopCoroutine(_ReturnCoroutine);
+            _ReturnCoroutine = null;
+        }
+        if (_MaxLifetimeCoroutine != null)
+        {
+            StopCoroutine(_MaxLifetimeCoroutine);
+            _MaxLifetimeCoroutine = null;
+        }
     }
 
     private void OnCollisionEnter(Collision collision)
@@ -97,9 +127,9 @@ public class Dart : MonoBehaviour
     private void ReturnToPool()
     {
         // 풀이 할당되어 있고, 게임 오브젝트가 아직 활성 상태일 때만 반납 시도
-        if (DartPoolManager.Instance != null && gameObject.activeInHierarchy)
+        if (_DartPoolManager != null && gameObject.activeInHierarchy)
         {
-            DartPoolManager.Instance.ReleaseDart(gameObject);
+            _DartPoolManager.ReleaseDart(gameObject);
         }
     }
 }

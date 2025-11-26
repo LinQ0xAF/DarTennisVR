@@ -3,8 +3,6 @@ using UnityEngine.Pool;
 
 public class DartPoolManager : MonoBehaviour
 {
-    public static DartPoolManager Instance { get; private set; } //singleton instance
-
     public GameObject DartPrefab;
     public int InitialPoolSize = 10;
     public int MaxPoolSize = 20;
@@ -13,13 +11,6 @@ public class DartPoolManager : MonoBehaviour
 
     private void Awake()
     {
-        if (Instance != null && Instance != this)
-        {
-            Destroy(this.gameObject);
-            return;
-        }
-
-        Instance = this;
         // ObjectPool 초기화
         _DartPool = new ObjectPool<GameObject>(
             createFunc: CreateDart,
@@ -52,6 +43,7 @@ public class DartPoolManager : MonoBehaviour
     private GameObject CreateDart()
     {
         GameObject dartInstance = Instantiate(DartPrefab);
+        dartInstance.GetComponent<Dart>().SetPoolManager(this);
         return dartInstance;
     }
 
