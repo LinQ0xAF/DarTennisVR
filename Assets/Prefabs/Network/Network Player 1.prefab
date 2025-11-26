@@ -935,7 +935,7 @@ PrefabInstance:
     - target: {fileID: 619632322147649230, guid: e84a75613e465bd4e8ef51529b49cff2, type: 3}
       propertyPath: m_ConnectedBody
       value: 
-      objectReference: {fileID: 2456303815559103923}
+      objectReference: {fileID: 3971075919800027174}
     - target: {fileID: 619632322147649230, guid: e84a75613e465bd4e8ef51529b49cff2, type: 3}
       propertyPath: m_AngularYMotion
       value: 0
@@ -1075,7 +1075,7 @@ PrefabInstance:
     - target: {fileID: 4354386095603395955, guid: e84a75613e465bd4e8ef51529b49cff2, type: 3}
       propertyPath: m_ConnectedBody
       value: 
-      objectReference: {fileID: 2456303815559103923}
+      objectReference: {fileID: 3971075919800027174}
     - target: {fileID: 4354386095603395955, guid: e84a75613e465bd4e8ef51529b49cff2, type: 3}
       propertyPath: m_AngularYMotion
       value: 0
@@ -1115,7 +1115,7 @@ PrefabInstance:
     - target: {fileID: 5364585701174953560, guid: e84a75613e465bd4e8ef51529b49cff2, type: 3}
       propertyPath: m_ConnectedBody
       value: 
-      objectReference: {fileID: 2456303815559103923}
+      objectReference: {fileID: 3971075919800027174}
     - target: {fileID: 5364585701174953560, guid: e84a75613e465bd4e8ef51529b49cff2, type: 3}
       propertyPath: m_AngularYMotion
       value: 0
@@ -1227,7 +1227,7 @@ PrefabInstance:
     - target: {fileID: 8284849784689053427, guid: e84a75613e465bd4e8ef51529b49cff2, type: 3}
       propertyPath: m_ConnectedBody
       value: 
-      objectReference: {fileID: 2456303815559103923}
+      objectReference: {fileID: 3971075919800027174}
     - target: {fileID: 8284849784689053427, guid: e84a75613e465bd4e8ef51529b49cff2, type: 3}
       propertyPath: m_AngularYMotion
       value: 0
@@ -1259,7 +1259,7 @@ PrefabInstance:
     - target: {fileID: 9114864405520850395, guid: e84a75613e465bd4e8ef51529b49cff2, type: 3}
       propertyPath: m_ConnectedBody
       value: 
-      objectReference: {fileID: 2456303815559103923}
+      objectReference: {fileID: 3971075919800027174}
     - target: {fileID: 9114864405520850395, guid: e84a75613e465bd4e8ef51529b49cff2, type: 3}
       propertyPath: m_AngularYMotion
       value: 0
@@ -1387,6 +1387,18 @@ PrefabInstance:
       propertyPath: m_Data.m_Target
       value: 
       objectReference: {fileID: 6017473808401819865}
+    - target: {fileID: 7366390853423719877, guid: b0adf0c0d477c7d45a32faea4d6d8f16, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7366390853423719877, guid: b0adf0c0d477c7d45a32faea4d6d8f16, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 1.6
+      objectReference: {fileID: 0}
+    - target: {fileID: 7366390853423719877, guid: b0adf0c0d477c7d45a32faea4d6d8f16, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 7494040692182148736, guid: b0adf0c0d477c7d45a32faea4d6d8f16, type: 3}
       propertyPath: m_Data.m_SourceObjects.m_Item0.transform
       value: 
@@ -1417,7 +1429,7 @@ PrefabInstance:
     m_AddedComponents:
     - targetCorrespondingSourceObject: {fileID: 8580351310631908481, guid: b0adf0c0d477c7d45a32faea4d6d8f16, type: 3}
       insertIndex: -1
-      addedObject: {fileID: 2456303815559103923}
+      addedObject: {fileID: 3971075919800027174}
   m_SourcePrefab: {fileID: 100100000, guid: b0adf0c0d477c7d45a32faea4d6d8f16, type: 3}
 --- !u!4 &646576218933444479 stripped
 Transform:
@@ -1434,7 +1446,7 @@ GameObject:
   m_CorrespondingSourceObject: {fileID: 8580351310631908481, guid: b0adf0c0d477c7d45a32faea4d6d8f16, type: 3}
   m_PrefabInstance: {fileID: 7063807396545691344}
   m_PrefabAsset: {fileID: 0}
---- !u!54 &2456303815559103923
+--- !u!54 &3971075919800027174
 Rigidbody:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -1459,7 +1471,7 @@ Rigidbody:
   m_UseGravity: 0
   m_IsKinematic: 0
   m_Interpolate: 0
-  m_Constraints: 0
+  m_Constraints: 4
   m_CollisionDetection: 0
 --- !u!137 &3137811437270251570 stripped
 SkinnedMeshRenderer:
