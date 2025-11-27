@@ -24,10 +24,7 @@ public class NetworkBalloonManager : NetworkBehaviour
 
     public override void OnNetworkSpawn()
     {
-#if UNITY_EDITOR
-        // 에디터 테스트 편의를 위해 자동 초기화
         Initialize();
-#endif
     }
 
     /// 씬 로드 직후나 게임 시작 시점에 호출하여 풍선 시스템을 초기화합니다.
