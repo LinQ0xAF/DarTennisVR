@@ -2570,6 +2570,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 4177987290737189863, guid: 9bef222c034a4ea4ba20f6f1efaf2a38, type: 3}
+      propertyPath: DartPrefab
+      value: 
+      objectReference: {fileID: 6891486028327192877, guid: 313f493aa252148449f09fd5509581aa, type: 3}
     - target: {fileID: 4471787106778149531, guid: 9bef222c034a4ea4ba20f6f1efaf2a38, type: 3}
       propertyPath: m_TranslationAtRest.z
       value: -0.04

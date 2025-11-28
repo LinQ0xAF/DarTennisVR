@@ -125,11 +125,4 @@ public class NetworkBalloonManager : NetworkBehaviour
         Debug.Log($"Balloon Popped at {pos}");
         // TODO: 파티클 생성 및 사운드 재생
     }
-
-    // 게임 리셋용 함수
-    // [ClientRpc]
-    // public void ResetBalloonsClientRpc()
-    // {
-    //     foreach(var b in BalloonList) b.gameObject.SetActive(true);
-    // }
 }

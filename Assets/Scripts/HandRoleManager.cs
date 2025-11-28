@@ -15,9 +15,9 @@ public class HandRoleManager : MonoBehaviour
     [SerializeField] private GameObject _LeftOffHandObjectGroup;
     [SerializeField] private GameObject _RightOffHandObjectGroup;
 
-    [Header("MainHand Dart Charging Handlers")]
-    [SerializeField] private DartChargingHandler _LeftHandDartChargingHandler;
-    [SerializeField] private DartChargingHandler _RightHandDartChargingHandler;
+    [Header("MainHand Dart Throw Handlers")]
+    [SerializeField] private DartThrowHandlerBase _LeftHandDartThrowHandler;
+    [SerializeField] private DartThrowHandlerBase _RightHandDartThrowHandler;
 
     [Header("Interaction Layer Masks")]
     [SerializeField] private InteractionLayerMask _MainHandInteractionLayerMask;
@@ -51,8 +51,8 @@ public class HandRoleManager : MonoBehaviour
             _RightOffHandObjectGroup.SetActive(false);
             _LeftOffHandObjectGroup.SetActive(true);
 
-            _RightHandDartChargingHandler.enabled = true;
-            _LeftHandDartChargingHandler.enabled = false;
+            _RightHandDartThrowHandler.enabled = true;
+            _LeftHandDartThrowHandler.enabled = false;
         }
         else
         {
@@ -63,8 +63,8 @@ public class HandRoleManager : MonoBehaviour
             _RightOffHandObjectGroup.SetActive(true);
             _LeftOffHandObjectGroup.SetActive(false);
 
-            _RightHandDartChargingHandler.enabled = false;
-            _LeftHandDartChargingHandler.enabled = true;
+            _RightHandDartThrowHandler.enabled = false;
+            _LeftHandDartThrowHandler.enabled = true;
         }
     }
 
