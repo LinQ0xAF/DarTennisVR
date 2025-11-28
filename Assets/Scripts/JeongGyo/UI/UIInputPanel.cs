@@ -1,8 +1,9 @@
+using System.Collections.Generic;
 using UnityEngine;
 using TMPro;
 using UnityEngine.UI;
 
-public class UIInputPanel1 : MonoBehaviour
+public class UIInputPanel : MonoBehaviour
 {
     [SerializeField] private string gamePlaySceneName = "DefaultGameScene";
     [SerializeField] private TMP_Dropdown setCountDropdown;
@@ -11,20 +12,18 @@ public class UIInputPanel1 : MonoBehaviour
     [SerializeField] private int timeStepSeconds = 30;
     [SerializeField] private GameSceneLoadManager sceneLoadManager;
     [SerializeField] private Button createRoomButton;
-    
+    private int[] setCountValues = new int[] { 1, 3, 5 }; // Best-of-one, Best-of-three, Best-of-five 순서
+   
     int setCount; // 맵 세트 개수
-    string setLabel; // 맵 세트 라벨
     int balloonCount; // 풍선 개수
     int timeLimit; // 제한 시간 (초)
   
     void Start()
     {
-        setCount = setCountDropdown.value;
-        setLabel = setCountDropdown.options.Count > setCount ? setCountDropdown.options[setCount].text : string.Empty;// 맵 세트 라벨
+        setCount = ResolveSetCount(setCountDropdown.value);
         balloonCount = (int)balloonCountSlider.value;
         timeLimit = (int)(timeLimitSlider.value * timeStepSeconds);
         
-
     }
 
     void OnEnable()
@@ -40,24 +39,31 @@ public class UIInputPanel1 : MonoBehaviour
             return;
         }
         
-        setCount = setCountDropdown.value;
-        setLabel = setCountDropdown.options.Count > setCount ? setCountDropdown.options[setCount].text : string.Empty;
+        setCount = ResolveSetCount(setCountDropdown.value);
         balloonCount = (int)balloonCountSlider.value;
         timeLimit = (int)(timeLimitSlider.value * timeStepSeconds);
       
-        var config = new GameSceneLoadManager.RoomConfig
-        {   gamePlaySceneName = gamePlaySceneName,
-            setIndex = setCount,
-            setLabel = setLabel,
+        var config = new RoomConfigDto
+        {
+            gamePlaySceneName = gamePlaySceneName,
             balloonCount = balloonCount,
-            timeLimitSeconds = timeLimit
-           
+            timeLimitSeconds = timeLimit,
+            setCount = setCount
         };
-            sceneLoadManager.LoadGameScene(config);
+        sceneLoadManager.LoadGameScene(config);
     }
 
     void OnDestroy()
     {
         createRoomButton.onClick.RemoveListener(CreateRoom);
+    }
+
+    private int ResolveSetCount(int dropdownIndex)
+    {
+        if (setCountValues != null && dropdownIndex >= 0 && dropdownIndex < setCountValues.Length)
+            return setCountValues[dropdownIndex];
+
+        // fallback: 드롭다운 인덱스+1을 사용(최소 1세트)
+        return Mathf.Max(1, dropdownIndex + 1);
     }
 }

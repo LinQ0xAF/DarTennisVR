@@ -4,6 +4,7 @@ using Unity.Netcode;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.SceneManagement;
+using System;
 
 /// <summary>
 /// 서버 기준으로 세트/매치 흐름을 관리하고, 풍선 잔여 수 기반 승패를 판정해 모든 클라이언트에 브로드캐스트한다.
@@ -42,10 +43,11 @@ public class GameManager : NetworkBehaviour
     private float currentSetStartTime; // 서버 기준 세트 시작 시각
 
     /// <summary>세트 결과를 알리는 이벤트(승자 clientId, 무승부면 null).</summary>
-    public event System.Action<ulong?> OnSetResult;
+    public event Action<ulong?> OnSetResult;
     /// <summary>세트 수가 설정될 때 알림.</summary>
-    public event System.Action<int> OnSetsConfigured;
+    public event Action<int> OnSetsConfigured;
 
+    // 참고: 초기 의존성 캐싱. 초기화 시점에 없으면 Start/이벤트에서 다시 잡는다.
     void Awake()
     {
         if (gameplayInitializer == null)
@@ -58,6 +60,7 @@ public class GameManager : NetworkBehaviour
             balloonsPerPlayer = balloonManager.MaxBalloonCount;
     }
 
+    // 참고: 풍선 피격 채널 및 클라이언트 접속 이벤트 구독
     void OnEnable()
     {
         if (balloonHitChannel != null)
@@ -80,11 +83,13 @@ public class GameManager : NetworkBehaviour
         }
     }
 
+    // 참고: 초기 세트 설정/풍선 리셋을 위한 코루틴 진입점
     void Start()
     {
         StartCoroutine(StartGameRoutine());
     }
 
+    /// <summary>초기 세트/풍선 상태를 맞추기 위해 Initializer 준비와 PlayerObject 스폰을 기다렸다가 설정.</summary>
     private IEnumerator StartGameRoutine()
     {
         // Initializer가 준비될 때까지 대기
@@ -107,6 +112,7 @@ public class GameManager : NetworkBehaviour
         }
     }
 
+    /// <summary>새 클라이언트 접속 시 풍선 매니저 캐싱/리셋을 재시도.</summary>
     private void OnClientConnected(ulong clientId)
     {
         if (!IsServer) return;
@@ -115,6 +121,7 @@ public class GameManager : NetworkBehaviour
         StartCoroutine(DelayedResetForNewClient());
     }
 
+    /// <summary>PlayerObject 생성 시간을 기다린 뒤 풍선 매니저 캐싱/리셋.</summary>
     private IEnumerator DelayedResetForNewClient()
     {
         // PlayerObject가 생성될 시간을 줌
@@ -165,29 +172,7 @@ public class GameManager : NetworkBehaviour
         balloonsPerPlayer = gameplayInitializer.BalloonCount; // Initializer에서 직접 값 가져오기
     }
 
-    /// <summary>내 풍선이 맞았을 때 로컬 NetworkBalloonManager에서 호출됨.</summary>
-    private void HandleBalloonPopRequest(int balloonIndex)
-    {
-        if (gameEnded || setEnding)
-            return;
-
-        if (IsServer)
-        {
-            ProcessBalloonPop(NetworkManager != null ? NetworkManager.LocalClientId : 0);
-        }
-        else
-        {
-            ReportBalloonPoppedServerRpc();
-        }
-    }
-
-    [ServerRpc(RequireOwnership = false)]
-    private void ReportBalloonPoppedServerRpc(ServerRpcParams rpcParams = default)
-    {
-        ulong senderId = rpcParams.Receive.SenderClientId;
-        ProcessBalloonPop(senderId);
-    }
-
+    /// <summary>서버 기준으로 풍선 피격을 처리하고 잔여 수가 0이면 세트 종료를 트리거.</summary>
     private void ProcessBalloonPop(ulong senderClientId)
     {
         if (!IsServer || gameEnded || setEnding)
@@ -209,16 +194,7 @@ public class GameManager : NetworkBehaviour
         }
     }
 
-    /// <summary>풍선 모두 터졌을 때(서버만) 호출.</summary>
-    private void HandleAllBalloonsCleared()
-    {
-        if (!IsServer || gameEnded)
-            return;
-
-        ulong? winnerId = EvaluateWinnerByRemaining();
-        StartSetEndSequence("balloons_cleared", winnerId);
-    }
-
+    /// <summary>세트 종료 시 공통 처리(서버에서 호출 후 클라에 브로드캐스트).</summary>
     private void StartSetEndSequence(string reason, ulong? winnerClientId)
     {
         if (setEnding || gameEnded)
@@ -239,7 +215,7 @@ public class GameManager : NetworkBehaviour
             SetEndClientRpc(hasNextSet, nextSetIndex, winnerClientId.HasValue, winnerClientId.GetValueOrDefault());
     }
 
-    private System.Collections.IEnumerator SetEndRoutine(bool hasNextSet, int nextSetIndex, ulong? winnerClientId)
+    private IEnumerator SetEndRoutine(bool hasNextSet, int nextSetIndex, ulong? winnerClientId)
     {
         yield return new WaitForSeconds(setEndPauseSeconds);
 
@@ -336,6 +312,7 @@ public class GameManager : NetworkBehaviour
         onTimeUp?.Invoke();
     }
 
+    /// <summary>[서버] 각 클라이언트의 잔여 풍선 수 딕셔너리 초기화.</summary>
     private void ResetBalloonCountsForSet()
     {
         if (!IsServer || NetworkManager == null)
@@ -351,6 +328,7 @@ public class GameManager : NetworkBehaviour
     /// <summary>
     /// [Server] 접속된 모든 클라이언트의 NetworkBalloonManager를 찾아 풍선을 리셋합니다.
     /// </summary>
+    /// <summary>[서버] 캐싱된 모든 NetworkBalloonManager에 리셋 명령.</summary>
     private void ResetAllBalloons()
     {
         if (!IsServer) return;
@@ -367,6 +345,7 @@ public class GameManager : NetworkBehaviour
         }
     }
 
+    /// <summary>[서버] 접속한 각 클라이언트 PlayerObject에서 NetworkBalloonManager를 수집.</summary>
     private void CacheBalloonManagers()
     {
         allBalloonManagers.Clear();
@@ -385,6 +364,7 @@ public class GameManager : NetworkBehaviour
         }
     }
 
+    /// <summary>[서버] 잔여 풍선 수로 승자 판정. 동점이면 null 반환.</summary>
     private ulong? EvaluateWinnerByRemaining()
     {
         if (!IsServer || balloonsRemaining.Count == 0)

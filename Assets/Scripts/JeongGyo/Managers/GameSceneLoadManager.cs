@@ -1,22 +1,15 @@
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
+/// <summary>
+/// 싱글/로컬 플레이용 씬 로드 매니저. RoomConfigDto를 static으로 저장해 다음 씬에서 소비한다.
+/// </summary>
 public class GameSceneLoadManager : MonoBehaviour
 {
-    [System.Serializable]
-    public class RoomConfig
-    {
-        public string gamePlaySceneName;
-        public int setIndex;
-        public string setLabel;
-        public int balloonCount;
-        public int timeLimitSeconds;
+    private static RoomConfigDto pendingConfig;
 
-    }
-
-    private static RoomConfig pendingConfig;
-
-       public static bool TryConsumePendingConfig(out RoomConfig config) // 대기중인 RoomConfig 가져오기
+    /// <summary>대기 중인 RoomConfigDto 가져오기.</summary>
+    public static bool TryConsumePendingConfig(out RoomConfigDto config)
     {
         if (pendingConfig == null)
         {
@@ -29,11 +22,12 @@ public class GameSceneLoadManager : MonoBehaviour
         return true;
     }
 
-    public void LoadGameScene(RoomConfig config) // 게임 씬 로드
+    /// <summary>싱글/로컬 게임 씬 로드.</summary>
+    public void LoadGameScene(RoomConfigDto config)
     {
         if (config == null)
         {
-            Debug.LogError("GameSceneLoadManager: 전달받은 RoomConfig 가 null 입니다.", this);
+            Debug.LogError("GameSceneLoadManager: 전달받은 RoomConfigDto 가 null 입니다.", this);
             return;
         }
 
@@ -50,7 +44,5 @@ public class GameSceneLoadManager : MonoBehaviour
         }
 
         SceneManager.LoadScene(sceneName);
-       
-        
     }
 }
