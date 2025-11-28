@@ -376,8 +376,8 @@ MonoBehaviour:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 4
-  m_ThrowVelocityScale: 1.4
-  m_ThrowAngularVelocityScale: 0.6
+  m_ThrowVelocityScale: 1.5
+  m_ThrowAngularVelocityScale: 0.1
   m_ForceGravityOnDetach: 1
   m_RetainTransformParent: 0
   m_StartingSingleGrabTransformers: []
@@ -413,4 +413,4 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3a527dd16aaa1324eb350e93da6e8248, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  MaxLifetime: 10
+  maxLifetime: 5

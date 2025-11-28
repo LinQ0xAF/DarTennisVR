@@ -1129,8 +1129,8 @@ MonoBehaviour:
   _RightHandNearFarInteractor: {fileID: 3547863226318807010}
   _LeftOffHandObjectGroup: {fileID: 3227249299440462479}
   _RightOffHandObjectGroup: {fileID: 4206862689109373917}
-  _LeftHandDartChargingHandler: {fileID: 5348412981034303588}
-  _RightHandDartChargingHandler: {fileID: 3201784171350640395}
+  _LeftHandDartThrowHandler: {fileID: 5348412981034303588}
+  _RightHandDartThrowHandler: {fileID: 3201784171350640395}
   _MainHandInteractionLayerMask:
     m_Bits: 1025
   _OffHandInteractionLayerMask:
@@ -5209,7 +5209,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   TriggerButtonAction: {fileID: -5982496924579745919, guid: c348712bda248c246b8c49b3db54643f, type: 3}
   SecondButtonAction: {fileID: 1138464006474592474, guid: c348712bda248c246b8c49b3db54643f, type: 3}
-  _ThisHandNearFarInteractor: {fileID: 8398966195918023449}
+  ThisHandNearFarInteractor: {fileID: 8398966195918023449}
 --- !u!4 &1934045000272297325 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 5745700813747042508, guid: 3df3e1220f2164f448701a6de8084f92, type: 3}
@@ -5417,7 +5417,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   TriggerButtonAction: {fileID: 83097790271614945, guid: c348712bda248c246b8c49b3db54643f, type: 3}
   SecondButtonAction: {fileID: -2727978792542937065, guid: c348712bda248c246b8c49b3db54643f, type: 3}
-  _ThisHandNearFarInteractor: {fileID: 3547863226318807010}
+  ThisHandNearFarInteractor: {fileID: 3547863226318807010}
 --- !u!4 &6873775206822562198 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 3234853630605623997, guid: b200f6587d118224eba8467281481800, type: 3}

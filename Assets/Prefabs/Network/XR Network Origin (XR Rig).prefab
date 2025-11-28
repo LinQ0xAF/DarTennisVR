@@ -3785,7 +3785,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1904067885271200998}
-  - component: {fileID: 2493331420655333166}
+  - component: {fileID: 602611614173501835}
   m_Layer: 2
   m_Name: Network Hand Role Manager
   m_TagString: Untagged
@@ -3808,7 +3808,7 @@ Transform:
   m_Children: []
   m_Father: {fileID: 8031568456917811543}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &2493331420655333166
+--- !u!114 &602611614173501835
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -3817,7 +3817,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 8337009951618751526}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: ddaf1bf850b6ffb4a83c59bf7c3f99be, type: 3}
+  m_Script: {fileID: 11500000, guid: 0654f61313602c34d949d219b6f19354, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   _LeftHandNearFarInteractor: {fileID: 2781090878322228912}
@@ -4506,9 +4506,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0dede3411db3e874e948f0520dde46a5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  TriggerAction: {fileID: -5982496924579745919, guid: c348712bda248c246b8c49b3db54643f, type: 3}
-  SecondAction: {fileID: 1138464006474592474, guid: c348712bda248c246b8c49b3db54643f, type: 3}
-  HandInteractor: {fileID: 2781090878322228912}
+  TriggerButtonAction: {fileID: -5982496924579745919, guid: c348712bda248c246b8c49b3db54643f, type: 3}
+  SecondButtonAction: {fileID: 1138464006474592474, guid: c348712bda248c246b8c49b3db54643f, type: 3}
+  ThisHandNearFarInteractor: {fileID: 2781090878322228912}
 --- !u!4 &5242312580773783748 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 5745700813747042508, guid: 3df3e1220f2164f448701a6de8084f92, type: 3}
@@ -4678,9 +4678,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0dede3411db3e874e948f0520dde46a5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  TriggerAction: {fileID: 83097790271614945, guid: c348712bda248c246b8c49b3db54643f, type: 3}
-  SecondAction: {fileID: -2727978792542937065, guid: c348712bda248c246b8c49b3db54643f, type: 3}
-  HandInteractor: {fileID: 6886432097833119246}
+  TriggerButtonAction: {fileID: 83097790271614945, guid: c348712bda248c246b8c49b3db54643f, type: 3}
+  SecondButtonAction: {fileID: -2727978792542937065, guid: c348712bda248c246b8c49b3db54643f, type: 3}
+  ThisHandNearFarInteractor: {fileID: 6886432097833119246}
 --- !u!114 &6886432097833119246 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 4808866746549998793, guid: b200f6587d118224eba8467281481800, type: 3}
