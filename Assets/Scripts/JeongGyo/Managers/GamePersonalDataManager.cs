@@ -4,7 +4,7 @@ using UnityEngine.InputSystem;
 using UnityEngine.XR.Interaction.Toolkit.Attachment;
 using System;
 
-[System.Serializable]
+[Serializable]
 public class HandBindings
 {
     public InputActionReference shootPrimary;
@@ -28,7 +28,7 @@ public class GamePersonalDataManager : ScriptableObject
     const string JsonFolderName = "UserSettings"; // PersistentDataPath 하위 저장 폴더
 
     // 제이슨으로 저장할 개인 설정
-    [System.Serializable]
+    [Serializable]
     public class PersonalSettings
     {
         public float masterVolume = 1f;       // 전체 볼륨
