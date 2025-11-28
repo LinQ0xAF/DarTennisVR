@@ -1,19 +1,32 @@
 using UnityEngine;
 using System;
+
+/// <summary>
+/// 싱글 플레이 풍선. 매니저가 부여한 인덱스를 들고 다트 충돌 시 매니저에 보고한다.
+/// </summary>
 public class Balloons : MonoBehaviour
 {
-   public event Action<Balloons> OnHit;
+    public event Action<Balloons> OnHit;
 
-   // 외부에서 이 메서드를 호출하면 이벤트가 발생
-   public void HitBalloon() // 풍선이 맞았을 때 다트호출되는 메서드
-   {
-      // 구독자가 있으면 this(어떤 풍선인지)를 전달하며 호출
-      OnHit?.Invoke(this);
-      Debug.Log($"[BalloonObj]:{this.name} [Active]:HitBalloon invoked");
-        
-      //풍선 객체가 터질때 실행할 이펙트나 사운드가 있으면 여기에 추가
-   }
- 
- } 
+    public int BalloonIndex { get; private set; }
+    private BalloonManager _manager;
 
+    /// <summary>매니저가 Awake/Start에서 호출하는 초기화.</summary>
+    public void Initialize(BalloonManager manager, int index)
+    {
+        _manager = manager;
+        BalloonIndex = index;
+    }
+
+    /// <summary>다트 충돌 시 호출.</summary>
+    public void HitBalloon()
+    {
+        _manager?.OnBalloonHit(BalloonIndex);
+
+        OnHit?.Invoke(this);
+        Debug.Log($"[BalloonObj]:{name} [Active]:HitBalloon invoked");
+
+        // TODO: 이펙트/사운드가 필요하면 여기에서 재생
+    }
+}
 

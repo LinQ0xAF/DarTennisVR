@@ -5,12 +5,28 @@ public class DartDetectOneTarget : MonoBehaviour
 {
     [SerializeField]
     private string MyTargetObjTag = "Balloons";
-    
+
+    private string _initialTargetTag;
+    private bool _hasHit = false; // 풀링된 다트가 한 번만 맞도록 제어
     private Balloons CollisionBalloons; // 충돌된 풍선 오브젝트의 Balloons 스크립트를 참조하기 위한 변수
+
+    private void Awake()
+    {
+        _initialTargetTag = MyTargetObjTag;
+    }
+
+    private void OnEnable()
+    {
+        // 풀 재사용 시 상태 리셋
+        _hasHit = false;
+        MyTargetObjTag = _initialTargetTag;
+        CollisionBalloons = null;
+    }
 
     void OnTriggerEnter(Collider other)
     {  
-        if (string.IsNullOrEmpty(MyTargetObjTag)) return;
+        if (_hasHit || string.IsNullOrEmpty(MyTargetObjTag))
+            return;
 
         Debug.Log($"Collision detected with {other.gameObject.name}");
         
@@ -18,8 +34,7 @@ public class DartDetectOneTarget : MonoBehaviour
         
         if (other.CompareTag(MyTargetObjTag)) //타켓 오브젝트로 지정한 태그와 충돌된 오브젝트의 태그가 일치한다면 
         {
-            MyTargetObjTag = string.Empty; // 힌반에 하나의 타켓오브젝만 상호작용을 하기 위해 타켓을 지움
-
+            _hasHit = true; // 한 번만 처리
             CollisionBalloons.HitBalloon();
         }
     }

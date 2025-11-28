@@ -13,6 +13,7 @@ public class BalloonManager : MonoBehaviour
     [SerializeField] public List<Balloons> BalloonList = new List<Balloons>(); // 인스펙터에서 넣은 순서를 유지
 
     private int remainingCount = 0;
+    private bool initialized = false;
 
     /// <summary>모든 풍선이 제거되었을 때 알림.</summary>
     public event System.Action OnAllBalloonsCleared;
@@ -32,9 +33,29 @@ public class BalloonManager : MonoBehaviour
         set => balloonCurrentNumber = Mathf.Clamp(value, 1, 5);
     }
 
+    private void Awake()
+    {
+        InitializeBalloons();
+    }
+
     private void Start()
     {
         ResetBalloons(balloonNumber);
+    }
+
+    /// <summary>씬에 배치된 풍선에 인덱스를 부여한다.</summary>
+    private void InitializeBalloons()
+    {
+        if (BalloonList == null || BalloonList.Count == 0)
+            return;
+
+        for (int i = 0; i < BalloonList.Count; i++)
+        {
+            if (BalloonList[i] != null)
+                BalloonList[i].Initialize(this, i);
+        }
+
+        initialized = true;
     }
 
     /// <summary>
@@ -45,6 +66,9 @@ public class BalloonManager : MonoBehaviour
         if (BalloonList == null || BalloonList.Count == 0)
             return;
 
+        if (!initialized)
+            InitializeBalloons();
+
         int activeCount = Mathf.Clamp(targetCount, 1, BalloonList.Count);
         balloonCurrentNumber = activeCount;
         remainingCount = activeCount;
@@ -54,26 +78,17 @@ public class BalloonManager : MonoBehaviour
             var balloon = BalloonList[i];
             bool shouldActive = i < activeCount;
 
-            balloon.OnHit -= HandleBalloonHit; // 중복 방지
             balloon.gameObject.SetActive(shouldActive);
-
-            if (shouldActive)
-                balloon.OnHit += HandleBalloonHit;
         }
     }
 
-    private void HandleBalloonHit(Balloons b)
+    /// <summary>풍선 객체에서 히트 보고를 받을 때 호출.</summary>
+    public void OnBalloonHit(int index)
     {
-        if (BalloonList == null)
+        if (BalloonList == null || index < 0 || index >= BalloonList.Count)
             return;
 
-        int index = BalloonList.IndexOf(b);
-        if (index < 0 || index >= BalloonList.Count)
-            return;
-
-        var balloon = BalloonList[index];
-        balloon.OnHit -= HandleBalloonHit;
-        balloon.gameObject.SetActive(false);
+        BalloonList[index].gameObject.SetActive(false);
 
         remainingCount = Mathf.Max(0, remainingCount - 1);
         Debug.Log($"[BalloonManager] Remaining:{remainingCount}");
