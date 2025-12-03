@@ -2,6 +2,7 @@ using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.XR.Interaction.Toolkit;
 using UnityEngine.XR.Interaction.Toolkit.Interactors;
+using System.Collections;
 
 public class LocalHandAnimator : MonoBehaviour
 {
@@ -16,6 +17,14 @@ public class LocalHandAnimator : MonoBehaviour
     [Header("Data Source")]
     [SerializeField] private GamePersonalDataManager _GameSettings;
 
+    [Header("Hand IK Target Reference")]
+    [SerializeField] private Transform LocalHandIKTarget;
+
+    [Header("Dart Held Comfort Settings")]
+    [SerializeField] private Transform HeldDartRotationReference;
+    [Tooltip("Delay before resetting hand IK target rotation on dart release (seconds)")]
+    [SerializeField] private float ReleaseRotationDelay = 0.1f;
+
     // Parameter hashes (performance optimization)
     private int _GripHash;
     private int _IsMainHash;
@@ -25,6 +34,9 @@ public class LocalHandAnimator : MonoBehaviour
     private float _CurrentGripValue = 0f;
     private bool _IsMainHand = false;
     private bool _IsHoldingDart = false;
+
+    // inital Local Rotation cache
+    private Quaternion _InitialLocalRotation;
 
     private void Awake()
     {
@@ -43,11 +55,15 @@ public class LocalHandAnimator : MonoBehaviour
             UpdateHandRole(_GameSettings.mainHand);
             _GameSettings.OnMainHandChanged += UpdateHandRole;
         }
+
+        if( LocalHandIKTarget != null)
+        {
+            _InitialLocalRotation = LocalHandIKTarget.localRotation;
+        }
     }
 
 private void OnDestroy()
     {
-        // 5. 구독 해제 (필수)
         if (_GameSettings != null)
         {
             _GameSettings.OnMainHandChanged -= UpdateHandRole;
@@ -56,7 +72,7 @@ private void OnDestroy()
 
     private void OnEnable()
     {
-        // 입력 및 상호작용 이벤트 구독
+        // subscribe to input and interaction events
         if (_GripAction != null)
         {
             _GripAction.action.performed += OnGripInput;
@@ -101,6 +117,11 @@ private void OnDestroy()
         {
             _IsHoldingDart = true;
             RefreshAnimatorState();
+            
+            if (LocalHandIKTarget != null && HeldDartRotationReference != null)
+            {
+                LocalHandIKTarget.localRotation = HeldDartRotationReference.localRotation;
+            }
         }
     }
 
@@ -108,6 +129,17 @@ private void OnDestroy()
     {
         _IsHoldingDart = false;
         RefreshAnimatorState();
+        
+        if (LocalHandIKTarget != null)
+        {
+            StartCoroutine(DelayedRotationReset());
+        }
+    }
+
+    private IEnumerator DelayedRotationReset()
+    {
+        yield return new WaitForSeconds(ReleaseRotationDelay);
+        LocalHandIKTarget.localRotation = _InitialLocalRotation;
     }
 
     // reflect in Animator

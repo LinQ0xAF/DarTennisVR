@@ -318,15 +318,15 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: b3ae9f5f3724f454ca6de2f2f397e270, type: 3}
       propertyPath: m_LocalRotation.x
-      value: -0
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: b3ae9f5f3724f454ca6de2f2f397e270, type: 3}
       propertyPath: m_LocalRotation.y
-      value: -0
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: b3ae9f5f3724f454ca6de2f2f397e270, type: 3}
       propertyPath: m_LocalRotation.z
-      value: -0
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: b3ae9f5f3724f454ca6de2f2f397e270, type: 3}
       propertyPath: m_LocalEulerAnglesHint.x
@@ -363,6 +363,22 @@ PrefabInstance:
     - target: {fileID: 4477978763947009247, guid: b3ae9f5f3724f454ca6de2f2f397e270, type: 3}
       propertyPath: m_Name
       value: RobotKyle
+      objectReference: {fileID: 0}
+    - target: {fileID: 7163341763079882450, guid: b3ae9f5f3724f454ca6de2f2f397e270, type: 3}
+      propertyPath: m_AABB.m_Center.x
+      value: -0.41710067
+      objectReference: {fileID: 0}
+    - target: {fileID: 7163341763079882450, guid: b3ae9f5f3724f454ca6de2f2f397e270, type: 3}
+      propertyPath: m_AABB.m_Center.z
+      value: -0.036129005
+      objectReference: {fileID: 0}
+    - target: {fileID: 7163341763079882450, guid: b3ae9f5f3724f454ca6de2f2f397e270, type: 3}
+      propertyPath: m_AABB.m_Extent.x
+      value: 0.51476204
+      objectReference: {fileID: 0}
+    - target: {fileID: 7163341763079882450, guid: b3ae9f5f3724f454ca6de2f2f397e270, type: 3}
+      propertyPath: m_AABB.m_Extent.z
+      value: 0.279809
       objectReference: {fileID: 0}
     - target: {fileID: 7163341763079882450, guid: b3ae9f5f3724f454ca6de2f2f397e270, type: 3}
       propertyPath: 'm_Materials.Array.data[0]'
@@ -452,7 +468,7 @@ PositionConstraint:
   serializedVersion: 2
   m_Weight: 1
   m_TranslationAtRest: {x: 0, y: -0.06, z: -0.1}
-  m_TranslationOffset: {x: 0, y: -1.66, z: -0.1}
+  m_TranslationOffset: {x: 0, y: 0, z: 0}
   m_AffectTranslationX: 1
   m_AffectTranslationY: 1
   m_AffectTranslationZ: 1
