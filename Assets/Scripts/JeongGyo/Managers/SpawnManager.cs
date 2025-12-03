@@ -13,6 +13,7 @@ public class SpawnManager : NetworkBehaviour
 
     [Header("Player Prefab NetworkObject")]
     [SerializeField] private NetworkObject playerPrefab;
+    [SerializeField] private RoomConfigSO roomConfig; // 룸 설정에서 풍선 수를 전달(없으면 기본 1)
 
     private void Awake()
     {
@@ -99,6 +100,16 @@ public class SpawnManager : NetworkBehaviour
         // (아바타는 생성되자마자 주인의 XR Origin 위치로 텔레포트 될 것입니다)
         NetworkObject playerInstance = Instantiate(playerPrefab, spawnPoint.position, spawnPoint.rotation);
         playerInstance.SpawnAsPlayerObject(clientId, true);
+
+        // 4. [서버 -> 해당 클라이언트] 로컬 BalloonManager를 활성화/초기화하도록 지시
+        // 룸 설정(runtime)을 참고해 풍선 수를 초기화한다. 값이 없으면 기본 1로 진행.
+        int balloonCount = roomConfig != null && roomConfig.runtimeConfig != null
+            ? roomConfig.runtimeConfig.balloonCount
+            : 1;
+        ActivateBalloonManager_ClientRpc(balloonCount, new ClientRpcParams
+        {
+            Send = new ClientRpcSendParams { TargetClientIds = new ulong[] { clientId } }
+        });
     }
 
     [ClientRpc]
@@ -129,5 +140,27 @@ public class SpawnManager : NetworkBehaviour
         {
             flipper.SetFlipped(flipForThisClient);
         }
+    }
+
+    [ClientRpc]
+    private void ActivateBalloonManager_ClientRpc(int balloonCount, ClientRpcParams rpcParams = default)
+    {
+        var nm = NetworkManager.Singleton;
+        if (nm == null || nm.LocalClient == null)
+            return;
+
+        var playerObj = nm.LocalClient.PlayerObject;
+        if (playerObj == null)
+            return;
+
+        var balloonManager = playerObj.GetComponentInChildren<NetworkBalloonManager>(true);
+        if (balloonManager == null)
+            return;
+
+        balloonManager.MaxBalloonCount = Mathf.Max(1, balloonCount);
+        if (!balloonManager.gameObject.activeSelf)
+            balloonManager.gameObject.SetActive(true);
+
+        balloonManager.Initialize();
     }
 }

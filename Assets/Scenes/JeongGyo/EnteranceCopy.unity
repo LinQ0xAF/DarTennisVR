@@ -15332,6 +15332,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   ShowTopMostFoldoutHeaderGroup: 1
+  roomConfig: {fileID: 11400000, guid: 3fa2a03bfa1504318a7633e0cad27580, type: 2}
 --- !u!4 &2051867481
 Transform:
   m_ObjectHideFlags: 0
@@ -17751,6 +17752,7 @@ MonoBehaviour:
   timeLimitSlider: {fileID: 3205095498126296285}
   timeStepSeconds: 30
   createRoomButton: {fileID: 1957288590}
+  presetConfig: {fileID: 0}
   localMatchmaker: {fileID: 1572415372}
 --- !u!33 &3360571906165538925
 MeshFilter:

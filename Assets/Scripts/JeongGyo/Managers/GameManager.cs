@@ -15,8 +15,8 @@ using System;
 public class GameManager : NetworkBehaviour
 {
     [Header("Refs")]
-    [SerializeField] private MultiGameplayInitializer gameplayInitializer; // 서버 시간/제한 시간을 제공
-    [SerializeField] private NetworkBalloonManager balloonManager; // 풍선 상태 감시용
+    [SerializeField] private RoomConfigSO roomConfig; // 룸 설정(Runtime 포함)
+    [SerializeField] private NetworkBalloonManager balloonManager; // 로컬 풍선 매니저 캐싱용(옵션)
     [SerializeField] private NetworkBalloonHitChannelSO balloonHitChannel; // 팀원 채널: 서버가 풍선 피격 보고 수신
 
     [Header("Set/Match Settings")]
@@ -25,7 +25,7 @@ public class GameManager : NetworkBehaviour
     [SerializeField] private float setEndPauseSeconds = 3f; // 세트 종료 후 잠시 멈추는 시간
 
     [Header("Scene Flow")]
-    [SerializeField] private string lobbySceneName = "EnteranceCopy"; // 모든 세트 종료 후 돌아갈 씬 이름(네트워크 씬 로드)
+    [SerializeField] private string lobbySceneName = "EnteranceTemp"; // 모든 세트 종료 후 돌아갈 씬 이름(네트워크 씬 로드)
     [SerializeField] private bool returnToLobbyOnMatchEnd = true;
 
     [Header("Events (optional)")]
@@ -40,21 +40,21 @@ public class GameManager : NetworkBehaviour
     private ulong? lastSetWinnerClientId;
     private readonly Dictionary<ulong, int> balloonsRemaining = new Dictionary<ulong, int>(); // 서버에서만 사용
     private List<NetworkBalloonManager> allBalloonManagers = new List<NetworkBalloonManager>(); // [Server] 캐싱된 풍선 매니저 목록
-    private float currentSetStartTime; // 서버 기준 세트 시작 시각
+    private NetworkVariable<float> networkSetStartTime = new NetworkVariable<float>(writePerm: NetworkVariableWritePermission.Server);
+    private NetworkVariable<bool> hasNetworkStartTime = new NetworkVariable<bool>(writePerm: NetworkVariableWritePermission.Server);
+    private int configuredTimeLimitSeconds = 60;
 
     /// <summary>세트 결과를 알리는 이벤트(승자 clientId, 무승부면 null).</summary>
     public event Action<ulong?> OnSetResult;
     /// <summary>세트 수가 설정될 때 알림.</summary>
     public event Action<int> OnSetsConfigured;
+    public int TimeLimitSeconds => configuredTimeLimitSeconds;
 
     // 참고: 초기 의존성 캐싱. 초기화 시점에 없으면 Start/이벤트에서 다시 잡는다.
     void Awake()
     {
-        if (gameplayInitializer == null)
-            gameplayInitializer = FindFirstObjectByType<MultiGameplayInitializer>();
-
-        if (balloonManager == null && gameplayInitializer != null)
-            balloonManager = gameplayInitializer.LocalBalloonManager;
+        if (balloonManager == null)
+            balloonManager = FindLocalPlayersBalloonManager();
 
         if (balloonManager != null)
             balloonsPerPlayer = balloonManager.MaxBalloonCount;
@@ -89,16 +89,16 @@ public class GameManager : NetworkBehaviour
         StartCoroutine(StartGameRoutine());
     }
 
-    /// <summary>초기 세트/풍선 상태를 맞추기 위해 Initializer 준비와 PlayerObject 스폰을 기다렸다가 설정.</summary>
+    /// <summary>초기 세트/풍선 상태를 맞추기 위해 설정과 PlayerObject 스폰을 기다렸다가 설정.</summary>
     private IEnumerator StartGameRoutine()
     {
-        // Initializer가 준비될 때까지 대기
-        while (gameplayInitializer != null && !gameplayInitializer.IsInitialized)
+        // RoomConfig runtime이 채워질 때까지 대기
+        while (roomConfig != null && roomConfig.runtimeConfig == null)
         {
             yield return null;
         }
 
-        TryConfigureSetsFromInitializer();
+        ConfigureFromRoomConfig();
 
         if (IsServer)
         {
@@ -133,17 +133,19 @@ public class GameManager : NetworkBehaviour
 
     void Update()
     {
-        if (gameEnded || gameplayInitializer == null)
+        if (gameEnded)
             return;
-
         if (!setsConfigured)
-            TryConfigureSetsFromInitializer();
+            ConfigureFromRoomConfig();
 
         if (!IsServer)
             return;
 
-        float elapsed = gameplayInitializer.GetElapsedServerSeconds();
-        float remain = gameplayInitializer.TimeLimitSeconds - elapsed;
+        if (!hasNetworkStartTime.Value || NetworkManager.Singleton == null)
+            return;
+
+        float elapsed = (float)(NetworkManager.Singleton.ServerTime.Time - networkSetStartTime.Value);
+        float remain = configuredTimeLimitSeconds - elapsed;
 
         if (remain <= 0f)
         {
@@ -163,13 +165,24 @@ public class GameManager : NetworkBehaviour
 
     public int TotalSets => totalSets;
 
-    private void TryConfigureSetsFromInitializer()
+    private void ConfigureFromRoomConfig()
     {
-        if (setsConfigured || gameplayInitializer == null)
+        if (setsConfigured)
             return;
 
-        ConfigureSets(gameplayInitializer.SetCount);
-        balloonsPerPlayer = gameplayInitializer.BalloonCount; // Initializer에서 직접 값 가져오기
+        if (roomConfig != null && roomConfig.runtimeConfig != null)
+        {
+            var cfg = roomConfig.runtimeConfig;
+            ConfigureSets(cfg.setCount);
+            balloonsPerPlayer = cfg.balloonCount;
+            configuredTimeLimitSeconds = cfg.timeLimitSeconds;
+        }
+        else
+        {
+            ConfigureSets(totalSets);
+            balloonsPerPlayer = balloonsPerPlayer;
+            // configuredTimeLimitSeconds 그대로 유지
+        }
     }
 
     /// <summary>서버 기준으로 풍선 피격을 처리하고 잔여 수가 0이면 세트 종료를 트리거.</summary>
@@ -268,7 +281,6 @@ public class GameManager : NetworkBehaviour
 
         currentSetIndex = nextSetIndex;
         Debug.Log($"[GameManager] 클라이언트에서 다음 세트 준비 수신 (set {nextSetIndex}/{totalSets})");
-        SyncSetStartTimeClient();
         onPrepareNextSet?.Invoke();
     }
 
@@ -397,31 +409,12 @@ public class GameManager : NetworkBehaviour
     /// <summary>서버: 세트 시작 기준 시각을 동기화.</summary>
     private void SyncSetStartTime()
     {
-        if (!IsServer || gameplayInitializer == null || NetworkManager == null)
+        if (!IsServer || NetworkManager == null)
             return;
 
-        currentSetStartTime = (float)NetworkManager.ServerTime.Time;
-        gameplayInitializer.SetServerMatchStartTime(currentSetStartTime); // 서버 자신도 갱신
-        SetStartTimeClientRpc(currentSetStartTime);
-    }
-
-    [ClientRpc]
-    private void SetStartTimeClientRpc(float startTime)
-    {
-        if (IsServer || gameplayInitializer == null)
-            return;
-
-        gameplayInitializer.SetServerMatchStartTime(startTime);
-        currentSetStartTime = startTime;
-    }
-
-    /// <summary>클라이언트가 다음 세트 준비 시점에 시작 시각을 한 번 더 맞춤.</summary>
-    private void SyncSetStartTimeClient()
-    {
-        if (IsServer || gameplayInitializer == null || NetworkManager == null)
-            return;
-
-        currentSetStartTime = (float)NetworkManager.ServerTime.Time; // 클라가 받을 때는 서버 RPC로 이미 전달됨. 이 줄은 안전용.
+        float startTime = (float)NetworkManager.ServerTime.Time;
+        networkSetStartTime.Value = startTime;
+        hasNetworkStartTime.Value = true;
     }
 
     /// <summary>팀원 채널에서 풍선 피격 보고를 받았을 때 서버가 남은 풍선을 차감.</summary>
@@ -431,5 +424,32 @@ public class GameManager : NetworkBehaviour
             return;
 
         ProcessBalloonPop(ownerClientId);
+    }
+
+    public bool HasSetStartTime() => hasNetworkStartTime.Value;
+    public float GetSetStartTime() => networkSetStartTime.Value;
+    /// <summary>서버 기준 흐른 시간(초). 시작 시각을 못 받았으면 0 반환.</summary>
+    public float GetElapsedServerSeconds()
+    {
+        if (!hasNetworkStartTime.Value || NetworkManager.Singleton == null)
+            return 0f;
+
+        return (float)(NetworkManager.Singleton.ServerTime.Time - networkSetStartTime.Value);
+    }
+
+    /// <summary>
+    /// 로컬 플레이어가 소유한 아바타에서 BalloonManager를 찾아 반환한다.
+    /// </summary>
+    private NetworkBalloonManager FindLocalPlayersBalloonManager()
+    {
+        var nm = NetworkManager.Singleton;
+        if (nm == null || nm.LocalClient == null)
+            return null;
+
+        var playerObj = nm.LocalClient.PlayerObject;
+        if (playerObj == null)
+            return null;
+
+        return playerObj.GetComponentInChildren<NetworkBalloonManager>(true);
     }
 }

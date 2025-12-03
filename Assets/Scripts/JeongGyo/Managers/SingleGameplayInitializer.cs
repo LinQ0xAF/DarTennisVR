@@ -30,8 +30,8 @@ public class SingleGameplayInitializer : MonoBehaviour
         if (balloonManager == null)
             balloonManager = FindObjectOfType<BalloonManager>();
 
-        GameSceneLoadManager.TryConsumePendingConfig(out var cfg); // 설정 가져오기
-        ApplyConfig(cfg);
+    //    GameSceneLoadManager.TryConsumePendingConfig(out var cfg); // 설정 가져오기
+    //    ApplyConfig(cfg);
     }
 
     private void Start()
