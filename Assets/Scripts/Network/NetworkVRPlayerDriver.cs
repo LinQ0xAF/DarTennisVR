@@ -8,6 +8,7 @@ public class NetworkVRPlayerDriver : NetworkBehaviour
     public Transform NetHeadIKTarget;
     public Transform NetLeftHandIKTarget;
     public Transform NetRightHandIKTarget;
+    // public Transform NetMainCameraTransform;
 
     [Header("Network Avatar Meshes")]
     [SerializeField] public SkinnedMeshRenderer[] NetworkAvatarMeshes;
@@ -21,6 +22,7 @@ public class NetworkVRPlayerDriver : NetworkBehaviour
     private Transform _LocalHeadIKTarget;
     private Transform _LocalLeftHandIKTarget;
     private Transform _LocalRightHandIKTarget;
+    // private Transform _LocalMainCameraTransform;
 
     public override void OnNetworkSpawn()
     {
@@ -37,6 +39,7 @@ public class NetworkVRPlayerDriver : NetworkBehaviour
                     _LocalHeadIKTarget = _LocalRigRefs.HeadIKTarget;
                     _LocalLeftHandIKTarget = _LocalRigRefs.LeftHandIKTarget;
                     _LocalRightHandIKTarget = _LocalRigRefs.RightHandIKTarget;
+                    // _LocalMainCameraTransform = _LocalRigRefs.MainCameraTransform;
                 }
             }
             
@@ -64,6 +67,12 @@ public class NetworkVRPlayerDriver : NetworkBehaviour
                 NetHeadIKTarget.localPosition = _LocalXROrigin.transform.InverseTransformPoint(_LocalHeadIKTarget.position);
                 NetHeadIKTarget.localRotation = Quaternion.Inverse(_LocalXROrigin.transform.rotation) * _LocalHeadIKTarget.rotation;
             }
+            // if (_LocalMainCameraTransform)
+            // {
+            //     // Calculate relative position based on XR Origin (root)
+            //     NetMainCameraTransform.localPosition = _LocalXROrigin.transform.InverseTransformPoint(_LocalMainCameraTransform.position);
+            //     NetMainCameraTransform.localRotation = Quaternion.Inverse(_LocalXROrigin.transform.rotation) * _LocalMainCameraTransform.rotation;
+            // }
 
             // 3. both Hands synchronization 
             if (_LocalLeftHandIKTarget)

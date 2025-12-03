@@ -7,8 +7,8 @@ public class PlayerDartState : NetworkBehaviour
     public NetworkVariable<bool> IsHoldingDart = new NetworkVariable<bool>(false, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
 
     [Header("Dummy Visuals")]
-    public GameObject[] OffHandDartMeshes;
     public GameObject HandDartMesh;
+    public GameObject[] OffHandDartMeshes;
 
     [SerializeField] private Animator NetworkAvatarAnimator;
 
