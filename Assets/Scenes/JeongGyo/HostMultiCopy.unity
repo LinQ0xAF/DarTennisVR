@@ -904,54 +904,6 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!1 &640511296
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 640511298}
-  - component: {fileID: 640511297}
-  m_Layer: 0
-  m_Name: MultiGamePlayInitializer
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!114 &640511297
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 640511296}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 5cff7d598a7ac4a6191a69f1e0c9beea, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  balloonManager: {fileID: 0}
-  defaultBalloonCount: 1
-  defaultTimeLimitSeconds: 60
-  defaultSetCount: 1
---- !u!4 &640511298
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 640511296}
-  serializedVersion: 2
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &765117313
 GameObject:
   m_ObjectHideFlags: 0
@@ -1324,9 +1276,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 67a2be59f893546deb701b869c39f557, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  gameplayInitializer: {fileID: 640511297}
+  gameManager: {fileID: 0}
   timerText: {fileID: 1255604109}
   clampToZero: 1
+  personalDataManager: {fileID: 0}
 --- !u!114 &1269147746
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2353,13 +2306,13 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   ShowTopMostFoldoutHeaderGroup: 1
-  gameplayInitializer: {fileID: 640511297}
+  roomConfig: {fileID: 11400000, guid: 3fa2a03bfa1504318a7633e0cad27580, type: 2}
   balloonManager: {fileID: 0}
   balloonHitChannel: {fileID: 0}
   totalSets: 1
   balloonsPerPlayer: 1
   setEndPauseSeconds: 3
-  lobbySceneName: EnteranceCopy
+  lobbySceneName: EnteranceTemp
   returnToLobbyOnMatchEnd: 1
   onSetEnd:
     m_PersistentCalls:
@@ -2643,6 +2596,5 @@ SceneRoots:
   - {fileID: 398185583}
   - {fileID: 1694158762}
   - {fileID: 1465334061}
-  - {fileID: 640511298}
   - {fileID: 1909114171}
   - {fileID: 135364858}
