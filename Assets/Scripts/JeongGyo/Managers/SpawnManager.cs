@@ -13,7 +13,6 @@ public class SpawnManager : NetworkBehaviour
 
     [Header("Player Prefab NetworkObject")]
     [SerializeField] private NetworkObject playerPrefab;
-    [SerializeField] private RoomConfigSO roomConfig; // 룸 설정에서 풍선 수를 전달(없으면 기본 1)
 
     private void Awake()
     {
@@ -21,45 +20,7 @@ public class SpawnManager : NetworkBehaviour
         Instance = this;
     }
 
-    public override void OnNetworkSpawn() // 네트워크 오브젝트가 스폰될 때 호출
-    {
-        // 씬 로드 완료 시점에 이미 접속해 있는 클라이언트들을 처리한다.
-        SubscribeSceneLoaded();
-    }
-
-    public override void OnNetworkDespawn() // 네트워크 오브젝트가 언스폰될 때 호출
-    {
-        UnsubscribeSceneLoaded();
-    }
-
-    private void SubscribeSceneLoaded()
-    {
-        var nm = NetworkManager.Singleton;
-        if (nm == null || !nm.IsServer) return;
-
-        nm.SceneManager.OnLoadEventCompleted += OnSceneLoadCompleted;
-    }
-
-    private void UnsubscribeSceneLoaded()
-    {
-        var nm = NetworkManager.Singleton;
-        if (nm == null || !nm.IsServer) return;
-
-        nm.SceneManager.OnLoadEventCompleted -= OnSceneLoadCompleted;
-    }
-
-    // 씬 로드가 완료된 후 서버에서 이미 접속해 있는 클라이언트들을 스폰 처리, 매개변수 자체는 이미 OnLoadEventCompleted 델리게이트에 정의된 형태로 고정
-    private void OnSceneLoadCompleted(string sceneName, LoadSceneMode loadSceneMode, List<ulong> clientsCompleted, List<ulong> clientsTimedOut)
-    {
-        if (!IsServer) return;
-
-        foreach (var clientId in clientsCompleted)
-        {
-            SpawnForClient(clientId);
-        }
-    }
-
-    private void SpawnForClient(ulong clientId)
+    public void SpawnForClient(ulong clientId, int playerOrderIndex)
     {
         if (spawnPoints == null || spawnPoints.Length == 0)
         {
@@ -67,18 +28,8 @@ public class SpawnManager : NetworkBehaviour
             return;
         }
 
-        // 1. 몇 번째 접속자인지 확인 (0번: 1P, 1번: 2P ...)
-        // ConnectedClientsIds 순서를 기준으로 매핑(접속 순서대로 0,1,...)
-        int playerIndex = 0;
-        var ids = NetworkManager.Singleton.ConnectedClientsIds;
-        for (int i = 0; i < ids.Count; i++)
-        {
-            if (ids[i] == clientId)
-            {
-                playerIndex = i;
-                break;
-            }
-        }
+        // 1. 호출 측(MatchManager)이 전달한 순번을 기준으로 포인트/플립 결정
+        int playerIndex = playerOrderIndex;
 
         // 스폰 포인트 수(2)에 맞춰 모듈러 적용
         playerIndex = playerIndex % spawnPoints.Length;
@@ -100,16 +51,6 @@ public class SpawnManager : NetworkBehaviour
         // (아바타는 생성되자마자 주인의 XR Origin 위치로 텔레포트 될 것입니다)
         NetworkObject playerInstance = Instantiate(playerPrefab, spawnPoint.position, spawnPoint.rotation);
         playerInstance.SpawnAsPlayerObject(clientId, true);
-
-        // 4. [서버 -> 해당 클라이언트] 로컬 BalloonManager를 활성화/초기화하도록 지시
-        // 룸 설정(runtime)을 참고해 풍선 수를 초기화한다. 값이 없으면 기본 1로 진행.
-        int balloonCount = roomConfig != null && roomConfig.runtimeConfig != null
-            ? roomConfig.runtimeConfig.balloonCount
-            : 1;
-        ActivateBalloonManager_ClientRpc(balloonCount, new ClientRpcParams
-        {
-            Send = new ClientRpcSendParams { TargetClientIds = new ulong[] { clientId } }
-        });
     }
 
     [ClientRpc]
@@ -140,27 +81,5 @@ public class SpawnManager : NetworkBehaviour
         {
             flipper.SetFlipped(flipForThisClient);
         }
-    }
-
-    [ClientRpc]
-    private void ActivateBalloonManager_ClientRpc(int balloonCount, ClientRpcParams rpcParams = default)
-    {
-        var nm = NetworkManager.Singleton;
-        if (nm == null || nm.LocalClient == null)
-            return;
-
-        var playerObj = nm.LocalClient.PlayerObject;
-        if (playerObj == null)
-            return;
-
-        var balloonManager = playerObj.GetComponentInChildren<NetworkBalloonManager>(true);
-        if (balloonManager == null)
-            return;
-
-        balloonManager.MaxBalloonCount = Mathf.Max(1, balloonCount);
-        if (!balloonManager.gameObject.activeSelf)
-            balloonManager.gameObject.SetActive(true);
-
-        balloonManager.Initialize();
     }
 }

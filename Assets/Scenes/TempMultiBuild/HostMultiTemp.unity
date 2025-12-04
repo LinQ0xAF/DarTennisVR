@@ -2025,7 +2025,7 @@ GameObject:
   - component: {fileID: 1909114169}
   - component: {fileID: 1909114170}
   m_Layer: 0
-  m_Name: GameManager
+  m_Name: MatchManager
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -2072,6 +2072,7 @@ MonoBehaviour:
   roomConfig: {fileID: 11400000, guid: 3fa2a03bfa1504318a7633e0cad27580, type: 2}
   balloonManager: {fileID: 0}
   balloonHitChannel: {fileID: 11400000, guid: 52c0dfa50c4c9044e84ff0d390a82eae, type: 2}
+  spawnManager: {fileID: 0}
   totalSets: 1
   balloonsPerPlayer: 1
   setEndPauseSeconds: 3

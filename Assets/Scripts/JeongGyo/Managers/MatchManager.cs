@@ -12,12 +12,13 @@ using System;
 /// - 풍선이 먼저 0이 된 쪽이 패배, 타임업이면 잔여 풍선이 많은 쪽 승리(동점은 무승부)
 /// - 세트가 남아 있으면 잠시 멈췄다가 다음 세트 준비, 없으면 매치 종료
 /// </summary>
-public class GameManager : NetworkBehaviour
+public class MatchManager : NetworkBehaviour
 {
     [Header("Refs")]
     [SerializeField] private RoomConfigSO roomConfig; // 룸 설정(Runtime 포함)
     [SerializeField] private NetworkBalloonManager balloonManager; // 로컬 풍선 매니저 캐싱용(옵션)
     [SerializeField] private NetworkBalloonHitChannelSO balloonHitChannel; // 팀원 채널: 서버가 풍선 피격 보고 수신
+    [SerializeField] private SpawnManager spawnManager; // 플레이어 아바타 스폰 담당
 
     [Header("Set/Match Settings")]
     [SerializeField, Min(1)] private int totalSets = 1; // 인스펙터 기본 세트 수(초기화 시 룸 설정으로 대체)
@@ -64,12 +65,23 @@ public class GameManager : NetworkBehaviour
     void OnEnable()
     {
         if (balloonHitChannel != null)
-            balloonHitChannel.OnPlayerHit += HandleBalloonHitFromChannel;
+            balloonHitChannel.OnPlayerHit += HandleBalloonHitFromChannel; //풍선이 다트 맞았을때 터지느 로직 부여
         
         if (NetworkManager.Singleton != null)
         {
-            NetworkManager.Singleton.OnClientConnectedCallback += OnClientConnected;
+            NetworkManager.Singleton.OnClientConnectedCallback += OnClientConnected; //각 클라이언트의 네트워크 벌룬 메니저를 서버로 가져와서 리스트로 저장 
         }
+    }
+
+    public override void OnNetworkSpawn()
+    { 
+        // 씬 로드 완료 시 서버가 접속 클라이언트 목록을 기반으로 스폰 처리
+        SubscribeSceneLoaded();
+    }
+
+    public override void OnNetworkDespawn()
+    {
+        UnsubscribeSceneLoaded();
     }
 
     void OnDisable()
@@ -80,6 +92,54 @@ public class GameManager : NetworkBehaviour
         if (NetworkManager.Singleton != null)
         {
             NetworkManager.Singleton.OnClientConnectedCallback -= OnClientConnected;
+        }
+    }
+
+    private void SubscribeSceneLoaded()
+    {
+        var nm = NetworkManager.Singleton;
+        if (nm == null || !nm.IsServer) return;
+
+        nm.SceneManager.OnLoadEventCompleted += OnSceneLoadCompleted;
+    }
+
+    private void UnsubscribeSceneLoaded()
+    {
+        var nm = NetworkManager.Singleton;
+        if (nm == null || !nm.IsServer) return;
+
+        nm.SceneManager.OnLoadEventCompleted -= OnSceneLoadCompleted;
+    }
+
+    // 씬 로드 완료 시 서버가 접속 클라이언트 목록을 기반으로 스폰 처리
+    private void OnSceneLoadCompleted(string sceneName, LoadSceneMode loadSceneMode, List<ulong> clientsCompleted, List<ulong> clientsTimedOut)
+    {
+        if (!IsServer) return;
+
+        if (spawnManager == null)
+            spawnManager = FindFirstObjectByType<SpawnManager>();
+
+        if (spawnManager == null)
+        {
+            Debug.LogError("MatchManager: SpawnManager가 없습니다.", this);
+            return;
+        }
+
+        int balloonCount = roomConfig != null && roomConfig.runtimeConfig != null
+            ? roomConfig.runtimeConfig.balloonCount
+            : 1;
+
+        for (int i = 0; i < clientsCompleted.Count; i++)
+        {
+            var clientId = clientsCompleted[i];
+            // 접속 완료 순서를 스폰 순서로 사용
+            spawnManager.SpawnForClient(clientId, i);
+
+            // 각 클라이언트 로컬 BalloonManager 초기화
+            InitializeBalloonManagerClientRpc(balloonCount, new ClientRpcParams
+            {
+                Send = new ClientRpcSendParams { TargetClientIds = new ulong[] { clientId } }
+            });
         }
     }
 
@@ -129,6 +189,28 @@ public class GameManager : NetworkBehaviour
         CacheBalloonManagers();
         ResetAllBalloons();
         ResetBalloonCountsForSet();
+    }
+
+    [ClientRpc]
+    private void InitializeBalloonManagerClientRpc(int balloonCount, ClientRpcParams rpcParams = default)
+    {
+        var nm = NetworkManager.Singleton;
+        if (nm == null || nm.LocalClient == null)
+            return;
+
+        var playerObj = nm.LocalClient.PlayerObject;
+        if (playerObj == null)
+            return;
+
+        var balloonMgr = playerObj.GetComponentInChildren<NetworkBalloonManager>(true);
+        if (balloonMgr == null)
+            return;
+
+        balloonMgr.MaxBalloonCount = Mathf.Max(1, balloonCount);
+        if (!balloonMgr.gameObject.activeSelf)
+            balloonMgr.gameObject.SetActive(true);
+
+        balloonMgr.Initialize();
     }
 
     void Update()

@@ -13,7 +13,7 @@ public class SetScoreUI : MonoBehaviour
     [SerializeField] private Color drawColor = Color.yellow;
     [SerializeField] private Color emptyColor = Color.white;
 
-    [SerializeField] private GameManager gameManager;
+    [SerializeField] private MatchManager gameManager;
 
     private int filledRounds = 0;
     private ulong localClientId;
@@ -22,7 +22,7 @@ public class SetScoreUI : MonoBehaviour
     void Awake()
     {
         if (gameManager == null)
-            gameManager = FindObjectOfType<GameManager>();
+            gameManager = FindObjectOfType<MatchManager>();
 
         InitializeDots();
     }
