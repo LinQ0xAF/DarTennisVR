@@ -16,7 +16,7 @@ public abstract class DartReloadManagerBase : MonoBehaviour
 
     [Header("Settings")]
     public string ReloadZoneTag = "ReloadZone";
-    [SerializeField] protected float socketReactivationDelay = 0.5f;
+    [SerializeField] protected float socketReactivationDelay = 0.8f;
 
     [Header("References")]
     public List<XRSocketInteractor> DartSockets;

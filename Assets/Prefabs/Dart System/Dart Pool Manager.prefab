@@ -45,5 +45,5 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   DartPrefab: {fileID: 6891486028327192877, guid: 03c59633e9eb57840b09924b38e13f45, type: 3}
-  InitialPoolSize: 10
-  MaxPoolSize: 20
+  DefaultCapacity: 12
+  MaxPoolSize: 24

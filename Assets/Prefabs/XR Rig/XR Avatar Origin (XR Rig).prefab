@@ -4717,11 +4717,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 935998587454039878, guid: e0e38d997d86d6149b4a962f5b17e725, type: 3}
       propertyPath: m_LocalPosition.y
-      value: -0.06
+      value: -0.059999943
       objectReference: {fileID: 0}
     - target: {fileID: 935998587454039878, guid: e0e38d997d86d6149b4a962f5b17e725, type: 3}
       propertyPath: m_LocalPosition.z
-      value: -0.1
+      value: -0.04
       objectReference: {fileID: 0}
     - target: {fileID: 935998587454039878, guid: e0e38d997d86d6149b4a962f5b17e725, type: 3}
       propertyPath: m_LocalRotation.w
@@ -4760,8 +4760,20 @@ PrefabInstance:
       value: UpperBody
       objectReference: {fileID: 0}
     - target: {fileID: 4880238627791011463, guid: e0e38d997d86d6149b4a962f5b17e725, type: 3}
+      propertyPath: m_TranslationAtRest.y
+      value: -0.059999943
+      objectReference: {fileID: 0}
+    - target: {fileID: 4880238627791011463, guid: e0e38d997d86d6149b4a962f5b17e725, type: 3}
+      propertyPath: m_TranslationAtRest.z
+      value: -0.04
+      objectReference: {fileID: 0}
+    - target: {fileID: 4880238627791011463, guid: e0e38d997d86d6149b4a962f5b17e725, type: 3}
       propertyPath: m_TranslationOffset.y
       value: -1.66
+      objectReference: {fileID: 0}
+    - target: {fileID: 4880238627791011463, guid: e0e38d997d86d6149b4a962f5b17e725, type: 3}
+      propertyPath: m_TranslationOffset.z
+      value: -0.04
       objectReference: {fileID: 0}
     - target: {fileID: 4880238627791011463, guid: e0e38d997d86d6149b4a962f5b17e725, type: 3}
       propertyPath: m_Sources.Array.data[0].sourceTransform
