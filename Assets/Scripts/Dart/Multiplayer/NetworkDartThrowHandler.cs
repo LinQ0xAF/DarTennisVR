@@ -45,6 +45,8 @@ public class NetworkDartThrowHandler : DartThrowHandlerBase
             dart.SetMainHandHandler(this);
 
             // 네트워크 상태 업데이트: 부손 개수 -1, 손에 듦 = true
+            if (_Bridge == null) InitializeBridge();
+            
             if (_Bridge != null) 
             {
                 _Bridge.UpdateOffHandDarts(-1);

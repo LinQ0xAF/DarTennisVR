@@ -20,8 +20,13 @@ public class NetworkDartReloadManager : DartReloadManagerBase
 
     private void Start()
     {
-        // 내 로컬 네트워크 플레이어에서 Bridge 찾기
-        if (NetworkManager.Singleton != null && NetworkManager.Singleton.LocalClient?.PlayerObject != null)
+        // 초기화 시도 (실패해도 괜찮음, 사용할 때 다시 찾음)
+        InitializeBridge();
+    }
+
+    private void InitializeBridge()
+    {
+        if (_bridge == null && NetworkManager.Singleton != null && NetworkManager.Singleton.LocalClient?.PlayerObject != null)
         {
             _bridge = NetworkManager.Singleton.LocalClient.PlayerObject.GetComponent<PlayerNetworkBridge>();
         }
@@ -66,6 +71,8 @@ public class NetworkDartReloadManager : DartReloadManagerBase
         }
 
         // 네트워크 상태 업데이트
+        if (_bridge == null) InitializeBridge();
+        
         if (_bridge != null && addedCount > 0)
         {
             _bridge.UpdateOffHandDarts(addedCount);
@@ -75,6 +82,8 @@ public class NetworkDartReloadManager : DartReloadManagerBase
     protected override void OnAllDartsDropped()
     {
         // 네트워크 상태 업데이트 (다트 반납됨)
+        if (_bridge == null) InitializeBridge();
+
         if (_bridge != null)
         {
             _bridge.UpdateOffHandDarts(-DartSockets.Count);

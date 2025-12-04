@@ -2,7 +2,7 @@ using UnityEngine;
 using UnityEngine.XR.Interaction.Toolkit.Interactables;
 
 /// <summary>
-/// 싱글플레이용 다트 리로드 매니저
+/// Dart Reload Manager for SinglePlayer match
 /// </summary>
 public class DartReloadManager : DartReloadManagerBase
 {
@@ -30,13 +30,13 @@ public class DartReloadManager : DartReloadManagerBase
         {
             if (socket == null || socket.hasSelection) continue;
 
-            // 풀에서 다트 꺼내기
+            // Get dart from pool
             GameObject newDart = _dartPoolManager.GetDart(
                 socket.transform.position,
                 socket.transform.rotation
             );
 
-            // 소켓에 장착
+            // Attach to socket
             var interactable = newDart.GetComponent<IXRSelectInteractable>();
             if (interactable != null)
             {
