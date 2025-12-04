@@ -6,5 +6,5 @@ public class LocalVRRigRefs : MonoBehaviour
     public Transform HeadIKTarget;      // Local Head IK Target
     public Transform LeftHandIKTarget;  // Left Controller
     public Transform RightHandIKTarget; // Right Controller
-    public Transform MainCameraTransform; // Main Camera (HMD) Transform
+    // public Transform MainCameraTransform; // Main Camera (HMD) Transform
 }

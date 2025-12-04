@@ -2805,7 +2805,7 @@ MonoBehaviour:
   _GameSettings: {fileID: 11400000, guid: 44c76b51bc24b3c4dbdcdc327d2a5052, type: 2}
   LocalHandIKTarget: {fileID: 6358561983079236979}
   HeldDartRotationReference: {fileID: 5025366964016698572}
-  ReleaseRotationDelay: 0.1
+  ReleaseRotationDelay: 0.2
 --- !u!1 &4931335213004631255
 GameObject:
   m_ObjectHideFlags: 0
@@ -3170,7 +3170,7 @@ MonoBehaviour:
   _GameSettings: {fileID: 11400000, guid: 44c76b51bc24b3c4dbdcdc327d2a5052, type: 2}
   LocalHandIKTarget: {fileID: 8456967643740810982}
   HeldDartRotationReference: {fileID: 1699811121072908857}
-  ReleaseRotationDelay: 0.1
+  ReleaseRotationDelay: 0.2
 --- !u!1 &5412271357166908980
 GameObject:
   m_ObjectHideFlags: 0

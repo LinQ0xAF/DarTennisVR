@@ -10,7 +10,7 @@ public class PlayerDartState : NetworkBehaviour
     public GameObject HandDartMesh;
     public GameObject[] OffHandDartMeshes;
 
-    [SerializeField] private Animator NetworkAvatarAnimator;
+    [SerializeField] private Animator _NetworkAvatarAnimator;
 
     // Parameter hashes (performance optimization)
     private int _GripHash;
@@ -25,6 +25,7 @@ public class PlayerDartState : NetworkBehaviour
         // cache parameter hashes for performance
         _GripHash = Animator.StringToHash("Grip_L");            // Off hand fixed to Left side
         _IsHoldingHash = Animator.StringToHash("IsHolding_R");  // Main hand fixed to Right side
+        _NetworkAvatarAnimator.SetBool("IsMain_R", true); // Main hand is always right in multiplayer
     }
 
     private void UpdateVisuals()
@@ -37,10 +38,10 @@ public class PlayerDartState : NetworkBehaviour
         }
 
         // 상대방 처리
-        if (NetworkAvatarAnimator != null)
+        if (_NetworkAvatarAnimator != null)
         {
-            NetworkAvatarAnimator.SetFloat(_GripHash, OffHandDartCount.Value > 0 ? 1f : 0f);        // Off hand grip (simplized)
-            NetworkAvatarAnimator.SetBool(_IsHoldingHash, IsHoldingDart.Value);                    // Main hand holding state
+            _NetworkAvatarAnimator.SetFloat(_GripHash, OffHandDartCount.Value > 0 ? 1f : 0f);        // Off hand grip (simplized)
+            _NetworkAvatarAnimator.SetBool(_IsHoldingHash, IsHoldingDart.Value);                    // Main hand holding state
         }
         for (int i = 0; i < OffHandDartMeshes.Length; i++) 
             OffHandDartMeshes[i].SetActive(i < OffHandDartCount.Value);

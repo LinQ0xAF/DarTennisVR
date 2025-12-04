@@ -23,7 +23,7 @@ public class LocalHandAnimator : MonoBehaviour
     [Header("Dart Held Comfort Settings")]
     [SerializeField] private Transform HeldDartRotationReference;
     [Tooltip("Delay before resetting hand IK target rotation on dart release (seconds)")]
-    [SerializeField] private float ReleaseRotationDelay = 0.1f;
+    [SerializeField] private float ReleaseRotationDelay = 0.2f;
 
     // Parameter hashes (performance optimization)
     private int _GripHash;
@@ -101,7 +101,7 @@ private void OnDestroy()
 
     private void UpdateHandRole(Hand mainHand)
     {
-        _IsMainHand =  mainHand == (IsRightHandComponent ? Hand.Right : Hand.Left) ;
+        _IsMainHand = mainHand == (IsRightHandComponent ? Hand.Right : Hand.Left) ;
         RefreshAnimatorState();
     }
 
