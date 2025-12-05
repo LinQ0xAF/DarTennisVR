@@ -1,10 +1,9 @@
-using System.Collections;
+using System;
 using System.Collections.Generic;
 using Unity.Netcode;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.SceneManagement;
-using System;
 
 /// <summary>
 /// 서버 기준으로 세트/매치 흐름을 관리하고, 풍선 잔여 수 기반 승패를 판정해 모든 클라이언트에 브로드캐스트한다.
@@ -12,6 +11,7 @@ using System;
 /// - 풍선이 먼저 0이 된 쪽이 패배, 타임업이면 잔여 풍선이 많은 쪽 승리(동점은 무승부)
 /// - 세트가 남아 있으면 잠시 멈췄다가 다음 세트 준비, 없으면 매치 종료
 /// </summary>
+[RequireComponent(typeof(SetManager))]
 public class MatchManager : NetworkBehaviour
 {
     [Header("Refs")]
@@ -19,11 +19,13 @@ public class MatchManager : NetworkBehaviour
     [SerializeField] private NetworkBalloonManager balloonManager; // 로컬 풍선 매니저 캐싱용(옵션)
     [SerializeField] private NetworkBalloonHitChannelSO balloonHitChannel; // 팀원 채널: 서버가 풍선 피격 보고 수신
     [SerializeField] private SpawnManager spawnManager; // 플레이어 아바타 스폰 담당
+    [SerializeField] private SetManager setManager; // 세트 흐름 전담
 
     [Header("Set/Match Settings")]
     [SerializeField, Min(1)] private int totalSets = 1; // 인스펙터 기본 세트 수(초기화 시 룸 설정으로 대체)
     [SerializeField, Min(1)] private int balloonsPerPlayer = 1; // 플레이어당 시작 풍선 수(씬 설정이 우선)
     [SerializeField] private float setEndPauseSeconds = 3f; // 세트 종료 후 잠시 멈추는 시간
+    [SerializeField] private int configuredTimeLimitSeconds = 60; // 세트 제한 시간(초)
 
     [Header("Scene Flow")]
     [SerializeField] private string lobbySceneName = "EnteranceTemp"; // 모든 세트 종료 후 돌아갈 씬 이름(네트워크 씬 로드)
@@ -35,335 +37,137 @@ public class MatchManager : NetworkBehaviour
     [SerializeField] private UnityEvent onTimeUp; // 매치 종료/타임업 시 실행
 
     private bool gameEnded;
-    private bool setsConfigured;
-    private bool setEnding;
-    private int currentSetIndex = 1;
-    private ulong? lastSetWinnerClientId;
-    private readonly Dictionary<ulong, int> balloonsRemaining = new Dictionary<ulong, int>(); // 서버에서만 사용
-    private List<NetworkBalloonManager> allBalloonManagers = new List<NetworkBalloonManager>(); // [Server] 캐싱된 풍선 매니저 목록
-    private NetworkVariable<float> networkSetStartTime = new NetworkVariable<float>(writePerm: NetworkVariableWritePermission.Server);
-    private NetworkVariable<bool> hasNetworkStartTime = new NetworkVariable<bool>(writePerm: NetworkVariableWritePermission.Server);
-    private int configuredTimeLimitSeconds = 60;
+    private ulong? player1ClientId;
+    private ulong? player2ClientId;
+    private readonly List<ulong> playerClientIds = new List<ulong>();
+    private bool setEventsWired;
 
     /// <summary>세트 결과를 알리는 이벤트(승자 clientId, 무승부면 null).</summary>
     public event Action<ulong?> OnSetResult;
     /// <summary>세트 수가 설정될 때 알림.</summary>
     public event Action<int> OnSetsConfigured;
-    public int TimeLimitSeconds => configuredTimeLimitSeconds;
+    /// <summary>매치 최종 결과 알림(무승부면 null).</summary>
+    public event Action<ulong?> OnMatchResult;
+    /// <summary>세트 시작 직전(카운트다운 등) 알림.</summary>
+    public event Action OnSetPreStart;
+    public int TimeLimitSeconds => setManager != null ? setManager.TimeLimitSeconds : configuredTimeLimitSeconds;
+    public int TotalSets => setManager != null ? setManager.TotalSets : totalSets;
 
-    // 참고: 초기 의존성 캐싱. 초기화 시점에 없으면 Start/이벤트에서 다시 잡는다.
-    void Awake()
+    private void Awake()
     {
-        if (balloonManager == null)
-            balloonManager = FindLocalPlayersBalloonManager();
-
-        if (balloonManager != null)
-            balloonsPerPlayer = balloonManager.MaxBalloonCount;
+        // 세트 매니저 컴포넌트 확보(인스펙터 미지정 시 자동 할당)
+        if (setManager == null)
+            setManager = GetComponent<SetManager>();
     }
+    
 
     // 참고: 풍선 피격 채널 및 클라이언트 접속 이벤트 구독
     void OnEnable()
     {
+        // 풍선 피격 이벤트 구독
         if (balloonHitChannel != null)
             balloonHitChannel.OnPlayerHit += HandleBalloonHitFromChannel; //풍선이 다트 맞았을때 터지느 로직 부여
-        
-        if (NetworkManager.Singleton != null)
-        {
-            NetworkManager.Singleton.OnClientConnectedCallback += OnClientConnected; //각 클라이언트의 네트워크 벌룬 메니저를 서버로 가져와서 리스트로 저장 
-        }
-    }
 
-    public override void OnNetworkSpawn()
-    { 
-        // 씬 로드 완료 시 서버가 접속 클라이언트 목록을 기반으로 스폰 처리
-        SubscribeSceneLoaded();
-    }
-
-    public override void OnNetworkDespawn()
-    {
-        UnsubscribeSceneLoaded();
+        // 세트 매니저 이벤트 구독
+        WireSetManagerEvents();
     }
 
     void OnDisable()
     {
+        // 풍선 피격 이벤트 해제
         if (balloonHitChannel != null)
             balloonHitChannel.OnPlayerHit -= HandleBalloonHitFromChannel;
 
-        if (NetworkManager.Singleton != null)
+        // 세트 매니저 이벤트 해제
+        UnwireSetManagerEvents();
+    }
+
+    public override void OnNetworkSpawn()
+    { 
+        // 가능한 빨리 설정 반영 시도
+        ConfigureFromRoomConfig();
+
+        // 씬 로드 완료 시 서버가 접속 클라이언트 목록을 기반으로 스폰 처리
+        if (IsServer && NetworkManager != null && NetworkManager.SceneManager != null)
         {
-            NetworkManager.Singleton.OnClientConnectedCallback -= OnClientConnected;
+            NetworkManager.SceneManager.OnLoadEventCompleted += OnSceneLoadCompleted;
         }
     }
 
-    private void SubscribeSceneLoaded()
+    public override void OnNetworkDespawn()
     {
-        var nm = NetworkManager.Singleton;
-        if (nm == null || !nm.IsServer) return;
-
-        nm.SceneManager.OnLoadEventCompleted += OnSceneLoadCompleted;
+        // 씬 로드 완료 콜백 해제
+        if (IsServer && NetworkManager != null && NetworkManager.SceneManager != null)
+        {
+            NetworkManager.SceneManager.OnLoadEventCompleted -= OnSceneLoadCompleted;
+        }
     }
 
-    private void UnsubscribeSceneLoaded()
-    {
-        var nm = NetworkManager.Singleton;
-        if (nm == null || !nm.IsServer) return;
-
-        nm.SceneManager.OnLoadEventCompleted -= OnSceneLoadCompleted;
-    }
-
-    // 씬 로드 완료 시 서버가 접속 클라이언트 목록을 기반으로 스폰 처리
+    // [Server] 씬 로드 완료 시 서버가 접속 클라이언트 목록을 기반으로 스폰 처리
     private void OnSceneLoadCompleted(string sceneName, LoadSceneMode loadSceneMode, List<ulong> clientsCompleted, List<ulong> clientsTimedOut)
     {
         if (!IsServer) return;
 
+        if (roomConfig != null && roomConfig.runtimeConfig == null) 
+            return;
+
         if (spawnManager == null)
             spawnManager = FindFirstObjectByType<SpawnManager>();
 
-        if (spawnManager == null)
-        {
-            Debug.LogError("MatchManager: SpawnManager가 없습니다.", this);
-            return;
-        }
+        playerClientIds.Clear();
+        
+        if (clientsCompleted != null)
+            playerClientIds.AddRange(clientsCompleted);
+       
+        else if (NetworkManager != null)
+            playerClientIds.AddRange(NetworkManager.ConnectedClientsIds);
 
-        int balloonCount = roomConfig != null && roomConfig.runtimeConfig != null
-            ? roomConfig.runtimeConfig.balloonCount
-            : 1;
 
-        for (int i = 0; i < clientsCompleted.Count; i++)
+        player1ClientId = playerClientIds[0]; // 첫 접속자가 1P
+        player2ClientId = playerClientIds[1]; // 두 번째 접속자가 2P
+        setManager?.SetPlayerClientIds(player1ClientId, player2ClientId);
+
+        for (int i = 0; i < playerClientIds.Count; i++) // 모든 접속 클라이언트에 대해 스폰
         {
-            var clientId = clientsCompleted[i];
+            var clientId = playerClientIds[i];
+
             // 접속 완료 순서를 스폰 순서로 사용
             spawnManager.SpawnForClient(clientId, i);
-
-            // 각 클라이언트 로컬 BalloonManager 초기화
-            InitializeBalloonManagerClientRpc(balloonCount, new ClientRpcParams
-            {
-                Send = new ClientRpcSendParams { TargetClientIds = new ulong[] { clientId } }
-            });
         }
-    }
-
-    // 참고: 초기 세트 설정/풍선 리셋을 위한 코루틴 진입점
-    void Start()
-    {
-        StartCoroutine(StartGameRoutine());
+        // 서버 측 준비 완료 시점 확인 및 풍선 초기화/동기화
+        StartGameRoutine();
     }
 
     /// <summary>초기 세트/풍선 상태를 맞추기 위해 설정과 PlayerObject 스폰을 기다렸다가 설정.</summary>
-    private IEnumerator StartGameRoutine()
+    private void StartGameRoutine()
     {
-        // RoomConfig runtime이 채워질 때까지 대기
-        while (roomConfig != null && roomConfig.runtimeConfig == null)
-        {
-            yield return null;
-        }
-
-        ConfigureFromRoomConfig();
-
+        // 서버에서만 세트 흐름 시작
         if (IsServer)
         {
-            // 클라이언트들이 접속하고 PlayerObject가 생성될 때까지 잠시 대기 (안전장치)
-            yield return new WaitForSeconds(0.5f);
-
-            CacheBalloonManagers();
-            ResetBalloonCountsForSet();
-            ResetAllBalloons(); // 모든 플레이어의 풍선 리셋
-            SyncSetStartTime();
+            setManager.StartSetFlow();
         }
     }
 
-    /// <summary>새 클라이언트 접속 시 풍선 매니저 캐싱/리셋을 재시도.</summary>
-    private void OnClientConnected(ulong clientId)
+    private void ConfigureFromRoomConfig() // 룸 설정이 있으면 세트 수/풍선 수/타임리밋 반영
     {
-        if (!IsServer) return;
-        
-        // 늦게 들어온 클라이언트(또는 씬 로드 완료 후)를 위해 다시 캐싱 및 리셋 시도
-        StartCoroutine(DelayedResetForNewClient());
-    }
-
-    /// <summary>PlayerObject 생성 시간을 기다린 뒤 풍선 매니저 캐싱/리셋.</summary>
-    private IEnumerator DelayedResetForNewClient()
-    {
-        // PlayerObject가 생성될 시간을 줌
-        yield return new WaitForSeconds(0.5f);
-        CacheBalloonManagers();
-        ResetAllBalloons();
-        ResetBalloonCountsForSet();
-    }
-
-    [ClientRpc]
-    private void InitializeBalloonManagerClientRpc(int balloonCount, ClientRpcParams rpcParams = default)
-    {
-        var nm = NetworkManager.Singleton;
-        if (nm == null || nm.LocalClient == null)
-            return;
-
-        var playerObj = nm.LocalClient.PlayerObject;
-        if (playerObj == null)
-            return;
-
-        var balloonMgr = playerObj.GetComponentInChildren<NetworkBalloonManager>(true);
-        if (balloonMgr == null)
-            return;
-
-        balloonMgr.MaxBalloonCount = Mathf.Max(1, balloonCount);
-        if (!balloonMgr.gameObject.activeSelf)
-            balloonMgr.gameObject.SetActive(true);
-
-        balloonMgr.Initialize();
-    }
-
-    void Update()
-    {
-        if (gameEnded)
-            return;
-        if (!setsConfigured)
-            ConfigureFromRoomConfig();
-
-        if (!IsServer)
-            return;
-
-        if (!hasNetworkStartTime.Value || NetworkManager.Singleton == null)
-            return;
-
-        float elapsed = (float)(NetworkManager.Singleton.ServerTime.Time - networkSetStartTime.Value);
-        float remain = configuredTimeLimitSeconds - elapsed;
-
-        if (remain <= 0f)
-        {
-            ulong? winnerId = EvaluateWinnerByRemaining();
-            StartSetEndSequence("time_up", winnerId);
-        }
-    }
-
-    /// <summary>룸 설정에서 세트 수를 전달할 때 사용.</summary>
-    public void ConfigureSets(int totalSetCount, int startSetIndex = 1)
-    {
-        totalSets = Mathf.Max(1, totalSetCount);
-        currentSetIndex = Mathf.Clamp(startSetIndex, 1, totalSets);
-        setsConfigured = true;
-        OnSetsConfigured?.Invoke(totalSets);
-    }
-
-    public int TotalSets => totalSets;
-
-    private void ConfigureFromRoomConfig()
-    {
-        if (setsConfigured)
-            return;
-
         if (roomConfig != null && roomConfig.runtimeConfig != null)
         {
             var cfg = roomConfig.runtimeConfig;
-            ConfigureSets(cfg.setCount);
-            balloonsPerPlayer = cfg.balloonCount;
             configuredTimeLimitSeconds = cfg.timeLimitSeconds;
+            setManager.ApplySettings(cfg.setCount, cfg.balloonCount, setEndPauseSeconds, configuredTimeLimitSeconds);
         }
         else
         {
-            ConfigureSets(totalSets);
-            balloonsPerPlayer = balloonsPerPlayer;
-            // configuredTimeLimitSeconds 그대로 유지
+            setManager.ApplySettings(totalSets, balloonsPerPlayer, setEndPauseSeconds, configuredTimeLimitSeconds);
         }
     }
 
-    /// <summary>서버 기준으로 풍선 피격을 처리하고 잔여 수가 0이면 세트 종료를 트리거.</summary>
-    private void ProcessBalloonPop(ulong senderClientId)
+    /// <summary>팀원 채널에서 풍선 피격 보고를 받았을 때 서버가 남은 풍선을 차감.</summary>
+    private void HandleBalloonHitFromChannel(ulong ownerClientId, int balloonIndex)
     {
-        if (!IsServer || gameEnded || setEnding)
-            return;
-
-        if (!balloonsRemaining.ContainsKey(senderClientId))
-            balloonsRemaining[senderClientId] = balloonsPerPlayer;
-
-        if (balloonsRemaining[senderClientId] <= 0)
-            return;
-
-        balloonsRemaining[senderClientId] = Mathf.Max(0, balloonsRemaining[senderClientId] - 1);
-        Debug.Log($"[GameManager] Server balloon pop | sender:{senderClientId} | remain:{balloonsRemaining[senderClientId]}");
-
-        if (balloonsRemaining[senderClientId] == 0)
-        {
-            ulong? winnerId = EvaluateWinnerByRemaining();
-            StartSetEndSequence("balloons_depleted", winnerId);
-        }
-    }
-
-    /// <summary>세트 종료 시 공통 처리(서버에서 호출 후 클라에 브로드캐스트).</summary>
-    private void StartSetEndSequence(string reason, ulong? winnerClientId)
-    {
-        if (setEnding || gameEnded)
-            return;
-
-        setEnding = true;
-        bool hasNextSet = currentSetIndex < totalSets;
-        int nextSetIndex = hasNextSet ? currentSetIndex + 1 : currentSetIndex;
-        lastSetWinnerClientId = winnerClientId;
-
-        string winnerText = winnerClientId.HasValue ? winnerClientId.Value.ToString() : "draw";
-        Debug.Log($"[GameManager] 세트 종료 감지(reason:{reason}) | winner:{winnerText} | current:{currentSetIndex}/{totalSets} | next:{nextSetIndex} | hasNext:{hasNextSet}");
-        onSetEnd?.Invoke(); // 승/패 UI는 여기 이벤트 구독
-        OnSetResult?.Invoke(winnerClientId);
-
-        StartCoroutine(SetEndRoutine(hasNextSet, nextSetIndex, winnerClientId));
-        if (IsServer)
-            SetEndClientRpc(hasNextSet, nextSetIndex, winnerClientId.HasValue, winnerClientId.GetValueOrDefault());
-    }
-
-    private IEnumerator SetEndRoutine(bool hasNextSet, int nextSetIndex, ulong? winnerClientId)
-    {
-        yield return new WaitForSeconds(setEndPauseSeconds);
-
-        setEnding = false;
-        if (gameEnded)
-            yield break;
-
-        if (hasNextSet)
-        {
-            PrepareNextSet(nextSetIndex);
-        }
-        else
-        {
-            EndGame();
-        }
-    }
-
-    [ClientRpc]
-    private void SetEndClientRpc(bool hasNextSet, int nextSetIndex, bool hasWinner, ulong winnerClientId)
-    {
-        if (IsServer || gameEnded)
-            return;
-
-        setEnding = true;
-        lastSetWinnerClientId = hasWinner ? winnerClientId : (ulong?)null;
-        string winnerText = hasWinner ? winnerClientId.ToString() : "draw";
-        Debug.Log($"[GameManager] 클라이언트 세트 종료 수신 | winner:{winnerText} | next:{nextSetIndex} | hasNext:{hasNextSet}");
-        onSetEnd?.Invoke();
-        OnSetResult?.Invoke(lastSetWinnerClientId);
-        StartCoroutine(SetEndRoutine(hasNextSet, nextSetIndex, lastSetWinnerClientId));
-    }
-
-    private void PrepareNextSet(int nextSetIndex) // 서버에서 다음 세트 준비
-    {
-        currentSetIndex = nextSetIndex;
-        Debug.Log($"[GameManager] 다음 세트 준비 (set {nextSetIndex}/{totalSets})");
-
-        onPrepareNextSet?.Invoke();
-        ResetAllBalloons(); // 모든 플레이어의 풍선 리셋
-        ResetBalloonCountsForSet();
-        SyncSetStartTime();
-        PrepareNextSetClientRpc(nextSetIndex);
-    }
-
-    [ClientRpc]
-    private void PrepareNextSetClientRpc(int nextSetIndex)
-    {
-        if (IsServer || gameEnded)
-            return;
-
-        currentSetIndex = nextSetIndex;
-        Debug.Log($"[GameManager] 클라이언트에서 다음 세트 준비 수신 (set {nextSetIndex}/{totalSets})");
-        onPrepareNextSet?.Invoke();
+        // 서버에서 세트 매니저에 전달해 풍선 카운트 감소
+        if (setManager != null)
+            setManager.ProcessBalloonPop(ownerClientId);
     }
 
     /// <summary>시간 만료/세트 모두 소진 시 호출. 서버에서 ClientRpc로 알림.</summary>
@@ -374,6 +178,9 @@ public class MatchManager : NetworkBehaviour
 
         gameEnded = true;
         Debug.Log("[GameManager] 매치 종료 - EndGame 실행");
+
+        // 세트 매니저에 종료 알림
+        setManager?.NotifyMatchEnded();
 
         if (IsServer)
         {
@@ -402,136 +209,75 @@ public class MatchManager : NetworkBehaviour
             return;
 
         gameEnded = true;
+        // 클라이언트에서도 세트 매니저 종료 플래그 동기화
+        setManager?.NotifyMatchEnded();
         Debug.Log("[GameManager] 클라이언트에서 매치 종료 수신 - EndGame 실행");
         onTimeUp?.Invoke();
     }
 
-    /// <summary>[서버] 각 클라이언트의 잔여 풍선 수 딕셔너리 초기화.</summary>
-    private void ResetBalloonCountsForSet()
+    private void WireSetManagerEvents()
     {
-        if (!IsServer || NetworkManager == null)
+        if (setManager == null || setEventsWired)
             return;
 
-        balloonsRemaining.Clear();
-        foreach (var clientId in NetworkManager.ConnectedClientsIds)
-        {
-            balloonsRemaining[clientId] = balloonsPerPlayer;
-        }
+        // 세트 이벤트를 매치 매니저/UnityEvent로 릴레이
+        setManager.OnSetEnd += HandleSetEnd;
+        setManager.OnPrepareNextSet += HandlePrepareNextSet;
+        setManager.OnSetResult += RelaySetResult;
+        setManager.OnSetsConfigured += RelaySetsConfigured;
+        setManager.OnMatchEndRequested += HandleMatchEndRequested;
+        setManager.OnMatchResult += RelayMatchResult;
+        setManager.OnSetPreStart += RelaySetPreStart;
+        setEventsWired = true;
     }
 
-    /// <summary>
-    /// [Server] 접속된 모든 클라이언트의 NetworkBalloonManager를 찾아 풍선을 리셋합니다.
-    /// </summary>
-    /// <summary>[서버] 캐싱된 모든 NetworkBalloonManager에 리셋 명령.</summary>
-    private void ResetAllBalloons()
+    private void UnwireSetManagerEvents()
     {
-        if (!IsServer) return;
-
-        if (allBalloonManagers.Count == 0)
-            CacheBalloonManagers();
-
-        foreach (var bm in allBalloonManagers)
-        {
-            if (bm != null)
-            {
-                bm.Server_ResetBalloons(balloonsPerPlayer);
-            }
-        }
-    }
-
-    /// <summary>[서버] 접속한 각 클라이언트 PlayerObject에서 NetworkBalloonManager를 수집.</summary>
-    private void CacheBalloonManagers()
-    {
-        allBalloonManagers.Clear();
-        if (NetworkManager == null) return;
-
-        foreach (var client in NetworkManager.ConnectedClientsList)
-        {
-            if (client.PlayerObject != null)
-            {
-                var bm = client.PlayerObject.GetComponentInChildren<NetworkBalloonManager>();
-                if (bm != null)
-                {
-                    allBalloonManagers.Add(bm);
-                }
-            }
-        }
-    }
-
-    /// <summary>[서버] 잔여 풍선 수로 승자 판정. 동점이면 null 반환.</summary>
-    private ulong? EvaluateWinnerByRemaining()
-    {
-        if (!IsServer || balloonsRemaining.Count == 0)
-            return null;
-
-        ulong? bestClient = null;
-        int bestRemain = int.MinValue;
-        bool tie = false;
-
-        foreach (var kv in balloonsRemaining)
-        {
-            if (kv.Value > bestRemain)
-            {
-                bestRemain = kv.Value;
-                bestClient = kv.Key;
-                tie = false;
-            }
-            else if (kv.Value == bestRemain)
-            {
-                tie = true;
-            }
-        }
-
-        if (tie)
-            return null; // 무승부
-
-        return bestClient;
-    }
-
-    /// <summary>서버: 세트 시작 기준 시각을 동기화.</summary>
-    private void SyncSetStartTime()
-    {
-        if (!IsServer || NetworkManager == null)
+        if (setManager == null || !setEventsWired)
             return;
 
-        float startTime = (float)NetworkManager.ServerTime.Time;
-        networkSetStartTime.Value = startTime;
-        hasNetworkStartTime.Value = true;
+        // 세트 이벤트 구독 해제
+        setManager.OnSetEnd -= HandleSetEnd;
+        setManager.OnPrepareNextSet -= HandlePrepareNextSet;
+        setManager.OnSetResult -= RelaySetResult;
+        setManager.OnSetsConfigured -= RelaySetsConfigured;
+        setManager.OnMatchEndRequested -= HandleMatchEndRequested;
+        setManager.OnMatchResult -= RelayMatchResult;
+        setManager.OnSetPreStart -= RelaySetPreStart;
+        setEventsWired = false;
     }
 
-    /// <summary>팀원 채널에서 풍선 피격 보고를 받았을 때 서버가 남은 풍선을 차감.</summary>
-    private void HandleBalloonHitFromChannel(ulong ownerClientId, int balloonIndex)
+    private void HandleMatchEndRequested()
     {
-        if (!IsServer || gameEnded || setEnding)
-            return;
-
-        ProcessBalloonPop(ownerClientId);
+        // 세트 매니저로부터 매치 종료 요청 수신
+        EndGame();
     }
 
-    public bool HasSetStartTime() => hasNetworkStartTime.Value;
-    public float GetSetStartTime() => networkSetStartTime.Value;
+    // 세트 종료 UnityEvent 호출
+    private void HandleSetEnd() => onSetEnd?.Invoke();
+    // 다음 세트 준비 UnityEvent 호출
+    private void HandlePrepareNextSet() => onPrepareNextSet?.Invoke();
+    // 세트 결과 C# 이벤트 릴레이
+    private void RelaySetResult(ulong? winnerClientId) => OnSetResult?.Invoke(winnerClientId);
+    // 세트 수 설정 C# 이벤트 릴레이
+    private void RelaySetsConfigured(int setCount) => OnSetsConfigured?.Invoke(setCount);
+    // 매치 최종 결과 C# 이벤트 릴레이
+    private void RelayMatchResult(ulong? winnerClientId) => OnMatchResult?.Invoke(winnerClientId);
+    // 세트 시작 직전 C# 이벤트 릴레이
+    private void RelaySetPreStart() => OnSetPreStart?.Invoke();
+
+    // UI에서 세트 시작 시각 수신 여부 확인
+    public bool HasSetStartTime() => setManager != null && setManager.HasSetStartTime();
+    // UI에서 세트 시작 시각 조회
+    public float GetSetStartTime() => setManager != null ? setManager.GetSetStartTime() : 0f;
     /// <summary>서버 기준 흐른 시간(초). 시작 시각을 못 받았으면 0 반환.</summary>
     public float GetElapsedServerSeconds()
     {
-        if (!hasNetworkStartTime.Value || NetworkManager.Singleton == null)
+        // 세트 매니저 없으면 0 반환
+        if (setManager == null)
             return 0f;
 
-        return (float)(NetworkManager.Singleton.ServerTime.Time - networkSetStartTime.Value);
+        return setManager.GetElapsedServerSeconds();
     }
 
-    /// <summary>
-    /// 로컬 플레이어가 소유한 아바타에서 BalloonManager를 찾아 반환한다.
-    /// </summary>
-    private NetworkBalloonManager FindLocalPlayersBalloonManager()
-    {
-        var nm = NetworkManager.Singleton;
-        if (nm == null || nm.LocalClient == null)
-            return null;
-
-        var playerObj = nm.LocalClient.PlayerObject;
-        if (playerObj == null)
-            return null;
-
-        return playerObj.GetComponentInChildren<NetworkBalloonManager>(true);
-    }
 }
