@@ -10,13 +10,14 @@ public class UIMatchResultPopUp : MonoBehaviour
     [SerializeField] private MatchManager _MatchManager;
     
     [Header("Display Settings")]
-    public float SpawnDistance = 2.0f;   // 눈앞 몇 미터?
+    public float SpawnDistance = 1.8f;   // 눈앞 몇 미터?
     public float HeightOffset = 0.0f;    // 눈높이 조절
 
     [Header("UI Components")]
     [SerializeField] private GameObject _MatchResultPanel;
     [SerializeField] private GameObject _WinBanner;
     [SerializeField] private GameObject _LoseBanner;
+    [SerializeField] private GameObject _DrawBanner;
     [SerializeField] private TextMeshProUGUI _ResultStatisticsText;
     [SerializeField] private Button _RematchButton;
     [SerializeField] private Button _ExitButton;
@@ -43,7 +44,7 @@ public class UIMatchResultPopUp : MonoBehaviour
     {
         if (_MatchManager != null)
         {
-            // _MatchManager.OnMatchEnded += ShowResultUI;
+            _MatchManager.OnMatchResult += ShowResultUI;
         }
         if (_ExitButton != null)
         {
@@ -60,7 +61,7 @@ public class UIMatchResultPopUp : MonoBehaviour
     {
         if (_MatchManager != null)
         {
-            // _MatchManager.OnMatchEnded -= ShowResultUI;
+            _MatchManager.OnMatchResult -= ShowResultUI;
         }
 #if UNITY_EDITOR
         if (_TestShowResultAction != null)
@@ -71,13 +72,29 @@ public class UIMatchResultPopUp : MonoBehaviour
     }
 
     // 이벤트가 발생하면 호출됨
-    private void ShowResultUI(ulong winnerId)
+    private void ShowResultUI(ulong? winnerId)
     {
         if(_MatchResultPanel == null) return;
         
-        // 승패 판정
-        bool isWinner = (winnerId == NetworkManager.Singleton.LocalClientId);
+        if (winnerId == null)
+        {
+            // 무승부 처리
+            if (_WinBanner != null) _WinBanner.SetActive(false);
+            if (_LoseBanner != null) _LoseBanner.SetActive(false);
+            if (_DrawBanner != null) _DrawBanner.SetActive(true);
+        }
+        else
+        {
+            // 승패 판정 (winnerId가 null이면 무승부 -> 승리 아님)
+            bool isWinner = (winnerId.Value == NetworkManager.Singleton.LocalClientId);
 
+            // 승패 이미지 설정
+            if (_WinBanner != null  && _LoseBanner != null)
+            {
+                _WinBanner.gameObject.SetActive(isWinner);
+                _LoseBanner.gameObject.SetActive(!isWinner);
+            }
+        }
         // VR 카메라(HMD) 위치 찾기
         Transform cameraTr = Camera.main.transform;
         
@@ -95,13 +112,6 @@ public class UIMatchResultPopUp : MonoBehaviour
         if (lookPos != Vector3.zero)
         {
             _MatchResultPanel.transform.rotation = Quaternion.LookRotation(lookPos);
-        }
-
-        // 승패 이미지 설정
-        if (_WinBanner != null  && _LoseBanner != null)
-        {
-            _WinBanner.gameObject.SetActive(isWinner);
-            _LoseBanner.gameObject.SetActive(!isWinner);
         }
 
         // 표시될 내용 설정 완료 후 UI 패널 활성화
@@ -125,7 +135,7 @@ public class UIMatchResultPopUp : MonoBehaviour
         // 매치 종료 처리 (매치메이커/네트워크 매니저 등과 연동 필요)
         if (_MatchManager != null)
         {
-            // _MatchManager.CloseMatchInstance();
+            _MatchManager.ReturnToLobby();
         }
     }
 
