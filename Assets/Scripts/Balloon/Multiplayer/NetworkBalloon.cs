@@ -24,4 +24,32 @@ public class NetworkBalloon : MonoBehaviour
             _manager.Server_OnBalloonHit(BalloonIndex);
         }
     }
+
+#if UNITY_EDITOR
+    [Header("Debug")]
+    [SerializeField] private bool _testPopTrigger = false;
+
+    private void Update()
+    {
+        if (_testPopTrigger)
+        {
+            _testPopTrigger = false;
+            TestPop();
+        }
+    }
+
+    [ContextMenu("Test Pop (Server Only)")]
+    public void TestPop()
+    {
+        if (_manager != null)
+        {
+            Debug.Log($"[NetworkBalloon] Test Pop Triggered for index {BalloonIndex}");
+            OnHitByDart();
+        }
+        else
+        {
+            Debug.LogWarning("[NetworkBalloon] Manager is null. Cannot pop.");
+        }
+    }
+#endif
 }

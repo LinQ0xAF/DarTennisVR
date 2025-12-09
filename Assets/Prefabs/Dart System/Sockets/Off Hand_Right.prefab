@@ -29,7 +29,7 @@ Transform:
   m_GameObject: {fileID: 569737622367892055}
   serializedVersion: 2
   m_LocalRotation: {x: 0.7071068, y: 0, z: 0, w: 0.7071068}
-  m_LocalPosition: {x: 0.1, y: -0.64, z: -0.75}
+  m_LocalPosition: {x: 0.1, y: -0.64, z: -0.8}
   m_LocalScale: {x: 0.2, y: 0.2, z: 0.2}
   m_ConstrainProportionsScale: 1
   m_Children: []
@@ -203,13 +203,13 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   GripAction: {fileID: 187161793506945269, guid: c348712bda248c246b8c49b3db54643f, type: 3}
-  DartPrefab: {fileID: 6891486028327192877, guid: 03c59633e9eb57840b09924b38e13f45, type: 3}
   ReloadZoneTag: ReloadZone
+  socketReactivationDelay: 0.8
   DartSockets:
   - {fileID: 6740126585792615049}
   - {fileID: 9091913218382145069}
   - {fileID: 3893404799865176289}
-  SocketReactivationDelay: 0.8
+  _dartPoolManager: {fileID: 0}
 --- !u!135 &7521100088279577732
 SphereCollider:
   m_ObjectHideFlags: 0
@@ -321,7 +321,7 @@ Transform:
   m_GameObject: {fileID: 7310637541657602321}
   serializedVersion: 2
   m_LocalRotation: {x: 0.7071068, y: 0, z: 0, w: 0.7071068}
-  m_LocalPosition: {x: -0.1, y: -0.04, z: -0.18}
+  m_LocalPosition: {x: -0.1, y: -0.04, z: -0.2}
   m_LocalScale: {x: 0.2, y: 0.2, z: 0.2}
   m_ConstrainProportionsScale: 1
   m_Children: []
@@ -476,7 +476,7 @@ Transform:
   m_GameObject: {fileID: 8076143874890831063}
   serializedVersion: 2
   m_LocalRotation: {x: 0.7071068, y: 0, z: 0, w: 0.7071068}
-  m_LocalPosition: {x: 0, y: -0.33, z: -0.5}
+  m_LocalPosition: {x: 0, y: -0.34, z: -0.5}
   m_LocalScale: {x: 0.2, y: 0.2, z: 0.2}
   m_ConstrainProportionsScale: 1
   m_Children: []

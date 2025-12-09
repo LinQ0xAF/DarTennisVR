@@ -14,7 +14,8 @@ public class SetManager : NetworkBehaviour
     [Header("Defaults (fallback if MatchManager doesn't override)")]
     [SerializeField, Min(1)] private int initialTotalSets = 1;
     [SerializeField, Min(1)] private int initialBalloonsPerPlayer = 1;
-    [SerializeField] private float setEndPauseSeconds = 3f;
+    [SerializeField] private float setEndPauseSeconds = 2f;
+    [SerializeField] private float prepDurationSeconds = 3f; // 세트 시작 전 대기 시간
     [SerializeField] private int initialTimeLimitSeconds = 60;
 
     private bool matchEnded;
@@ -41,8 +42,10 @@ public class SetManager : NetworkBehaviour
     public event Action OnSetEnd;
     /// <summary>다음 세트 준비 시 실행(풍선 리셋 등).</summary>
     public event Action OnPrepareNextSet;
-    /// <summary>세트 시작 직전(카운트다운 등) 알림.</summary>
+    /// <summary>세트 시작 직전(Prep 단계 진입) 알림.</summary>
     public event Action OnSetPreStart;
+    /// <summary>세트 실제 시작(Prep 종료, 타이머 시작) 알림.</summary>
+    public event Action OnSetStart;
 
     public int TotalSets => totalSets;
     public int TimeLimitSeconds => configuredTimeLimitSeconds;
@@ -88,8 +91,8 @@ public class SetManager : NetworkBehaviour
         CacheBalloonManagers();
         ResetBalloonCountsForSet();
         ResetAllBalloons();
-        BroadcastSetPreStart();
-        SyncSetStartTime();
+        
+        StartCoroutine(SetStartSequenceRoutine());
     }
 
     void Update()
@@ -105,7 +108,7 @@ public class SetManager : NetworkBehaviour
 
         if (remain <= 0f)
         {
-            ulong? winnerId = EvaluateWinnerByRemaining();
+            ulong? winnerId = EvaluateSetWinnerByRemaining();
             StartSetEndSequence("time_up", winnerId);
         }
     }
@@ -135,7 +138,7 @@ public class SetManager : NetworkBehaviour
 
         if (balloonsRemaining[senderClientId] == 0)
         {
-            ulong? winnerId = EvaluateWinnerByRemaining();
+            ulong? winnerId = EvaluateSetWinnerByRemaining();
             StartSetEndSequence("balloons_depleted", winnerId);
         }
     }
@@ -184,9 +187,9 @@ public class SetManager : NetworkBehaviour
         OnPrepareNextSet?.Invoke();
         ResetAllBalloons(); // 모든 플레이어의 풍선 리셋
         ResetBalloonCountsForSet();
-        BroadcastSetPreStart();
-        SyncSetStartTime();
         PrepareNextSetClientRpc(nextSetIndex);
+
+        StartCoroutine(SetStartSequenceRoutine());
     }
 
     [ClientRpc]
@@ -198,6 +201,24 @@ public class SetManager : NetworkBehaviour
         currentSetIndex = nextSetIndex;
         Debug.Log($"[SetManager] 클라이언트에서 다음 세트 준비 수신 (set {nextSetIndex}/{totalSets})");
         OnPrepareNextSet?.Invoke();
+    }
+
+    private IEnumerator SetStartSequenceRoutine()
+    {
+        // 1. 타이머 상태 리셋 (Prep 동안 시간 흐르지 않음)
+        hasNetworkStartTime.Value = false;
+
+        // 2. Prep 단계 시작 알림 (입력 차단, UI 표시)
+        BroadcastSetPreStart();
+
+        // 3. 대기
+        yield return new WaitForSeconds(prepDurationSeconds);
+
+        // 4. 타이머 시작
+        SyncSetStartTime();
+
+        // 5. 세트 시작 알림 (입력 허용, UI 숨김)
+        BroadcastSetStart();
     }
 
     /// <summary>[서버] 각 클라이언트의 잔여 풍선 수 딕셔너리 초기화.</summary>
@@ -250,7 +271,7 @@ public class SetManager : NetworkBehaviour
     }
 
     /// <summary>[서버] 잔여 풍선 수로 승자 판정. 동점이면 null 반환.</summary>
-    private ulong? EvaluateWinnerByRemaining()
+    private ulong? EvaluateSetWinnerByRemaining()
     {
         if (!IsServer || balloonsRemaining.Count == 0)
             return null;
@@ -337,5 +358,19 @@ public class SetManager : NetworkBehaviour
             return;
 
         OnSetPreStart?.Invoke();
+    }
+
+    private void BroadcastSetStart()
+    {
+        OnSetStart?.Invoke();
+        if (IsServer)
+            SetStartClientRpc();
+    }
+
+    [ClientRpc]
+    private void SetStartClientRpc()
+    {
+        if (IsServer) return;
+        OnSetStart?.Invoke();
     }
 }
