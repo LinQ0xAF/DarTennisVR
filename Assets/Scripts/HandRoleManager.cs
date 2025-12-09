@@ -1,4 +1,3 @@
-using Meta.XR.ImmersiveDebugger.UserInterface.Generic;
 using UnityEngine;
 using UnityEngine.XR.Interaction.Toolkit;
 using UnityEngine.XR.Interaction.Toolkit.Interactors;
@@ -16,15 +15,21 @@ public class HandRoleManager : MonoBehaviour
     [SerializeField] private GameObject _RightOffHandObjectGroup;
 
     [Header("MainHand Dart Throw Handlers")]
-    [SerializeField] private DartThrowHandlerBase _LeftHandDartThrowHandler;
-    [SerializeField] private DartThrowHandlerBase _RightHandDartThrowHandler;
+    [SerializeField] private DartThrowHandlerBase _LeftDartThrowHandler;
+    [SerializeField] private DartThrowHandlerBase _RightDartThrowHandler;
 
     [Header("Interaction Layer Masks")]
     [SerializeField] private InteractionLayerMask _MainHandInteractionLayerMask;
     [SerializeField] private InteractionLayerMask _OffHandInteractionLayerMask;
 
-    [SerializeField]
-    private GamePersonalDataManager _GameSettings;
+    [Header("References")]
+    [SerializeField] private GamePersonalDataManager _GameSettings;
+    [SerializeField] private SetManager _SetManager;
+#if UNITY_EDITOR
+    [Header("Debug")]
+    [SerializeField] private bool _testHandsActive = true;
+    private bool _lastTestHandsActive = true;
+#endif
 
     private void Awake()
     {
@@ -37,7 +42,62 @@ public class HandRoleManager : MonoBehaviour
     private void Start()
     {
         UpdateHandRoles(_GameSettings.mainHand);
+
+        if (_SetManager == null) 
+        {
+            _SetManager = FindFirstObjectByType<SetManager>();
+        }
+
+        if (_SetManager != null)
+        {
+            _SetManager.OnSetPreStart += HandleSetPreStart;
+            _SetManager.OnSetStart += HandleSetStart;
+        }
     }
+
+    private void HandleSetPreStart() => SetHandsActive(false);
+    private void HandleSetStart() => SetHandsActive(true);
+
+    /// <summary>
+    /// 손의 상호작용 및 다트 던지기 기능을 활성화/비활성화한다.
+    /// </summary>
+    public void SetHandsActive(bool active)
+    {
+#if UNITY_EDITOR
+        _testHandsActive = active;
+        _lastTestHandsActive = active;
+#endif
+
+        if (active)
+        {
+            // 설정에 따라 올바른 손 역할 복구
+            UpdateHandRoles(_GameSettings.mainHand);
+        }
+        else
+        {
+            // 모든 상호작용 비활성화
+            _LeftHandNearFarInteractor.interactionLayers = _OffHandInteractionLayerMask;
+            _RightHandNearFarInteractor.interactionLayers = _OffHandInteractionLayerMask;
+
+            _LeftOffHandObjectGroup.SetActive(false);
+            _RightOffHandObjectGroup.SetActive(false);
+
+            _LeftDartThrowHandler.enabled = false;
+            _RightDartThrowHandler.enabled = false;
+        }
+    }
+
+#if UNITY_EDITOR
+    void Update()
+    {
+        // 에디터 테스트용: _testHandsActive 값이 변경되면 SetHandsActive 호출
+        if (_lastTestHandsActive != _testHandsActive)
+        {
+            SetHandsActive(_testHandsActive);
+            _lastTestHandsActive = _testHandsActive;
+        }
+    }
+#endif
 
     private void UpdateHandRoles(Hand mainHand)
     {
@@ -51,8 +111,8 @@ public class HandRoleManager : MonoBehaviour
             _RightOffHandObjectGroup.SetActive(false);
             _LeftOffHandObjectGroup.SetActive(true);
 
-            _RightHandDartThrowHandler.enabled = true;
-            _LeftHandDartThrowHandler.enabled = false;
+            _RightDartThrowHandler.enabled = true;
+            _LeftDartThrowHandler.enabled = false;
         }
         else
         {
@@ -63,8 +123,8 @@ public class HandRoleManager : MonoBehaviour
             _RightOffHandObjectGroup.SetActive(true);
             _LeftOffHandObjectGroup.SetActive(false);
 
-            _RightHandDartThrowHandler.enabled = false;
-            _LeftHandDartThrowHandler.enabled = true;
+            _RightDartThrowHandler.enabled = false;
+            _LeftDartThrowHandler.enabled = true;
         }
     }
 
@@ -73,6 +133,12 @@ public class HandRoleManager : MonoBehaviour
         if (_GameSettings != null)
         {
             _GameSettings.OnMainHandChanged -= UpdateHandRoles;
+        }
+
+        if (_SetManager != null)
+        {
+            _SetManager.OnSetPreStart -= HandleSetPreStart;
+            _SetManager.OnSetStart -= HandleSetStart;
         }
     }
 }

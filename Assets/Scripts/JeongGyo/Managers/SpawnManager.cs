@@ -1,7 +1,6 @@
 using Unity.Netcode;
 using UnityEngine;
 using Unity.XR.CoreUtils; // XR Origin 찾기 위해 필요
-using UnityEngine.SceneManagement;
 using System.Collections.Generic;
 
 public class SpawnManager : NetworkBehaviour
@@ -13,6 +12,8 @@ public class SpawnManager : NetworkBehaviour
 
     [Header("Player Prefab NetworkObject")]
     [SerializeField] private NetworkObject playerPrefab;
+
+    [SerializeField] List<UIOrientationFlipper> _UIFlippers;
 
     private void Awake()
     {
@@ -76,8 +77,7 @@ public class SpawnManager : NetworkBehaviour
     [ClientRpc]
     private void SetPlayerUiOrientation_ClientRpc(bool flipForThisClient, ClientRpcParams rpcParams = default)
     {
-        var flipper = FindFirstObjectByType<UIOrientationFlipper>();
-        if (flipper != null)
+        foreach (var flipper in _UIFlippers)
         {
             flipper.SetFlipped(flipForThisClient);
         }
