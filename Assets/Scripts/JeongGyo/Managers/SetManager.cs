@@ -7,6 +7,7 @@ using UnityEngine;
 /// <summary>
 /// 세트 진행/승패 판정/타이머 관리 전담.
 /// - 서버에서 세트 흐름을 결정하고 ClientRpc로 동기화한다.
+/// - 매치 승패나 다음 세트 진행 여부는 MatchManager가 결정한다.
 /// </summary>
 public class SetManager : NetworkBehaviour
 {
@@ -25,13 +26,12 @@ public class SetManager : NetworkBehaviour
     private ulong? lastSetWinnerClientId;
     private ulong? player1ClientId;
     private ulong? player2ClientId;
-    private ulong? matchWinnerClientId;
 
     private readonly Dictionary<ulong, int> balloonsRemaining = new Dictionary<ulong, int>(); // 서버에서만 사용
     private readonly List<NetworkBalloonManager> allBalloonManagers = new List<NetworkBalloonManager>(); // [Server] 캐싱된 풍선 매니저 목록
     private readonly NetworkVariable<float> networkSetStartTime = new NetworkVariable<float>(writePerm: NetworkVariableWritePermission.Server);
     private readonly NetworkVariable<bool> hasNetworkStartTime = new NetworkVariable<bool>(writePerm: NetworkVariableWritePermission.Server);
-    private readonly Dictionary<ulong, int> setWinCounts = new Dictionary<ulong, int>(); // 세트별 승리 수 집계
+    // private readonly Dictionary<ulong, int> setWinCounts = new Dictionary<ulong, int>(); // Removed: MatchManager handles this
 
     /// <summary>세트 결과를 알리는 이벤트(승자 clientId, 무승부면 null).</summary>
     public event Action<ulong?> OnSetResult;
@@ -41,16 +41,11 @@ public class SetManager : NetworkBehaviour
     public event Action OnSetEnd;
     /// <summary>다음 세트 준비 시 실행(풍선 리셋 등).</summary>
     public event Action OnPrepareNextSet;
-    /// <summary>모든 세트 종료/타임업으로 매치 종료가 필요할 때 알림.</summary>
-    public event Action OnMatchEndRequested;
     /// <summary>세트 시작 직전(카운트다운 등) 알림.</summary>
     public event Action OnSetPreStart;
-    /// <summary>매치 최종 승자 알림(무승부면 null).</summary>
-    public event Action<ulong?> OnMatchResult;
 
     public int TotalSets => totalSets;
     public int TimeLimitSeconds => configuredTimeLimitSeconds;
-    public ulong? MatchWinnerClientId => matchWinnerClientId;
 
     private void Awake()
     {
@@ -90,8 +85,6 @@ public class SetManager : NetworkBehaviour
 
         matchEnded = false;
         setEnding = false;
-        matchWinnerClientId = null;
-        setWinCounts.Clear();
         CacheBalloonManagers();
         ResetBalloonCountsForSet();
         ResetAllBalloons();
@@ -154,58 +147,37 @@ public class SetManager : NetworkBehaviour
             return;
 
         setEnding = true;
-        bool hasNextSet = currentSetIndex < totalSets;
-        int nextSetIndex = hasNextSet ? currentSetIndex + 1 : currentSetIndex;
         lastSetWinnerClientId = winnerClientId;
 
         string winnerText = winnerClientId.HasValue ? winnerClientId.Value.ToString() : "draw";
-        Debug.Log($"[SetManager] 세트 종료 감지(reason:{reason}) | winner:{winnerText} | current:{currentSetIndex}/{totalSets} | next:{nextSetIndex} | hasNext:{hasNextSet}");
+        Debug.Log($"[SetManager] 세트 종료 감지(reason:{reason}) | winner:{winnerText} | current:{currentSetIndex}/{totalSets}");
+        
         OnSetEnd?.Invoke(); // 승/패 UI는 여기 이벤트 구독
         OnSetResult?.Invoke(winnerClientId);
-        RecordSetWinner(winnerClientId);
+        // RecordSetWinner(winnerClientId); // Removed: MatchManager handles this
 
-        StartCoroutine(SetEndRoutine(hasNextSet, nextSetIndex, winnerClientId));
+        // StartCoroutine(SetEndRoutine(hasNextSet, nextSetIndex, winnerClientId)); // Removed: MatchManager handles flow
         if (IsServer)
-            SetEndClientRpc(hasNextSet, nextSetIndex, winnerClientId.HasValue, winnerClientId.GetValueOrDefault());
-    }
-
-    private IEnumerator SetEndRoutine(bool hasNextSet, int nextSetIndex, ulong? winnerClientId)
-    {
-        yield return new WaitForSeconds(setEndPauseSeconds);
-
-        setEnding = false;
-        if (matchEnded)
-            yield break;
-
-        if (hasNextSet)
-        {
-            PrepareNextSet(nextSetIndex);
-        }
-        else if (IsServer)
-        {
-            matchWinnerClientId = EvaluateMatchWinnerBySetWins();
-            OnMatchResult?.Invoke(matchWinnerClientId);
-            RequestMatchEnd();
-        }
+            SetEndClientRpc(winnerClientId.HasValue, winnerClientId.GetValueOrDefault());
     }
 
     [ClientRpc]
-    private void SetEndClientRpc(bool hasNextSet, int nextSetIndex, bool hasWinner, ulong winnerClientId)
+    private void SetEndClientRpc(bool hasWinner, ulong winnerClientId)
     {
-        if (IsServer || matchEnded)
-            return;
+        if (IsServer) return; // Server already fired events locally
 
         setEnding = true;
         lastSetWinnerClientId = hasWinner ? winnerClientId : (ulong?)null;
         string winnerText = hasWinner ? GetPlayerSlotText(winnerClientId) : "draw";
-        Debug.Log($"[SetManager] 클라이언트 세트 종료 수신 | winner:{winnerText} | next:{nextSetIndex} | hasNext:{hasNextSet}");
+        Debug.Log($"[SetManager] 클라이언트 세트 종료 수신 | winner:{winnerText}");
+        
         OnSetEnd?.Invoke();
         OnSetResult?.Invoke(lastSetWinnerClientId);
-        StartCoroutine(SetEndRoutine(hasNextSet, nextSetIndex, lastSetWinnerClientId));
     }
 
-    private void PrepareNextSet(int nextSetIndex) // 서버에서 다음 세트 준비
+    public void PrepareNextSet(int nextSetIndex) // 서버에서 다음 세트 준비 (Called by MatchManager)
     {
+        setEnding = false; // Reset flag
         currentSetIndex = nextSetIndex;
         Debug.Log($"[SetManager] 다음 세트 준비 (set {nextSetIndex}/{totalSets})");
 
@@ -220,22 +192,12 @@ public class SetManager : NetworkBehaviour
     [ClientRpc]
     private void PrepareNextSetClientRpc(int nextSetIndex)
     {
-        if (IsServer || matchEnded)
-            return;
+        if (IsServer) return; // Server already handled locally
 
+        setEnding = false; // Reset flag on client too
         currentSetIndex = nextSetIndex;
         Debug.Log($"[SetManager] 클라이언트에서 다음 세트 준비 수신 (set {nextSetIndex}/{totalSets})");
         OnPrepareNextSet?.Invoke();
-    }
-
-    private void RequestMatchEnd()
-    {
-        if (matchEnded)
-            return;
-
-        matchEnded = true;
-        OnMatchResult?.Invoke(matchWinnerClientId);
-        OnMatchEndRequested?.Invoke();
     }
 
     /// <summary>[서버] 각 클라이언트의 잔여 풍선 수 딕셔너리 초기화.</summary>
@@ -375,58 +337,5 @@ public class SetManager : NetworkBehaviour
             return;
 
         OnSetPreStart?.Invoke();
-    }
-
-    /// <summary>세트 승자 기록(무승부 제외).</summary>
-    private void RecordSetWinner(ulong? winnerClientId)
-    {
-        if (!winnerClientId.HasValue)
-            return;
-
-        if (!setWinCounts.ContainsKey(winnerClientId.Value))
-            setWinCounts[winnerClientId.Value] = 0;
-
-        setWinCounts[winnerClientId.Value]++;
-    }
-
-    /// <summary>세트 승수 기반 최종 승자 계산(동률이면 null).</summary>
-    private ulong? EvaluateMatchWinnerBySetWins()
-    {
-        if (setWinCounts.Count == 0)
-            return null;
-
-        // 플레이어 1/2 둘 다 존재하면 둘 사이의 승수를 비교
-        if (player1ClientId.HasValue && player2ClientId.HasValue)
-        {
-            int p1Wins = setWinCounts.TryGetValue(player1ClientId.Value, out var w1) ? w1 : 0;
-            int p2Wins = setWinCounts.TryGetValue(player2ClientId.Value, out var w2) ? w2 : 0;
-            if (p1Wins > p2Wins) return player1ClientId.Value;
-            if (p2Wins > p1Wins) return player2ClientId.Value;
-            return null; // 동률
-        }
-
-        // 일반 케이스: 가장 승수가 많은 클라이언트
-        ulong? bestClient = null;
-        int bestWins = int.MinValue;
-        bool tie = false;
-
-        foreach (var kv in setWinCounts)
-        {
-            if (kv.Value > bestWins)
-            {
-                bestWins = kv.Value;
-                bestClient = kv.Key;
-                tie = false;
-            }
-            else if (kv.Value == bestWins)
-            {
-                tie = true;
-            }
-        }
-
-        if (tie)
-            return null;
-
-        return bestClient;
     }
 }

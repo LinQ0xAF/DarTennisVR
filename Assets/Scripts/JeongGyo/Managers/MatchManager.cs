@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using Unity.Netcode;
 using UnityEngine;
@@ -25,10 +26,11 @@ public class MatchManager : NetworkBehaviour
     [SerializeField, Min(1)] private int totalSets = 1; // 인스펙터 기본 세트 수(초기화 시 룸 설정으로 대체)
     [SerializeField, Min(1)] private int balloonsPerPlayer = 1; // 플레이어당 시작 풍선 수(씬 설정이 우선)
     [SerializeField] private float setEndPauseSeconds = 3f; // 세트 종료 후 잠시 멈추는 시간
+    [SerializeField] private float matchEndWaitSeconds = 5f; // 매치 종료 후 로비 이동 전 대기 시간
     [SerializeField] private int configuredTimeLimitSeconds = 60; // 세트 제한 시간(초)
 
     [Header("Scene Flow")]
-    [SerializeField] private string lobbySceneName = "EnteranceTemp"; // 모든 세트 종료 후 돌아갈 씬 이름(네트워크 씬 로드)
+    [SerializeField] private string lobbySceneName = "Entrance_Alpha"; // 모든 세트 종료 후 돌아갈 씬 이름(로비 씬 로드)
     [SerializeField] private bool returnToLobbyOnMatchEnd = true;
 
     [Header("Events (optional)")]
@@ -41,6 +43,8 @@ public class MatchManager : NetworkBehaviour
     private ulong? player2ClientId;
     private readonly List<ulong> playerClientIds = new List<ulong>();
     private bool setEventsWired;
+    private int currentSetIndex = 1; // Track current set index in MatchManager
+    private readonly Dictionary<ulong, int> matchScore = new Dictionary<ulong, int>(); // Track match score
 
     /// <summary>세트 결과를 알리는 이벤트(승자 clientId, 무승부면 null).</summary>
     public event Action<ulong?> OnSetResult;
@@ -154,7 +158,9 @@ public class MatchManager : NetworkBehaviour
         {
             var cfg = roomConfig.runtimeConfig;
             configuredTimeLimitSeconds = cfg.timeLimitSeconds;
-            setManager.ApplySettings(cfg.setCount, cfg.balloonCount, setEndPauseSeconds, configuredTimeLimitSeconds);
+            totalSets = cfg.setCount; // Update local field
+            balloonsPerPlayer = cfg.balloonCount; // Update local field
+            setManager.ApplySettings(totalSets, balloonsPerPlayer, setEndPauseSeconds, configuredTimeLimitSeconds);
         }
         else
         {
@@ -171,46 +177,87 @@ public class MatchManager : NetworkBehaviour
     }
 
     /// <summary>시간 만료/세트 모두 소진 시 호출. 서버에서 ClientRpc로 알림.</summary>
-    public void EndGame()
+    public void EndGame(ulong? matchWinner = null)
     {
         if (gameEnded)
             return;
 
         gameEnded = true;
-        Debug.Log("[GameManager] 매치 종료 - EndGame 실행");
+        Debug.Log($"[GameManager] 매치 종료 - EndGame 실행 (Winner: {matchWinner})");
 
         // 세트 매니저에 종료 알림
         setManager?.NotifyMatchEnded();
+        
+        OnMatchResult?.Invoke(matchWinner); // Local event
 
         if (IsServer)
         {
-            EndGameClientRpc();
+            EndGameClientRpc(matchWinner.HasValue, matchWinner.GetValueOrDefault());
         }
 
         onTimeUp?.Invoke();
 
-        if (IsServer && returnToLobbyOnMatchEnd && !string.IsNullOrWhiteSpace(lobbySceneName))
+        // 매치 종료 후 잠시 대기했다가 로비로 이동
+        StartCoroutine(EndGameRoutine());
+    }
+
+    /// <summary>
+    /// 로비로 즉시 이동한다.
+    /// - Server: 모든 클라이언트를 데리고 씬 이동
+    /// - Client: 네트워크 연결을 끊고 로컬 씬 이동
+    /// </summary>
+    public void ReturnToLobby()
+    {
+        if (IsServer)
         {
-            if (NetworkManager != null && NetworkManager.SceneManager != null)
+            if (!string.IsNullOrWhiteSpace(lobbySceneName))
             {
-                NetworkManager.SceneManager.LoadScene(lobbySceneName, LoadSceneMode.Single);
+                if (NetworkManager != null && NetworkManager.SceneManager != null)
+                {
+                    NetworkManager.SceneManager.LoadScene(lobbySceneName, LoadSceneMode.Single);
+                }
+                else
+                {
+                    SceneManager.LoadScene(lobbySceneName);
+                }
             }
-            else
+        }
+        else
+        {
+            // Client: Disconnect and load local
+            if (NetworkManager.Singleton != null)
             {
-                SceneManager.LoadScene(lobbySceneName);
+                NetworkManager.Singleton.Shutdown();
             }
+            SceneManager.LoadScene(lobbySceneName);
         }
     }
 
+    private IEnumerator EndGameRoutine()
+    {
+        yield return new WaitForSeconds(matchEndWaitSeconds);
+
+        if (IsServer && returnToLobbyOnMatchEnd)
+        {
+            ReturnToLobby();
+        }
+    }
+
+
     [ClientRpc]
-    private void EndGameClientRpc()
+    private void EndGameClientRpc(bool hasWinner, ulong winnerId)
     {
         if (gameEnded)
             return;
 
         gameEnded = true;
+        ulong? matchWinner = hasWinner ? winnerId : (ulong?)null;
+        
         // 클라이언트에서도 세트 매니저 종료 플래그 동기화
         setManager?.NotifyMatchEnded();
+        
+        OnMatchResult?.Invoke(matchWinner); // Local event
+        
         Debug.Log("[GameManager] 클라이언트에서 매치 종료 수신 - EndGame 실행");
         onTimeUp?.Invoke();
     }
@@ -223,10 +270,9 @@ public class MatchManager : NetworkBehaviour
         // 세트 이벤트를 매치 매니저/UnityEvent로 릴레이
         setManager.OnSetEnd += HandleSetEnd;
         setManager.OnPrepareNextSet += HandlePrepareNextSet;
-        setManager.OnSetResult += RelaySetResult;
+        setManager.OnSetResult += HandleSetResult; // Changed from RelaySetResult
         setManager.OnSetsConfigured += RelaySetsConfigured;
-        setManager.OnMatchEndRequested += HandleMatchEndRequested;
-        setManager.OnMatchResult += RelayMatchResult;
+        // setManager.OnMatchEndRequested += HandleMatchEndRequested; // Removed
         setManager.OnSetPreStart += RelaySetPreStart;
         setEventsWired = true;
     }
@@ -239,30 +285,107 @@ public class MatchManager : NetworkBehaviour
         // 세트 이벤트 구독 해제
         setManager.OnSetEnd -= HandleSetEnd;
         setManager.OnPrepareNextSet -= HandlePrepareNextSet;
-        setManager.OnSetResult -= RelaySetResult;
+        setManager.OnSetResult -= HandleSetResult; // Changed from RelaySetResult
         setManager.OnSetsConfigured -= RelaySetsConfigured;
-        setManager.OnMatchEndRequested -= HandleMatchEndRequested;
-        setManager.OnMatchResult -= RelayMatchResult;
+        // setManager.OnMatchEndRequested -= HandleMatchEndRequested; // Removed
         setManager.OnSetPreStart -= RelaySetPreStart;
         setEventsWired = false;
     }
-
-    private void HandleMatchEndRequested()
-    {
-        // 세트 매니저로부터 매치 종료 요청 수신
-        EndGame();
-    }
-
+    
     // 세트 종료 UnityEvent 호출
     private void HandleSetEnd() => onSetEnd?.Invoke();
     // 다음 세트 준비 UnityEvent 호출
     private void HandlePrepareNextSet() => onPrepareNextSet?.Invoke();
-    // 세트 결과 C# 이벤트 릴레이
-    private void RelaySetResult(ulong? winnerClientId) => OnSetResult?.Invoke(winnerClientId);
+    
+    // 세트 결과 처리 (Server Logic + Relay)
+    private void HandleSetResult(ulong? winnerClientId)
+    {
+        OnSetResult?.Invoke(winnerClientId); // Relay to public event
+
+        if (IsServer)
+        {
+            ProcessSetResultServer(winnerClientId);
+        }
+    }
+
+    private void ProcessSetResultServer(ulong? winnerClientId)
+    {
+        if (winnerClientId.HasValue)
+        {
+            if (!matchScore.ContainsKey(winnerClientId.Value))
+                matchScore[winnerClientId.Value] = 0;
+            matchScore[winnerClientId.Value]++;
+        }
+
+        StartCoroutine(MatchFlowRoutine());
+    }
+
+    private IEnumerator MatchFlowRoutine()
+    {
+        yield return new WaitForSeconds(setEndPauseSeconds);
+
+        if (gameEnded) yield break;
+
+        // Check Win Condition
+        bool matchOver = false;
+        ulong? matchWinner = null;
+
+        // Condition 1: All sets played
+        if (currentSetIndex >= totalSets)
+        {
+            matchOver = true;
+        }
+        
+        // Condition 2: Majority win (Best of N)
+        int majority = (totalSets / 2) + 1;
+        foreach(var kv in matchScore) 
+        { 
+            if(kv.Value >= majority) 
+            { 
+                matchOver = true; 
+                matchWinner = kv.Key; 
+                break;
+            } 
+        }
+
+        if (matchOver)
+        {
+             if (matchWinner == null) matchWinner = EvaluateMatchWinner();
+             EndGame(matchWinner);
+        }
+        else
+        {
+             currentSetIndex++;
+             setManager.PrepareNextSet(currentSetIndex);
+        }
+    }
+
+    private ulong? EvaluateMatchWinner()
+    {
+        ulong? bestClient = null;
+        int bestWins = int.MinValue;
+        bool tie = false;
+
+        foreach (var kv in matchScore)
+        {
+            if (kv.Value > bestWins)
+            {
+                bestWins = kv.Value;
+                bestClient = kv.Key;
+                tie = false;
+            }
+            else if (kv.Value == bestWins)
+            {
+                tie = true;
+            }
+        }
+
+        if (tie) return null;
+        return bestClient;
+    }
+
     // 세트 수 설정 C# 이벤트 릴레이
     private void RelaySetsConfigured(int setCount) => OnSetsConfigured?.Invoke(setCount);
-    // 매치 최종 결과 C# 이벤트 릴레이
-    private void RelayMatchResult(ulong? winnerClientId) => OnMatchResult?.Invoke(winnerClientId);
     // 세트 시작 직전 C# 이벤트 릴레이
     private void RelaySetPreStart() => OnSetPreStart?.Invoke();
 

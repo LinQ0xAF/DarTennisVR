@@ -42,7 +42,7 @@ public class NetworkBalloonManager : NetworkBehaviour
         // 자신의 풍선은 그림자만 보이도록 설정
         if (IsOwner)
         {
-            HideBalloonsForOwner();
+            // HideBalloonsForOwner();
         }
     }
 

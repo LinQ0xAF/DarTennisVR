@@ -22,7 +22,7 @@ public class SetScoreUI : MonoBehaviour
     void Awake()
     {
         if (gameManager == null)
-            gameManager = FindObjectOfType<MatchManager>();
+            gameManager = FindFirstObjectByType<MatchManager>();
 
         InitializeDots();
     }

@@ -3764,7 +3764,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   m_Mediator: {fileID: 8376157852249783270}
   m_TransformationPriority: 0
-  m_TurnSpeed: 60
+  m_TurnSpeed: 120
   m_EnableTurnLeftRight: 1
   m_EnableTurnAround: 1
   m_LeftHandTurnInput:
