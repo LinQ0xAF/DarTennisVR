@@ -401,13 +401,15 @@ MonoBehaviour:
   _RightHandNearFarInteractor: {fileID: 4436899273659824945}
   _LeftOffHandObjectGroup: {fileID: 5981711073642908193}
   _RightOffHandObjectGroup: {fileID: 6558710217745664872}
-  _LeftHandDartThrowHandler: {fileID: 6926236700652351889}
-  _RightHandDartThrowHandler: {fileID: 160949362902995205}
+  _LeftDartThrowHandler: {fileID: 6926236700652351889}
+  _RightDartThrowHandler: {fileID: 160949362902995205}
   _MainHandInteractionLayerMask:
     m_Bits: 1025
   _OffHandInteractionLayerMask:
     m_Bits: 1
   _GameSettings: {fileID: 11400000, guid: 44c76b51bc24b3c4dbdcdc327d2a5052, type: 2}
+  _SetManager: {fileID: 0}
+  _testHandsActive: 1
 --- !u!1 &1538756680100236013
 GameObject:
   m_ObjectHideFlags: 0
@@ -5099,7 +5101,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 66955603859301094, guid: c20e8e50f9b912d40ad03589bd3457b0, type: 3}
       propertyPath: m_LocalPosition.z
-      value: -0.75
+      value: -0.8
       objectReference: {fileID: 0}
     - target: {fileID: 66955603859301094, guid: c20e8e50f9b912d40ad03589bd3457b0, type: 3}
       propertyPath: m_LocalRotation.w
@@ -5171,7 +5173,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7367807604958008907, guid: c20e8e50f9b912d40ad03589bd3457b0, type: 3}
       propertyPath: m_LocalPosition.y
-      value: -0.33
+      value: -0.34
       objectReference: {fileID: 0}
     - target: {fileID: 7367807604958008907, guid: c20e8e50f9b912d40ad03589bd3457b0, type: 3}
       propertyPath: m_LocalPosition.z
@@ -5442,6 +5444,10 @@ PrefabInstance:
     - target: {fileID: 1751975429920479143, guid: 1d42fc69162568143a1dab17a7685b39, type: 3}
       propertyPath: m_Name
       value: Off Hand_Right
+      objectReference: {fileID: 0}
+    - target: {fileID: 1751975429920479143, guid: 1d42fc69162568143a1dab17a7685b39, type: 3}
+      propertyPath: m_IsActive
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 6556785357697319757, guid: 1d42fc69162568143a1dab17a7685b39, type: 3}
       propertyPath: m_LocalScale.x
