@@ -12,7 +12,6 @@ using UnityEngine.SceneManagement;
 /// - 풍선이 먼저 0이 된 쪽이 패배, 타임업이면 잔여 풍선이 많은 쪽 승리(동점은 무승부)
 /// - 세트가 남아 있으면 잠시 멈췄다가 다음 세트 준비, 없으면 매치 종료
 /// </summary>
-[RequireComponent(typeof(SetManager))]
 public class MatchManager : NetworkBehaviour
 {
     [Header("Refs")]
@@ -92,18 +91,41 @@ public class MatchManager : NetworkBehaviour
         ConfigureFromRoomConfig();
 
         // 씬 로드 완료 시 서버가 접속 클라이언트 목록을 기반으로 스폰 처리
-        if (IsServer && NetworkManager != null && NetworkManager.SceneManager != null)
+        if (IsServer && NetworkManager != null)
         {
-            NetworkManager.SceneManager.OnLoadEventCompleted += OnSceneLoadCompleted;
+            if (NetworkManager.SceneManager != null)
+                NetworkManager.SceneManager.OnLoadEventCompleted += OnSceneLoadCompleted;
+
+            NetworkManager.OnClientDisconnectCallback += OnClientDisconnect;
         }
     }
 
     public override void OnNetworkDespawn()
     {
         // 씬 로드 완료 콜백 해제
-        if (IsServer && NetworkManager != null && NetworkManager.SceneManager != null)
+        if (IsServer && NetworkManager != null)
         {
-            NetworkManager.SceneManager.OnLoadEventCompleted -= OnSceneLoadCompleted;
+            if (NetworkManager.SceneManager != null)
+                NetworkManager.SceneManager.OnLoadEventCompleted -= OnSceneLoadCompleted;
+
+            NetworkManager.OnClientDisconnectCallback -= OnClientDisconnect;
+        }
+    }
+
+    private void OnClientDisconnect(ulong clientId)
+    {
+        if (!IsServer || gameEnded) return;
+
+        // 플레이어 중 한 명이 나갔는지 확인
+        if (player1ClientId.HasValue && clientId == player1ClientId.Value)
+        {
+            Debug.Log($"[MatchManager] P1({clientId}) Disconnected. P2 Wins.");
+            EndGame(player2ClientId);
+        }
+        else if (player2ClientId.HasValue && clientId == player2ClientId.Value)
+        {
+            Debug.Log($"[MatchManager] P2({clientId}) Disconnected. P1 Wins.");
+            EndGame(player1ClientId);
         }
     }
 
@@ -160,12 +182,9 @@ public class MatchManager : NetworkBehaviour
             configuredTimeLimitSeconds = cfg.timeLimitSeconds;
             totalSets = cfg.setCount; // Update local field
             balloonsPerPlayer = cfg.balloonCount; // Update local field
-            setManager.ApplySettings(totalSets, balloonsPerPlayer, setEndPauseSeconds, configuredTimeLimitSeconds);
         }
-        else
-        {
-            setManager.ApplySettings(totalSets, balloonsPerPlayer, setEndPauseSeconds, configuredTimeLimitSeconds);
-        }
+
+        setManager.ApplySettings(totalSets, balloonsPerPlayer, setEndPauseSeconds, configuredTimeLimitSeconds);
     }
 
     /// <summary>팀원 채널에서 풍선 피격 보고를 받았을 때 서버가 남은 풍선을 차감.</summary>
