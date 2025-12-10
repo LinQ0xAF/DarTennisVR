@@ -16,9 +16,9 @@ public class UIMatchTimer : MonoBehaviour
     {
         // 인스펙터에 없으면 씬에서 자동 검색
         if (gameManager == null)
-            gameManager = FindObjectOfType<MatchManager>();
+            gameManager = FindFirstObjectByType<MatchManager>();
         if (personalDataManager == null)
-            personalDataManager = FindObjectOfType<GamePersonalDataManager>();
+            personalDataManager = FindFirstObjectByType<GamePersonalDataManager>();
     }
 
     void Update()

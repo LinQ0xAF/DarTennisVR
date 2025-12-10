@@ -17,7 +17,7 @@ public class MatchManager : NetworkBehaviour
     [Header("Refs")]
     [SerializeField] private RoomConfigSO roomConfig; // 룸 설정(Runtime 포함)
     [SerializeField] private NetworkBalloonManager balloonManager; // 로컬 풍선 매니저 캐싱용(옵션)
-    [SerializeField] private NetworkBalloonHitChannelSO balloonHitChannel; // 팀원 채널: 서버가 풍선 피격 보고 수신
+    // [SerializeField] private NetworkBalloonHitChannelSO balloonHitChannel; // Moved to SetManager
     [SerializeField] private SpawnManager spawnManager; // 플레이어 아바타 스폰 담당
     [SerializeField] private SetManager setManager; // 세트 흐름 전담
 
@@ -37,7 +37,7 @@ public class MatchManager : NetworkBehaviour
     [SerializeField] public UnityEvent onPrepareNextSet; // 다음 세트 준비 시 실행(풍선 리셋 등)
     [SerializeField] private UnityEvent onTimeUp; // 매치 종료/타임업 시 실행
 
-    private bool gameEnded;
+    private bool matchEnded;
     private ulong? player1ClientId;
     private ulong? player2ClientId;
     private readonly List<ulong> playerClientIds = new List<ulong>();
@@ -60,16 +60,16 @@ public class MatchManager : NetworkBehaviour
     {
         // 세트 매니저 컴포넌트 확보(인스펙터 미지정 시 자동 할당)
         if (setManager == null)
-            setManager = GetComponent<SetManager>();
+            setManager = FindFirstObjectByType<SetManager>();
     }
     
 
     // 참고: 풍선 피격 채널 및 클라이언트 접속 이벤트 구독
     void OnEnable()
     {
-        // 풍선 피격 이벤트 구독
-        if (balloonHitChannel != null)
-            balloonHitChannel.OnPlayerHit += HandleBalloonHitFromChannel; //풍선이 다트 맞았을때 터지느 로직 부여
+        // 풍선 피격 이벤트 구독 -> SetManager로 이동
+        // if (balloonHitChannel != null)
+        //     balloonHitChannel.OnPlayerHit += HandleBalloonHitFromChannel; 
 
         // 세트 매니저 이벤트 구독
         WireSetManagerEvents();
@@ -77,9 +77,9 @@ public class MatchManager : NetworkBehaviour
 
     void OnDisable()
     {
-        // 풍선 피격 이벤트 해제
-        if (balloonHitChannel != null)
-            balloonHitChannel.OnPlayerHit -= HandleBalloonHitFromChannel;
+        // 풍선 피격 이벤트 해제 -> SetManager로 이동
+        // if (balloonHitChannel != null)
+        //     balloonHitChannel.OnPlayerHit -= HandleBalloonHitFromChannel;
 
         // 세트 매니저 이벤트 해제
         UnwireSetManagerEvents();
@@ -114,7 +114,7 @@ public class MatchManager : NetworkBehaviour
 
     private void OnClientDisconnect(ulong clientId)
     {
-        if (!IsServer || gameEnded) return;
+        if (!IsServer || matchEnded) return;
 
         // 플레이어 중 한 명이 나갔는지 확인
         if (player1ClientId.HasValue && clientId == player1ClientId.Value)
@@ -170,7 +170,7 @@ public class MatchManager : NetworkBehaviour
         // 서버에서만 세트 흐름 시작
         if (IsServer)
         {
-            setManager.StartSetFlow();
+            setManager.StartSetFlow(currentSetIndex);
         }
     }
 
@@ -184,24 +184,18 @@ public class MatchManager : NetworkBehaviour
             balloonsPerPlayer = cfg.balloonCount; // Update local field
         }
 
-        setManager.ApplySettings(totalSets, balloonsPerPlayer, setEndPauseSeconds, configuredTimeLimitSeconds);
+        setManager.ApplySettings(totalSets, balloonsPerPlayer, configuredTimeLimitSeconds);
     }
 
-    /// <summary>팀원 채널에서 풍선 피격 보고를 받았을 때 서버가 남은 풍선을 차감.</summary>
-    private void HandleBalloonHitFromChannel(ulong ownerClientId, int balloonIndex)
-    {
-        // 서버에서 세트 매니저에 전달해 풍선 카운트 감소
-        if (setManager != null)
-            setManager.ProcessBalloonPop(ownerClientId);
-    }
+    // HandleBalloonHitFromChannel moved to SetManager
 
     /// <summary>시간 만료/세트 모두 소진 시 호출. 서버에서 ClientRpc로 알림.</summary>
     public void EndGame(ulong? matchWinner = null)
     {
-        if (gameEnded)
+        if (matchEnded)
             return;
 
-        gameEnded = true;
+        matchEnded = true;
         Debug.Log($"[GameManager] 매치 종료 - EndGame 실행 (Winner: {matchWinner})");
 
         // 세트 매니저에 종료 알림
@@ -266,10 +260,10 @@ public class MatchManager : NetworkBehaviour
     [ClientRpc]
     private void EndGameClientRpc(bool hasWinner, ulong winnerId)
     {
-        if (gameEnded)
+        if (matchEnded)
             return;
 
-        gameEnded = true;
+        matchEnded = true;
         ulong? matchWinner = hasWinner ? winnerId : (ulong?)null;
         
         // 클라이언트에서도 세트 매니저 종료 플래그 동기화
@@ -343,7 +337,7 @@ public class MatchManager : NetworkBehaviour
     {
         yield return new WaitForSeconds(setEndPauseSeconds);
 
-        if (gameEnded) yield break;
+        if (matchEnded) yield break;
 
         // Check Win Condition
         bool matchOver = false;
@@ -375,7 +369,7 @@ public class MatchManager : NetworkBehaviour
         else
         {
              currentSetIndex++;
-             setManager.PrepareNextSet(currentSetIndex);
+             setManager.StartSetFlow(currentSetIndex);
         }
     }
 

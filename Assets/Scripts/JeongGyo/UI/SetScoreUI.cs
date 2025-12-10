@@ -3,7 +3,7 @@ using UnityEngine.UI;
 using Unity.Netcode;
 
 /// <summary>
-/// 세트 결과를 원형 UI로 표시한다. GameManager.OnSetResult를 구독해 승/패/무승부 색상을 갱신한다.
+/// 세트 결과를 원형 UI로 표시한다. MatchManager.OnSetResult를 구독해 승/패/무승부 색상을 갱신한다.
 /// </summary>
 public class SetScoreUI : MonoBehaviour
 {
@@ -13,7 +13,7 @@ public class SetScoreUI : MonoBehaviour
     [SerializeField] private Color drawColor = Color.yellow;
     [SerializeField] private Color emptyColor = Color.white;
 
-    [SerializeField] private MatchManager gameManager;
+    [SerializeField] private MatchManager matchManager;
 
     private int filledRounds = 0;
     private ulong localClientId;
@@ -21,8 +21,8 @@ public class SetScoreUI : MonoBehaviour
 
     void Awake()
     {
-        if (gameManager == null)
-            gameManager = FindFirstObjectByType<MatchManager>();
+        if (matchManager == null)
+            matchManager = FindFirstObjectByType<MatchManager>();
 
         InitializeDots();
     }
@@ -32,10 +32,10 @@ public class SetScoreUI : MonoBehaviour
         if (NetworkManager.Singleton != null)
             localClientId = NetworkManager.Singleton.LocalClientId;
 
-        if (gameManager != null)
+        if (matchManager != null)
         {
-            gameManager.OnSetResult += HandleSetResult;
-            gameManager.OnSetsConfigured += HandleSetsConfigured;
+            matchManager.OnSetResult += HandleSetResult;
+            matchManager.OnSetsConfigured += HandleSetsConfigured;
         }
 
         InitializeDots();
@@ -43,10 +43,10 @@ public class SetScoreUI : MonoBehaviour
 
     void OnDisable()
     {
-        if (gameManager != null)
+        if (matchManager != null)
         {
-            gameManager.OnSetResult -= HandleSetResult;
-            gameManager.OnSetsConfigured -= HandleSetsConfigured;
+            matchManager.OnSetResult -= HandleSetResult;
+            matchManager.OnSetsConfigured -= HandleSetsConfigured;
         }
     }
 
@@ -70,7 +70,7 @@ public class SetScoreUI : MonoBehaviour
     private void InitializeDots()
     {
         int available = roundDots != null ? roundDots.Length : 0;
-        int configuredSets = gameManager != null ? gameManager.TotalSets : available;
+        int configuredSets = matchManager != null ? matchManager.TotalSets : available;
         targetSets = Mathf.Clamp(configuredSets, 0, available);
         ResetDots();
     }

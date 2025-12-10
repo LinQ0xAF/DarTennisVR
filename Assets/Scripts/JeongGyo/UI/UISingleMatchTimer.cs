@@ -7,24 +7,32 @@ using TMPro;
 /// </summary>
 public class UISingleMatchTimer : MonoBehaviour
 {
-    [SerializeField] private SingleGameplayInitializer gameplayInitializer; // 씬에 존재하는 초기화 스크립트 참조
+    [SerializeField] private SingleRoundManager _RoundManager; // 씬에 존재하는 초기화 스크립트 참조
     [SerializeField] private TMP_Text timerText; // mm:ss 표시용
     [SerializeField] private bool clampToZero = true; // 0 아래로 내려갈지 여부
+    private float _TimeLimitSeconds = -1f;
+    public float TimeLimitSeconds => _RoundManager != null ? _RoundManager.TimeLimitSeconds : _TimeLimitSeconds;
 
     private void Awake()
     {
         // 인스펙터에 없으면 씬에서 자동 검색
-        if (gameplayInitializer == null)
-            gameplayInitializer = FindObjectOfType<SingleGameplayInitializer>();
+        if (_RoundManager == null)
+            _RoundManager = FindFirstObjectByType<SingleRoundManager>();
+    }
+
+    private void OnEnable()
+    {
+        if (_RoundManager != null)
+            _TimeLimitSeconds = _RoundManager.TimeLimitSeconds;
     }
 
     private void Update()
     {
-        if (gameplayInitializer == null || timerText == null || !gameplayInitializer.IsInitialized)
+        if (_RoundManager == null || timerText == null)
             return;
 
-        var elapsed = gameplayInitializer.GetElapsedLocalSeconds();
-        var remain = gameplayInitializer.TimeLimitSeconds - elapsed;
+        var elapsed = _RoundManager.GetElapsedLocalSeconds();
+        var remain = TimeLimitSeconds - elapsed;
         if (clampToZero && remain < 0f)
             remain = 0f;
 

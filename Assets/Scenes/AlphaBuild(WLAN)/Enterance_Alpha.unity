@@ -607,7 +607,6 @@ GameObject:
   - component: {fileID: 525539243}
   - component: {fileID: 525539242}
   - component: {fileID: 525539245}
-  - component: {fileID: 525539246}
   m_Layer: 0
   m_Name: Target Respawn Button
   m_TagString: Untagged
@@ -770,14 +769,14 @@ MonoBehaviour:
   m_Activated:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 525539246}
-        m_TargetAssemblyTypeName: RangeTargetRespawn, Assembly-CSharp
-        m_MethodName: ResetTargets
-        m_Mode: 1
+      - m_Target: {fileID: 750730601}
+        m_TargetAssemblyTypeName: BalloonManager, Assembly-CSharp
+        m_MethodName: ResetBalloons
+        m_Mode: 3
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
           m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 0
+          m_IntArgument: 5
           m_FloatArgument: 0
           m_StringArgument: 
           m_BoolArgument: 0
@@ -788,21 +787,6 @@ MonoBehaviour:
   m_StartingHoverFilters: []
   m_StartingSelectFilters: []
   m_StartingInteractionStrengthFilters: []
---- !u!114 &525539246
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 525539240}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 4b18ebd9dab8d304c890d46edd157e18, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  _TargetDummyPrefab: {fileID: 7339143514867368539, guid: 496b895135396934385f096e98e358cc, type: 3}
-  _FirstTargetDummy: {fileID: 78774055324019902}
-  _RangeTargetSpawnPoint: {fileID: 36657422}
 --- !u!1 &610590590
 GameObject:
   m_ObjectHideFlags: 0
@@ -1083,6 +1067,17 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 698329844}
   m_Mesh: {fileID: 6607397599308209861, guid: 00c9c177e828a57439e290aef2a23b3f, type: 3}
+--- !u!114 &750730601 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 5043500616296755830, guid: 496b895135396934385f096e98e358cc, type: 3}
+  m_PrefabInstance: {fileID: 2001607436294515156}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e6aff848fa5654b2e88cde4aa271b846, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &767429076
 GameObject:
   m_ObjectHideFlags: 0
@@ -2764,11 +2759,6 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2143414803}
   m_Mesh: {fileID: 6626561161428730133, guid: 00c9c177e828a57439e290aef2a23b3f, type: 3}
---- !u!1 &78774055324019902 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 7339143514867368539, guid: 496b895135396934385f096e98e358cc, type: 3}
-  m_PrefabInstance: {fileID: 2001607436294515156}
-  m_PrefabAsset: {fileID: 0}
 --- !u!1 &426275973361579989
 GameObject:
   m_ObjectHideFlags: 0
@@ -2860,6 +2850,22 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 36657422}
     m_Modifications:
+    - target: {fileID: 890398178081746609, guid: 496b895135396934385f096e98e358cc, type: 3}
+      propertyPath: m_IsActive
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 4084719961742148876, guid: 496b895135396934385f096e98e358cc, type: 3}
+      propertyPath: m_IsActive
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 4814072583722650929, guid: 496b895135396934385f096e98e358cc, type: 3}
+      propertyPath: m_IsActive
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 5043500616296755830, guid: 496b895135396934385f096e98e358cc, type: 3}
+      propertyPath: balloonCurrentNumber
+      value: 5
+      objectReference: {fileID: 0}
     - target: {fileID: 5599989819392637625, guid: 496b895135396934385f096e98e358cc, type: 3}
       propertyPath: m_LocalPosition.x
       value: 0
@@ -2900,9 +2906,17 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 5640819676042534425, guid: 496b895135396934385f096e98e358cc, type: 3}
+      propertyPath: m_IsActive
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 7339143514867368539, guid: 496b895135396934385f096e98e358cc, type: 3}
       propertyPath: m_Name
       value: FirstTargetDummy
+      objectReference: {fileID: 0}
+    - target: {fileID: 8810273681634543002, guid: 496b895135396934385f096e98e358cc, type: 3}
+      propertyPath: m_IsActive
+      value: 1
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -3139,6 +3153,10 @@ PrefabInstance:
       propertyPath: _LocalMatchmaker
       value: 
       objectReference: {fileID: 1572415374}
+    - target: {fileID: 7174814105916476013, guid: 12b2f91e7924c804fa51eb3dfef94346, type: 3}
+      propertyPath: gamePlaySceneName
+      value: MultiMatch_Alpha
+      objectReference: {fileID: 0}
     - target: {fileID: 8439365601101424157, guid: 12b2f91e7924c804fa51eb3dfef94346, type: 3}
       propertyPath: presetConfig
       value: 
