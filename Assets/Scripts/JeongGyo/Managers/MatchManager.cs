@@ -213,7 +213,8 @@ public class MatchManager : NetworkBehaviour
         onTimeUp?.Invoke();
 
         // 매치 종료 후 잠시 대기했다가 로비로 이동
-        StartCoroutine(EndGameRoutine());
+        // StartCoroutine(EndGameRoutine());
+        // 호스트에서 중복 실행을 방지하기 위해 제거
     }
 
     /// <summary>
@@ -223,63 +224,43 @@ public class MatchManager : NetworkBehaviour
     /// </summary>
     public void ReturnToLobby()
     {
-        if (IsServer)
+        // Host: Close Server and load local // Client: Disconnect and load local
+        if (NetworkManager.Singleton != null)
         {
-            if (!string.IsNullOrWhiteSpace(lobbySceneName))
-            {
-                if (NetworkManager != null && NetworkManager.SceneManager != null)
-                {
-                    NetworkManager.SceneManager.LoadScene(lobbySceneName, LoadSceneMode.Single);
-                }
-                else
-                {
-                    SceneManager.LoadScene(lobbySceneName);
-                }
-            }
-            // Host shutdown after Returning to Lobby
-            if (NetworkManager.Singleton != null)
-            {
-                NetworkManager.Singleton.Shutdown();
-            }
+            NetworkManager.Singleton.Shutdown();
         }
-        else
-        {
-            // Client: Disconnect and load local
-            if (NetworkManager.Singleton != null)
-            {
-                NetworkManager.Singleton.Shutdown();
-            }
-            SceneManager.LoadScene(lobbySceneName);
-        }
+        SceneManager.LoadScene(lobbySceneName);
     }
 
     private IEnumerator EndGameRoutine()
     {
         yield return new WaitForSeconds(matchEndWaitSeconds);
 
-        if (IsServer && returnToLobbyOnMatchEnd)
+        if (returnToLobbyOnMatchEnd && lobbySceneName != string.Empty)
         {
             ReturnToLobby();
         }
     }
 
-
     [ClientRpc]
     private void EndGameClientRpc(bool hasWinner, ulong winnerId)
     {
-        if (matchEnded)
-            return;
+        if (!matchEnded)
+        {   // client에서만 처리
+            matchEnded = true;
+            ulong? matchWinner = hasWinner ? winnerId : (ulong?)null;
+            
+            // 클라이언트에서도 세트 매니저 종료 플래그 동기화
+            setManager?.NotifyMatchEnded();
+            
+            OnMatchResult?.Invoke(matchWinner); // Local event
+            
+            Debug.Log("[GameManager] 클라이언트에서 매치 종료 수신 - EndGame 실행");
+            onTimeUp?.Invoke();
+        }
 
-        matchEnded = true;
-        ulong? matchWinner = hasWinner ? winnerId : (ulong?)null;
-        
-        // 클라이언트에서도 세트 매니저 종료 플래그 동기화
-        setManager?.NotifyMatchEnded();
-        
-        OnMatchResult?.Invoke(matchWinner); // Local event
-        
-        Debug.Log("[GameManager] 클라이언트에서 매치 종료 수신 - EndGame 실행");
-        onTimeUp?.Invoke();
+        // Host와 client 모두에서 매치 종료 후 로비 이동 코루틴 시작
+        StartCoroutine(EndGameRoutine());
     }
 
     private void WireSetManagerEvents()
