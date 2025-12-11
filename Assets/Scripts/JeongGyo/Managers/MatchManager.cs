@@ -236,6 +236,11 @@ public class MatchManager : NetworkBehaviour
                     SceneManager.LoadScene(lobbySceneName);
                 }
             }
+            // Host shutdown after Returning to Lobby
+            if (NetworkManager.Singleton != null)
+            {
+                NetworkManager.Singleton.Shutdown();
+            }
         }
         else
         {
