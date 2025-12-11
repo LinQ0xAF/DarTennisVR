@@ -1258,7 +1258,7 @@ MonoBehaviour:
   _ReadyImage: {fileID: 935202859}
   _StartImage: {fileID: 1511038956}
   _StartMsgDuration: 1.5
-  _RoundManager: {fileID: 1773886561}
+  _MatchManager: {fileID: 1227572211}
 --- !u!1 &445864269
 GameObject:
   m_ObjectHideFlags: 0
@@ -2379,10 +2379,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
-    - target: {fileID: 2729601274781894844, guid: 88473cb74259de04e99c6c002e03c226, type: 3}
-      propertyPath: m_TranslationOffset.y
-      value: -1.96
-      objectReference: {fileID: 0}
+    - target: {fileID: 1617940951607518182, guid: 88473cb74259de04e99c6c002e03c226, type: 3}
+      propertyPath: _RoundManager
+      value: 
+      objectReference: {fileID: 1773886561}
     - target: {fileID: 4243763598731970278, guid: 88473cb74259de04e99c6c002e03c226, type: 3}
       propertyPath: m_Name
       value: XR SinglePlay Origin (XR Rig)
@@ -2804,7 +2804,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _RoomConfig: {fileID: 11400000, guid: 3fa2a03bfa1504318a7633e0cad27580, type: 2}
   _RoundManager: {fileID: 1773886561}
-  _TotalSets: 1
+  _TotalRounds: 1
   _BalloonsPerRound: 1
   _RoundEndPauseSeconds: 3
   _MatchEndWaitSeconds: 5
@@ -5204,9 +5204,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ca749cc2d23a34461a31677add0bb861, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _RoundManager: {fileID: 1773886561}
-  timerText: {fileID: 624825567}
-  clampToZero: 1
+  _MatchManager: {fileID: 1227572211}
+  _TimerText: {fileID: 624825567}
+  _ClampToZero: 1
 --- !u!114 &1946489587
 MonoBehaviour:
   m_ObjectHideFlags: 0

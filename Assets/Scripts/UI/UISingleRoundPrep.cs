@@ -15,16 +15,16 @@ public class UISingleRoundPrep : MonoBehaviour
     [SerializeField] private float _StartMsgDuration = 1.5f;
 
     [Header("References")]
-    [SerializeField] private SingleRoundManager _RoundManager;
+    [SerializeField] private SingleMatchManager _MatchManager;
 
     private void Start()
     {
-        if (_RoundManager == null) _RoundManager = FindFirstObjectByType<SingleRoundManager>();
+        if (_MatchManager == null) _MatchManager = FindFirstObjectByType<SingleMatchManager>();
 
-        if (_RoundManager != null)
+        if (_MatchManager != null)
         {
-            _RoundManager.OnRoundPreStart += ShowPrep;
-            _RoundManager.OnRoundStart += HidePrep;
+            _MatchManager.OnRoundPreStart += ShowPrep;
+            _MatchManager.OnRoundStart += HidePrep;
         }
         
         if (_RoundPrepPanel != null) 
@@ -33,10 +33,10 @@ public class UISingleRoundPrep : MonoBehaviour
 
     private void OnDestroy()
     {
-        if (_RoundManager != null)
+        if (_MatchManager != null)
         {
-            _RoundManager.OnRoundPreStart -= ShowPrep;
-            _RoundManager.OnRoundStart -= HidePrep;
+            _MatchManager.OnRoundPreStart -= ShowPrep;
+            _MatchManager.OnRoundStart -= HidePrep;
         }
     }
 

@@ -40,10 +40,13 @@ public class SingleMatchManager : MonoBehaviour
     public event Action<bool> OnMatchResult;
     /// <summary>세트 시작 직전(카운트다운 등) 알림.</summary>
     public event Action OnRoundPreStart;
+    /// <summary>세트 실제 시작(Prep 종료, 타이머 시작) 알림.</summary>
+    public event Action OnRoundStart;
 
+    private int _CurrentRoundIndex = 0;
     private bool _MatchEnded = false;
     private bool _RoundEventsWired = false;
-    private int _CurrentRoundIndex = 1;
+
 
     /// <summary>현재 총 라운드 수.</summary>
     public int TotalRounds => _TotalRounds;
@@ -132,8 +135,7 @@ public class SingleMatchManager : MonoBehaviour
         }
 
         if (matchOver)
-        {
-            yield return new WaitForSeconds(_MatchEndWaitSeconds);
+        {   // end match
             EndGame(lastRoundSuccess);
         }
         else
@@ -190,7 +192,7 @@ public class SingleMatchManager : MonoBehaviour
         {
             // Reset state
             _MatchEnded = false;
-            _CurrentRoundIndex = 1;
+            _CurrentRoundIndex = 0;
 
             // Reconfigure from RoomConfig
             ConfigureFromRoomConfig();
@@ -218,6 +220,7 @@ public class SingleMatchManager : MonoBehaviour
         _RoundManager.OnPrepareNextRound += RelayPrepareNextRound;
         _RoundManager.OnRoundsConfigured += RelayRoundsConfigured;
         _RoundManager.OnRoundPreStart += RelayRoundPreStart;
+        _RoundManager.OnRoundStart += RelayRoundStart;
         
         _RoundEventsWired = true;
     }
@@ -232,6 +235,7 @@ public class SingleMatchManager : MonoBehaviour
         _RoundManager.OnPrepareNextRound -= RelayPrepareNextRound;
         _RoundManager.OnRoundsConfigured -= RelayRoundsConfigured;
         _RoundManager.OnRoundPreStart -= RelayRoundPreStart;
+        _RoundManager.OnRoundStart -= RelayRoundStart;
 
         _RoundEventsWired = false;
     }
@@ -251,5 +255,18 @@ public class SingleMatchManager : MonoBehaviour
     private void RelayRoundPreStart()
     {
         OnRoundPreStart?.Invoke();
+    }
+    private void RelayRoundStart()
+    {
+        OnRoundStart?.Invoke();
+    }
+    
+    /// <summary>로컬 기준 흐른 시간(초). 준비 단계에서는 0 반환.</summary>
+    public float GetElapsedLocalSeconds()
+    {
+        if (_RoundManager == null)
+            return 0f;
+
+        return _RoundManager.GetElapsedLocalSeconds();
     }
 }

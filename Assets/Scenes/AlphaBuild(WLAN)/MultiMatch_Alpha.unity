@@ -2767,7 +2767,7 @@ MonoBehaviour:
   _ReadyImage: {fileID: 1681539719}
   _StartImage: {fileID: 2131193137}
   _StartMsgDuration: 1.5
-  setManager: {fileID: 109186324}
+  matchManager: {fileID: 1909114170}
 --- !u!114 &1071183992
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -3038,7 +3038,6 @@ MonoBehaviour:
   gameManager: {fileID: 1909114170}
   timerText: {fileID: 1255604109}
   clampToZero: 1
-  personalDataManager: {fileID: 11400000, guid: 44c76b51bc24b3c4dbdcdc327d2a5052, type: 2}
 --- !u!114 &1269147746
 MonoBehaviour:
   m_ObjectHideFlags: 0

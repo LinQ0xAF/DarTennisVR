@@ -25,6 +25,7 @@ public class HandRoleManager : MonoBehaviour
     [Header("References")]
     [SerializeField] private GamePersonalDataManager _GameSettings;
     [SerializeField] private SetManager _SetManager;
+    [SerializeField] private SingleRoundManager _RoundManager;
 #if UNITY_EDITOR
     [Header("Debug")]
     [SerializeField] private bool _testHandsActive = true;
@@ -43,15 +44,21 @@ public class HandRoleManager : MonoBehaviour
     {
         UpdateHandRoles(_GameSettings.mainHand);
 
-        if (_SetManager == null) 
+        if (_SetManager == null && _RoundManager != null)
         {
             _SetManager = FindFirstObjectByType<SetManager>();
+            _RoundManager = FindFirstObjectByType<SingleRoundManager>();
         }
 
         if (_SetManager != null)
         {
             _SetManager.OnSetPreStart += HandleSetPreStart;
             _SetManager.OnSetStart += HandleSetStart;
+        }
+        if (_RoundManager != null)
+        {
+            _RoundManager.OnRoundPreStart += HandleSetPreStart;
+            _RoundManager.OnRoundStart += HandleSetStart;
         }
     }
 
@@ -61,7 +68,7 @@ public class HandRoleManager : MonoBehaviour
     /// <summary>
     /// 손의 상호작용 및 다트 던지기 기능을 활성화/비활성화한다.
     /// </summary>
-    public void SetHandsActive(bool active)
+    private void SetHandsActive(bool active)
     {
 #if UNITY_EDITOR
         _testHandsActive = active;

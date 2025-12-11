@@ -20,6 +20,7 @@ public class SingleRoundManager : MonoBehaviour
     private bool _MatchEnded = false;
     private bool _RoundEnding;
     private bool _OnPrepPhase = false;
+    private bool _IsRoundActive = false; // 라운드 시작 여부 체크
     private int _TargetBalloonsCount;
     private int _ConfiguredTimeLimitSeconds;
     private int _Balloons_remaining;
@@ -70,6 +71,7 @@ public class SingleRoundManager : MonoBehaviour
     {
         _MatchEnded = false;
         _RoundEnding = false;
+        _IsRoundActive = true;
 
         _Balloons_remaining = _TargetBalloonsCount;
         _TargetBalloonManager.ResetBalloons(_TargetBalloonsCount);
@@ -79,7 +81,7 @@ public class SingleRoundManager : MonoBehaviour
 
     void Update()
     {
-        if (_MatchEnded || _RoundEnding || _OnPrepPhase)
+        if (!_IsRoundActive || _MatchEnded || _RoundEnding || _OnPrepPhase)
             return;
 
         CheckTimeLimit();
@@ -101,6 +103,8 @@ public class SingleRoundManager : MonoBehaviour
     /// </summary>
     public float GetElapsedLocalSeconds()
     {
+        if (_OnPrepPhase || !_IsRoundActive)
+            return 0f;
         return Mathf.Max(0f, Time.time - RoundStartTime);
     }
 
@@ -122,6 +126,7 @@ public class SingleRoundManager : MonoBehaviour
             return;
 
         _RoundEnding = true;
+        _IsRoundActive = false;
         bool isSuccess = !isTimeUp && (_Balloons_remaining == 0);
 
         OnRoundEnd?.Invoke();

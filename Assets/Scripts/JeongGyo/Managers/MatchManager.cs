@@ -53,6 +53,8 @@ public class MatchManager : NetworkBehaviour
     public event Action<ulong?> OnMatchResult;
     /// <summary>세트 시작 직전(카운트다운 등) 알림.</summary>
     public event Action OnSetPreStart;
+    /// <summary>세트 실제 시작(Prep 종료, 타이머 시작) 알림.</summary>
+    public event Action OnSetStart;
     public int TimeLimitSeconds => setManager != null ? setManager.TimeLimitSeconds : configuredTimeLimitSeconds;
     public int TotalSets => setManager != null ? setManager.TotalSets : totalSets;
 
@@ -287,6 +289,7 @@ public class MatchManager : NetworkBehaviour
         setManager.OnSetsConfigured += RelaySetsConfigured;
         // setManager.OnMatchEndRequested += HandleMatchEndRequested; // Removed
         setManager.OnSetPreStart += RelaySetPreStart;
+        setManager.OnSetStart += RelaySetStart;
         setEventsWired = true;
     }
 
@@ -302,6 +305,7 @@ public class MatchManager : NetworkBehaviour
         setManager.OnSetsConfigured -= RelaySetsConfigured;
         // setManager.OnMatchEndRequested -= HandleMatchEndRequested; // Removed
         setManager.OnSetPreStart -= RelaySetPreStart;
+        setManager.OnSetStart -= RelaySetStart;
         setEventsWired = false;
     }
     
@@ -401,6 +405,8 @@ public class MatchManager : NetworkBehaviour
     private void RelaySetsConfigured(int setCount) => OnSetsConfigured?.Invoke(setCount);
     // 세트 시작 직전 C# 이벤트 릴레이
     private void RelaySetPreStart() => OnSetPreStart?.Invoke();
+    // 세트 시작 C# 이벤트 릴레이
+    private void RelaySetStart() => OnSetStart?.Invoke();
 
     // UI에서 세트 시작 시각 수신 여부 확인
     public bool HasSetStartTime() => setManager != null && setManager.HasSetStartTime();

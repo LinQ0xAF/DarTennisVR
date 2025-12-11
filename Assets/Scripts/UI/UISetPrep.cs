@@ -15,16 +15,16 @@ public class UISetPrep : MonoBehaviour
     [SerializeField] private float _StartMsgDuration = 1.5f;
 
     [Header("References")]
-    [SerializeField] private SetManager setManager;
+    [SerializeField] private MatchManager matchManager;
 
     private void Start()
     {
-        if (setManager == null) setManager = FindFirstObjectByType<SetManager>();
+        if (matchManager == null) matchManager = FindFirstObjectByType<MatchManager>();
 
-        if (setManager != null)
+        if (matchManager != null)
         {
-            setManager.OnSetPreStart += ShowPrep;
-            setManager.OnSetStart += HidePrep;
+            matchManager.OnSetPreStart += ShowPrep;
+            matchManager.OnSetStart += HidePrep;
         }
         
         if (_SetPrepPanel != null) 
@@ -33,10 +33,10 @@ public class UISetPrep : MonoBehaviour
 
     private void OnDestroy()
     {
-        if (setManager != null)
+        if (matchManager != null)
         {
-            setManager.OnSetPreStart -= ShowPrep;
-            setManager.OnSetStart -= HidePrep;
+            matchManager.OnSetPreStart -= ShowPrep;
+            matchManager.OnSetStart -= HidePrep;
         }
     }
 
