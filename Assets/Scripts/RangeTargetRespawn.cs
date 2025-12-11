@@ -28,5 +28,7 @@ public class RangeTargetRespawn : MonoBehaviour
 
         GameObject newTargetDummy = Instantiate(_TargetDummyPrefab, _RangeTargetSpawnPoint.position, _RangeTargetSpawnPoint.rotation, _RangeTargetSpawnPoint);
         _ActiveTargetDummies.Add(newTargetDummy);
+        BalloonManager targetBalloonManager = newTargetDummy.GetComponentInChildren<BalloonManager>();
+        if (targetBalloonManager != null) targetBalloonManager.ResetBalloons(5);
     }
 }
