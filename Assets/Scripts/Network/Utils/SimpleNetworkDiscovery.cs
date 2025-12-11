@@ -44,9 +44,9 @@ public class SimpleNetworkDiscovery : MonoBehaviour
         {
             try
             {
-                // 1초마다 "나 여기 있어" 메시지 전송
+                // 0.5초마다 "나 여기 있어" 메시지 전송 (빠른 발견을 위해 단축)
                 await udpClient.SendAsync(data, data.Length, endPoint);
-                await Task.Delay(1000); 
+                await Task.Delay(500); 
             }
             catch
             {
