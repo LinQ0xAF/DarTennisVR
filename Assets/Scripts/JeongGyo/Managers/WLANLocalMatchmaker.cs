@@ -156,21 +156,21 @@ public class WLANLocalMatchmaker : NetworkBehaviour
         }
         else
         {
-            // 0. 동시 접속 방지를 위한 랜덤 대기 (0.5 ~ 2.0초)
-            float randomDelay = UnityEngine.Random.Range(0.5f, 2.0f);
-            Debug.Log($"[WLANLocalMatchmaker] 매칭 시작 전 {randomDelay:F2}초 대기...");
-            yield return new WaitForSeconds(randomDelay);
+            // 1. 먼저 주변에 방이 있는지 탐색 (기본 2초 + 랜덤 0~2초 추가)
+            // 랜덤 시간을 추가하여 동시에 호스트가 되는 것을 방지 (오래 탐색하는 쪽이 나중에 호스트가 된 쪽을 발견)
+            float baseDuration = 2.0f;
+            float randomExtra = UnityEngine.Random.Range(0.0f, 2.0f);
+            float totalDuration = baseDuration + randomExtra;
 
-            // 1. 먼저 주변에 방이 있는지 탐색 (2초간)
             string foundServerIp = null;
             string username = "Placeholder Player";
             bool searchComplete = false;
 
-            Debug.Log("[WLANLocalMatchmaker] 주변 방 탐색 시작...");
+            Debug.Log($"[WLANLocalMatchmaker] 주변 방 탐색 시작... (Duration: {totalDuration:F2}s)");
             discovery.SearchForServer((ip) => {
                 foundServerIp = ip;
                 searchComplete = true;
-            });
+            }, totalDuration);
 
             // 탐색 대기
             while (!searchComplete) yield return null;
