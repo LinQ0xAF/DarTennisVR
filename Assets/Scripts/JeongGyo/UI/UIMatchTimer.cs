@@ -10,15 +10,15 @@ public class UIMatchTimer : MonoBehaviour
     [SerializeField] private MatchManager gameManager; // 씬에 존재하는 게임 매니저 참조
     [SerializeField] private TMP_Text timerText; // mm:ss 표시용
     [SerializeField] private bool clampToZero = true; // 0 아래로 내려갈지 여부
-    [SerializeField] private GamePersonalDataManager personalDataManager; // 네트워크 매니저가 담긴 오브젝트
+    // [SerializeField] private GamePersonalDataManager personalDataManager; // 네트워크 매니저가 담긴 오브젝트
 
     void Awake()
     {
         // 인스펙터에 없으면 씬에서 자동 검색
         if (gameManager == null)
-            gameManager = FindObjectOfType<MatchManager>();
-        if (personalDataManager == null)
-            personalDataManager = FindObjectOfType<GamePersonalDataManager>();
+            gameManager = FindFirstObjectByType<MatchManager>();
+        // if (personalDataManager == null)
+        //     personalDataManager = FindFirstObjectByType<GamePersonalDataManager>();
     }
 
     void Update()

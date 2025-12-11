@@ -18,6 +18,9 @@ public class BalloonManager : MonoBehaviour
     /// <summary>모든 풍선이 제거되었을 때 알림.</summary>
     public event System.Action OnAllBalloonsCleared;
 
+    /// <summary>하나의 풍선이 제거되었을 때 알림.</summary>
+    public event System.Action<int> OnBalloonPop;
+
     /// <summary>현재 세트에서 남은 풍선 수.</summary>
     public int RemainingBalloonCount => remainingCount;
 
@@ -38,10 +41,10 @@ public class BalloonManager : MonoBehaviour
         InitializeBalloons();
     }
 
-    private void Start()
-    {
-        ResetBalloons(balloonNumber);
-    }
+    // private void Start()
+    // {
+    //     ResetBalloons(balloonNumber);
+    // }
 
     /// <summary>씬에 배치된 풍선에 인덱스를 부여한다.</summary>
     private void InitializeBalloons()
@@ -92,6 +95,7 @@ public class BalloonManager : MonoBehaviour
 
         remainingCount = Mathf.Max(0, remainingCount - 1);
         Debug.Log($"[BalloonManager] Remaining:{remainingCount}");
+        OnBalloonPop?.Invoke(RemainingBalloonCount);
 
         if (remainingCount == 0)
             OnAllBalloonsCleared?.Invoke();

@@ -3,7 +3,7 @@ using UnityEngine.SceneManagement;
 using Unity.Netcode;
 
 /// <summary>
-/// 싱글/로컬 플레이용 씬 로드 매니저. RoomConfigDto를 static으로 저장해 다음 씬에서 소비한다.
+/// 싱글/로컬 플레이용 씬 로드 매니저. 
 /// </summary>
 public class SingleMatchLoader : MonoBehaviour
 {
@@ -14,7 +14,7 @@ public class SingleMatchLoader : MonoBehaviour
     {
         if (config == null || string.IsNullOrWhiteSpace(gamePlaySceneName))
         {
-            Debug.LogError("GameSceneLoadManager: 전달받은 RoomConfigDto 가 null 입니다.", this);
+            Debug.LogError("SingleMatchLoader: 전달받은 RoomConfigDto 가 null 입니다.", this);
             return;
         }
 

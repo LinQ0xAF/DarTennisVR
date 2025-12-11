@@ -14,9 +14,9 @@ public class SetManager : NetworkBehaviour
     [Header("Defaults (fallback if MatchManager doesn't override)")]
     [SerializeField, Min(1)] private int initialTotalSets = 1;
     [SerializeField, Min(1)] private int initialBalloonsPerPlayer = 1;
-    [SerializeField] private float setEndPauseSeconds = 2f;
     [SerializeField] private float prepDurationSeconds = 3f; // 세트 시작 전 대기 시간
     [SerializeField] private int initialTimeLimitSeconds = 60;
+    [SerializeField] private NetworkBalloonHitChannelSO balloonHitChannel;
 
     private bool matchEnded;
     private bool setEnding;
@@ -58,6 +58,23 @@ public class SetManager : NetworkBehaviour
         currentSetIndex = Mathf.Clamp(currentSetIndex, 1, totalSets);
     }
 
+    private void OnEnable()
+    {
+        if (balloonHitChannel != null)
+            balloonHitChannel.OnPlayerHit += HandleBalloonHitFromChannel;
+    }
+
+    private void OnDisable()
+    {
+        if (balloonHitChannel != null)
+            balloonHitChannel.OnPlayerHit -= HandleBalloonHitFromChannel;
+    }
+
+    private void HandleBalloonHitFromChannel(ulong ownerClientId, int balloonIndex)
+    {
+        ProcessBalloonPop(ownerClientId);
+    }
+
     /// <summary>매치매니저에서 플레이어 1/2의 clientId를 전달.</summary>
     public void SetPlayerClientIds(ulong? p1ClientId, ulong? p2ClientId)
     {
@@ -65,11 +82,10 @@ public class SetManager : NetworkBehaviour
         player2ClientId = p2ClientId;
     }
 
-    public void ApplySettings(int totalSetCount, int balloonsPerPlayerCount, float pauseSeconds, int timeLimitSeconds, int startSetIndex = 1) // 서버에서 룸 설정에 따라 세트 매니저 설정 적용
+    public void ApplySettings(int totalSetCount, int balloonsPerPlayerCount, int timeLimitSeconds, int startSetIndex = 1) // 서버에서 룸 설정에 따라 세트 매니저 설정 적용
     {
         totalSets = Mathf.Max(1, totalSetCount);
         balloonsPerPlayer = Mathf.Max(1, balloonsPerPlayerCount);
-        setEndPauseSeconds = pauseSeconds;
         configuredTimeLimitSeconds = timeLimitSeconds;
         currentSetIndex = Mathf.Clamp(startSetIndex, 1, totalSets);
         OnSetsConfigured?.Invoke(totalSets);
@@ -81,16 +97,24 @@ public class SetManager : NetworkBehaviour
     }
 
     /// <summary>씬 로드 완료 후 서버에서 호출: 풍선/시간 등 세트 초기화.</summary>
-    public void StartSetFlow()
+    public void StartSetFlow(int setIndex)
     {
         if (!IsServer)
             return;
 
         matchEnded = false;
         setEnding = false;
+        currentSetIndex = setIndex;
+
+        Debug.Log($"[SetManager] 세트 시작 (set {setIndex}/{totalSets})");
+
         CacheBalloonManagers();
-        ResetBalloonCountsForSet();
+        
+        OnPrepareNextSet?.Invoke();
         ResetAllBalloons();
+        ResetBalloonCountsForSet();
+        
+        PrepareNextSetClientRpc(setIndex);
         
         StartCoroutine(SetStartSequenceRoutine());
     }
@@ -176,20 +200,6 @@ public class SetManager : NetworkBehaviour
         
         OnSetEnd?.Invoke();
         OnSetResult?.Invoke(lastSetWinnerClientId);
-    }
-
-    public void PrepareNextSet(int nextSetIndex) // 서버에서 다음 세트 준비 (Called by MatchManager)
-    {
-        setEnding = false; // Reset flag
-        currentSetIndex = nextSetIndex;
-        Debug.Log($"[SetManager] 다음 세트 준비 (set {nextSetIndex}/{totalSets})");
-
-        OnPrepareNextSet?.Invoke();
-        ResetAllBalloons(); // 모든 플레이어의 풍선 리셋
-        ResetBalloonCountsForSet();
-        PrepareNextSetClientRpc(nextSetIndex);
-
-        StartCoroutine(SetStartSequenceRoutine());
     }
 
     [ClientRpc]

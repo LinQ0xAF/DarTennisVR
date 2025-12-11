@@ -12,25 +12,25 @@ public class SingleSetScoreUI : MonoBehaviour
     [SerializeField] private Color failColor = Color.red;
     [SerializeField] private Color emptyColor = Color.white;
 
-    [SerializeField] private SingleGameManager gameManager;
+    [SerializeField] private SingleMatchManager _MatchManager;
 
     private int filledRounds = 0;
     private int targetSets = 0;
 
     private void Awake()
     {
-        if (gameManager == null)
-            gameManager = FindFirstObjectByType<SingleGameManager>();
+        if (_MatchManager == null)
+            _MatchManager = FindFirstObjectByType<SingleMatchManager>();
 
         InitializeDots();
     }
 
     private void OnEnable()
     {
-        if (gameManager != null)
+        if (_MatchManager != null)
         {
-            gameManager.OnSetResult += HandleSetResult;
-            gameManager.OnSetsConfigured += HandleSetsConfigured;
+            _MatchManager.OnRoundResult += HandleSetResult;
+            _MatchManager.OnRoundsConfigured += HandleSetsConfigured;
         }
 
         InitializeDots();
@@ -38,10 +38,10 @@ public class SingleSetScoreUI : MonoBehaviour
 
     private void OnDisable()
     {
-        if (gameManager != null)
+        if (_MatchManager != null)
         {
-            gameManager.OnSetResult -= HandleSetResult;
-            gameManager.OnSetsConfigured -= HandleSetsConfigured;
+            _MatchManager.OnRoundResult -= HandleSetResult;
+            _MatchManager.OnRoundsConfigured -= HandleSetsConfigured;
         }
     }
 
@@ -65,7 +65,7 @@ public class SingleSetScoreUI : MonoBehaviour
     private void InitializeDots()
     {
         int available = roundDots != null ? roundDots.Length : 0;
-        int configuredSets = gameManager != null ? gameManager.TotalSets : available;
+        int configuredSets = _MatchManager != null ? _MatchManager.TotalRounds : available;
         targetSets = Mathf.Clamp(configuredSets, 0, available);
         ResetDots();
     }

@@ -7,25 +7,33 @@ using TMPro;
 /// </summary>
 public class UISingleMatchTimer : MonoBehaviour
 {
-    [SerializeField] private SingleGameplayInitializer gameplayInitializer; // 씬에 존재하는 초기화 스크립트 참조
-    [SerializeField] private TMP_Text timerText; // mm:ss 표시용
-    [SerializeField] private bool clampToZero = true; // 0 아래로 내려갈지 여부
+    [SerializeField] private SingleMatchManager _MatchManager; // 씬에 존재하는 라운드 스크립트 참조
+    [SerializeField] private TMP_Text _TimerText; // mm:ss 표시용
+    [SerializeField] private bool _ClampToZero = true; // 0 아래로 내려갈지 여부
+    private float _TimeLimitSeconds = -1f;
+    public float TimeLimitSeconds => _MatchManager != null ? _MatchManager.TimeLimitSeconds : _TimeLimitSeconds;
 
     private void Awake()
     {
         // 인스펙터에 없으면 씬에서 자동 검색
-        if (gameplayInitializer == null)
-            gameplayInitializer = FindObjectOfType<SingleGameplayInitializer>();
+        if (_MatchManager == null)
+            _MatchManager = FindFirstObjectByType<SingleMatchManager>();
+    }
+
+    private void OnEnable()
+    {
+        if (_MatchManager != null)
+            _TimeLimitSeconds = _MatchManager.TimeLimitSeconds;
     }
 
     private void Update()
     {
-        if (gameplayInitializer == null || timerText == null || !gameplayInitializer.IsInitialized)
+        if (_MatchManager == null || _TimerText == null)
             return;
 
-        var elapsed = gameplayInitializer.GetElapsedLocalSeconds();
-        var remain = gameplayInitializer.TimeLimitSeconds - elapsed;
-        if (clampToZero && remain < 0f)
+        var elapsed = _MatchManager.GetElapsedLocalSeconds();
+        var remain = TimeLimitSeconds - elapsed;
+        if (_ClampToZero && remain < 0f)
             remain = 0f;
 
         FormatToText(remain);
@@ -36,6 +44,6 @@ public class UISingleMatchTimer : MonoBehaviour
         int seconds = Mathf.Max(0, Mathf.CeilToInt(remainSeconds));
         int minutes = seconds / 60;
         int sec = seconds % 60;
-        timerText.text = $"{minutes:00}:{sec:00}";
+        _TimerText.text = $"{minutes:00}:{sec:00}";
     }
 }

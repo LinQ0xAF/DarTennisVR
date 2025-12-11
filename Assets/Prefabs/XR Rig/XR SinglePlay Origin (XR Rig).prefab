@@ -409,6 +409,7 @@ MonoBehaviour:
     m_Bits: 1
   _GameSettings: {fileID: 11400000, guid: 44c76b51bc24b3c4dbdcdc327d2a5052, type: 2}
   _SetManager: {fileID: 0}
+  _RoundManager: {fileID: 0}
   _testHandsActive: 1
 --- !u!1 &1538756680100236013
 GameObject:

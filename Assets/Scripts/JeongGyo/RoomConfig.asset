@@ -12,6 +12,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d24ce3f00606c4d7d86a162884e31c56, type: 3}
   m_Name: RoomConfig
   m_EditorClassIdentifier: 
-  balloonCount: 1
-  timeLimitSeconds: 30
-  setCount: 1
+  balloonCount: 3
+  timeLimitSeconds: 60
+  setCount: 3

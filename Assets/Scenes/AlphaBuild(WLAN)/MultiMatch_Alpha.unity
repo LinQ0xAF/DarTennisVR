@@ -489,9 +489,9 @@ MonoBehaviour:
   ShowTopMostFoldoutHeaderGroup: 1
   initialTotalSets: 1
   initialBalloonsPerPlayer: 1
-  setEndPauseSeconds: 2
   prepDurationSeconds: 3
   initialTimeLimitSeconds: 60
+  balloonHitChannel: {fileID: 11400000, guid: 52c0dfa50c4c9044e84ff0d390a82eae, type: 2}
 --- !u!4 &109186325
 Transform:
   m_ObjectHideFlags: 0
@@ -2767,7 +2767,7 @@ MonoBehaviour:
   _ReadyImage: {fileID: 1681539719}
   _StartImage: {fileID: 2131193137}
   _StartMsgDuration: 1.5
-  setManager: {fileID: 109186324}
+  matchManager: {fileID: 1909114170}
 --- !u!114 &1071183992
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -3038,7 +3038,6 @@ MonoBehaviour:
   gameManager: {fileID: 1909114170}
   timerText: {fileID: 1255604109}
   clampToZero: 1
-  personalDataManager: {fileID: 11400000, guid: 44c76b51bc24b3c4dbdcdc327d2a5052, type: 2}
 --- !u!114 &1269147746
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -3137,7 +3136,7 @@ MonoBehaviour:
   loseColor: {r: 1, g: 0, b: 0, a: 1}
   drawColor: {r: 1, g: 0.92156863, b: 0.015686275, a: 1}
   emptyColor: {r: 1, g: 1, b: 1, a: 1}
-  gameManager: {fileID: 1909114170}
+  matchManager: {fileID: 1909114170}
 --- !u!1 &1280051642
 GameObject:
   m_ObjectHideFlags: 0
@@ -4853,7 +4852,6 @@ MonoBehaviour:
   ShowTopMostFoldoutHeaderGroup: 1
   roomConfig: {fileID: 11400000, guid: 3fa2a03bfa1504318a7633e0cad27580, type: 2}
   balloonManager: {fileID: 0}
-  balloonHitChannel: {fileID: 11400000, guid: 52c0dfa50c4c9044e84ff0d390a82eae, type: 2}
   spawnManager: {fileID: 1465334062}
   setManager: {fileID: 109186324}
   totalSets: 1
