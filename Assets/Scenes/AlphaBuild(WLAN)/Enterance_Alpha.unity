@@ -2022,6 +2022,7 @@ GameObject:
   - component: {fileID: 1572415373}
   - component: {fileID: 1572415371}
   - component: {fileID: 1572415374}
+  - component: {fileID: 1572415375}
   m_Layer: 0
   m_Name: LocalMatchMaker
   m_TagString: Untagged
@@ -2083,7 +2084,21 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   ShowTopMostFoldoutHeaderGroup: 1
   matchLoader: {fileID: 2051867480}
-  discovery: {fileID: 0}
+  discovery: {fileID: 1572415375}
+--- !u!114 &1572415375
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1572415370}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9644e0b2ea7c9f84e9c816bcca0065bd, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  discoveryPort: 47777
+  discoveryMessage: DarTennisVR_Room
 --- !u!1 &1598269138
 GameObject:
   m_ObjectHideFlags: 0
