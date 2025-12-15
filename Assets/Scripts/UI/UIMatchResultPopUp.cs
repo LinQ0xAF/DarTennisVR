@@ -19,8 +19,14 @@ public class UIMatchResultPopUp : MonoBehaviour
     [SerializeField] private GameObject _LoseBanner;
     [SerializeField] private GameObject _DrawBanner;
     [SerializeField] private TextMeshProUGUI _ResultStatisticsText;
+    [SerializeField] private TextMeshProUGUI _OpponentRematchStatusText; // 상대방 재대결 요청 상태 표시 텍스트
     [SerializeField] private Button _RematchButton;
     [SerializeField] private Button _ExitButton;
+
+    private TextMeshProUGUI _ExitButtonText;
+    private float _AutoExitTime;
+    private bool _IsMatchEnded;
+    private int _LastDisplayedSeconds = -1;
 
 #if UNITY_EDITOR
     [SerializeField] private InputActionReference _TestShowResultAction;
@@ -39,22 +45,28 @@ public class UIMatchResultPopUp : MonoBehaviour
     }
 #endif
 
-// matchmanager에서 이벤트 추가 후 연결 예정
+// Matchmanager의 이벤트와 연결
     private void Start()
     {
         if (_MatchManager != null)
         {
             _MatchManager.OnMatchResult += ShowResultUI;
+            _MatchManager.OnRematchStatusChanged += HandleRematchStatusChanged;
         }
         if (_ExitButton != null)
         {
             _ExitButton.onClick.AddListener(OnExitButtonClicked);
+            _ExitButtonText = _ExitButton.GetComponentInChildren<TextMeshProUGUI>();
         }
         if( _RematchButton != null)
         {
             _RematchButton.onClick.AddListener(OnRematchButtonClicked);
         }
         
+        if (_OpponentRematchStatusText != null)
+        {
+            _OpponentRematchStatusText.gameObject.SetActive(false);
+        }
     }
 
     private void OnDestroy()
@@ -62,6 +74,7 @@ public class UIMatchResultPopUp : MonoBehaviour
         if (_MatchManager != null)
         {
             _MatchManager.OnMatchResult -= ShowResultUI;
+            _MatchManager.OnRematchStatusChanged -= HandleRematchStatusChanged;
         }
 #if UNITY_EDITOR
         if (_TestShowResultAction != null)
@@ -71,10 +84,32 @@ public class UIMatchResultPopUp : MonoBehaviour
 #endif
     }
 
+    private void Update()
+    {
+        if (_IsMatchEnded && _ExitButtonText != null)
+        {
+            float remaining = Mathf.Max(0, _AutoExitTime - Time.time);
+            int currentSeconds = Mathf.CeilToInt(remaining);
+
+            if (currentSeconds != _LastDisplayedSeconds)
+            {
+                _LastDisplayedSeconds = currentSeconds;
+                _ExitButtonText.text = $"Exit ({currentSeconds}s)";
+            }
+        }
+    }
+
     // 이벤트가 발생하면 호출됨
     private void ShowResultUI(ulong? winnerId)
     {
         if(_MatchResultPanel == null) return;
+
+        _IsMatchEnded = true;
+        _LastDisplayedSeconds = -1;
+        if (_MatchManager != null)
+        {
+            _AutoExitTime = Time.time + _MatchManager.MatchEndWaitSeconds;
+        }
         
         if (winnerId == null)
         {
@@ -139,12 +174,37 @@ public class UIMatchResultPopUp : MonoBehaviour
         }
     }
 
+    private void HandleRematchStatusChanged(ulong clientId, bool requested)
+    {
+        if (clientId == NetworkManager.Singleton.LocalClientId)
+        {
+            // 내가 요청한 경우: 버튼 비활성화 및 텍스트 변경
+            if (_RematchButton != null)
+            {
+                _RematchButton.interactable = false;
+                _OpponentRematchStatusText.text = "Rematch Requested!";
+                _OpponentRematchStatusText.color = Color.white;
+                _OpponentRematchStatusText.gameObject.SetActive(true);
+            }
+        }
+        else
+        {
+            // 상대방이 요청한 경우: 텍스트 표시
+            if (_OpponentRematchStatusText != null)
+            {
+                _OpponentRematchStatusText.text = "Opponent wants a rematch!";
+                _OpponentRematchStatusText.color = Color.green;
+                _OpponentRematchStatusText.gameObject.SetActive(true);
+            }
+        }
+    }
+
     private void OnRematchButtonClicked()
     {
-        // 리매치 요청 처리 (매치메이커/네트워크 매니저 등과 연동 필요)
+        // 리매치 요청 처리
         if (_MatchManager != null)
         {
-            // _MatchManager.RequestRematch();
+            _MatchManager.RequestRematch();
         }
     }
 }
