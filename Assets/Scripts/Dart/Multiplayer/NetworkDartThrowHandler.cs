@@ -41,8 +41,8 @@ public class NetworkDartThrowHandler : DartThrowHandlerBase
         {
             _HeldDart = dart;
             
-            // 다트에게 나(주손)에게 잡혔음을 알림
-            dart.SetMainHandHandler(this);
+            // 부모(DartThrowHandlerBase)에서 이미 SetThrowHandler를 호출했으므로 여기서는 생략 가능
+            // 하지만 LocalDart 타입으로 캐스팅된 참조가 필요하다면 유지
 
             // 네트워크 상태 업데이트: 부손 개수 -1, 손에 듦 = true
             if (_Bridge == null) InitializeBridge();

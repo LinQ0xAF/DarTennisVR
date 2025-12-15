@@ -2826,9 +2826,13 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 1783572214}
     m_Modifications:
+    - target: {fileID: 2782594496709931492, guid: 2b214fddedb674c4ab72a233838f0d30, type: 3}
+      propertyPath: m_Resource
+      value: 
+      objectReference: {fileID: 8300000, guid: 206edd765746ae84e950b3ec06e0a66d, type: 3}
     - target: {fileID: 4134997114574124272, guid: 2b214fddedb674c4ab72a233838f0d30, type: 3}
       propertyPath: m_Name
-      value: BGM Player
+      value: BGM Player(Lobby)
       objectReference: {fileID: 0}
     - target: {fileID: 4382273615433487174, guid: 2b214fddedb674c4ab72a233838f0d30, type: 3}
       propertyPath: m_LocalPosition.x
@@ -3149,6 +3153,14 @@ PrefabInstance:
     - target: {fileID: 4814072583722650929, guid: 496b895135396934385f096e98e358cc, type: 3}
       propertyPath: m_IsActive
       value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 5043500616296755830, guid: 496b895135396934385f096e98e358cc, type: 3}
+      propertyPath: _PopEffectPrefab
+      value: 
+      objectReference: {fileID: 5053655129435668827, guid: 5572aa4cd976fcc46a5f45ea9b2c8bd1, type: 3}
+    - target: {fileID: 5043500616296755830, guid: 496b895135396934385f096e98e358cc, type: 3}
+      propertyPath: _PopEffectPoolSize
+      value: 3
       objectReference: {fileID: 0}
     - target: {fileID: 5043500616296755830, guid: 496b895135396934385f096e98e358cc, type: 3}
       propertyPath: balloonCurrentNumber

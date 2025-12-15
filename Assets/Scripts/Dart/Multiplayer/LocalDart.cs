@@ -8,7 +8,12 @@ using UnityEngine.XR.Interaction.Toolkit;
 public class LocalDart : ThrowingDartBase
 {
     private LocalDartPool _PoolManager;
-    private NetworkDartThrowHandler _CurrentDartThrowHandler;
+
+    protected override void Awake()
+    {
+        base.Awake();
+        // AudioSource 초기화는 부모에서 수행
+    }
 
     public void SetPoolManager(LocalDartPool manager)
     {
@@ -18,31 +23,24 @@ public class LocalDart : ThrowingDartBase
     protected override void OnEnable()
     {
         base.OnEnable();
-        _CurrentDartThrowHandler = null;
+        // _CurrentDartThrowHandler 초기화 불필요 (부모의 currentThrowHandler 사용)
     }
 
-    /// <summary>
-    /// 주손 핸들러 등록 (주손이 잡았을 때 DartThrowHandler가 호출)
-    /// </summary>
-    public void SetMainHandHandler(NetworkDartThrowHandler handler)
-    {
-        _CurrentDartThrowHandler = handler;
-    }
+    // SetMainHandHandler 제거됨 (부모의 SetThrowHandler 사용)
 
     protected override void OnReleased(SelectExitEventArgs args)
     {
         // 주손에서 놓여진 경우에만 네트워크 처리
-        if (_CurrentDartThrowHandler != null)
+        // 부모의 currentThrowHandler가 null이 되기 전에 캐스팅해서 사용
+        if (currentThrowHandler is NetworkDartThrowHandler netHandler)
         {
-            var handlerTemp = _CurrentDartThrowHandler;
-            _CurrentDartThrowHandler = null;
             StartCoroutine(CaptureVelocityNextFrame((vel, angVel) =>
             {
-                handlerTemp.HandleDartRelease(this, vel, angVel);
+                netHandler.HandleDartRelease(this, vel, angVel);
             }));
         }
 
-        // 부모의 최대 수명 타이머 시작
+        // 부모 호출 (여기서 소리 재생 및 currentThrowHandler 초기화 수행됨)
         base.OnReleased(args);
     }
 
@@ -53,6 +51,8 @@ public class LocalDart : ThrowingDartBase
         rb.linearVelocity = Vector3.zero;
         rb.angularVelocity = Vector3.zero;
 
+        StopFlyingSound();
+
         // 즉시 반납 (LocalDart는 벽에 박히면 바로 사라짐)
         ForceReturnToPool();
     }
@@ -62,12 +62,14 @@ public class LocalDart : ThrowingDartBase
     /// </summary>
     public void ForceReturnToPool()
     {
+        StopFlyingSound();
         StopAllReturnCoroutines();
         ReturnToPool();
     }
 
     public override void ReturnToPool()
     {
+        StopFlyingSound();
         if (_PoolManager != null)
         {
             _PoolManager.ReleaseDart(gameObject);

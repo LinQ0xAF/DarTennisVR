@@ -7,10 +7,15 @@ public class NetworkBalloonManager : NetworkBehaviour
     [Header("Settings")]
     [SerializeField]
     [Range(1, 5)]
-    private int _maxBalloonCount = 5;
+    private int _MaxBalloonCount = 5;
 
     [Header("References")]
     public List<NetworkBalloon> BalloonList = new List<NetworkBalloon>();
+
+    [Header("Effect Pool")]
+    [SerializeField] private GameObject _PopEffectPrefab;
+    [SerializeField] private int _PopEffectPoolSize = 3;
+    private List<GameObject> _PopEffectPool = new List<GameObject>();
 
     [Header("Event Channel")]
     public NetworkBalloonHitChannelSO HitChannel;
@@ -18,13 +23,38 @@ public class NetworkBalloonManager : NetworkBehaviour
     /// <summary>현재 세트에서 사용할 풍선 최대 개수.</summary>
     public int MaxBalloonCount
     {
-        get => _maxBalloonCount;
-        set => _maxBalloonCount = Mathf.Clamp(value, 1, Mathf.Max(1, BalloonList.Count));
+        get => _MaxBalloonCount;
+        set => _MaxBalloonCount = Mathf.Clamp(value, 1, Mathf.Max(1, BalloonList.Count));
     }
 
     public override void OnNetworkSpawn()
     {
         Initialize();
+        InitializeEffectPool();
+    }
+
+    private void InitializeEffectPool()
+    {
+        if (_PopEffectPrefab == null) return;
+
+        for (int i = 0; i < _PopEffectPoolSize; i++)
+        {
+            GameObject obj = Instantiate(_PopEffectPrefab, transform);
+            obj.SetActive(false);
+            _PopEffectPool.Add(obj);
+        }
+    }
+
+    public GameObject GetEffectFromPool()
+    {
+        foreach (var obj in _PopEffectPool)
+        {
+            if (!obj.activeInHierarchy)
+            {
+                return obj;
+            }
+        }
+        return null;
     }
 
     /// 씬 로드 직후나 게임 시작 시점에 호출하여 풍선 시스템을 초기화합니다.
@@ -54,10 +84,10 @@ public class NetworkBalloonManager : NetworkBehaviour
 
         if (count != -1)
         {
-            _maxBalloonCount = Mathf.Clamp(count, 1, BalloonList.Count);
+            _MaxBalloonCount = Mathf.Clamp(count, 1, BalloonList.Count);
         }
 
-        ResetBalloonsClientRpc(_maxBalloonCount);
+        ResetBalloonsClientRpc(_MaxBalloonCount);
     }
 
     [ClientRpc]
@@ -123,6 +153,12 @@ public class NetworkBalloonManager : NetworkBehaviour
     private void PlayPopEffect(Vector3 pos)
     {
         Debug.Log($"Balloon Popped at {pos}");
-        // TODO: 파티클 생성 및 사운드 재생
+        
+        GameObject effect = GetEffectFromPool();
+        if (effect != null)
+        {
+            effect.transform.position = pos;
+            effect.SetActive(true);
+        }
     }
 }

@@ -13,16 +13,32 @@ public abstract class ThrowingDartBase : MonoBehaviour
     [Tooltip("다트가 던져진 후 풀에 자동으로 반환될 때까지의 최대 시간 (초)")]
     [SerializeField] protected float maxLifetime = 10.0f;
 
+    [Header("Audio")]
+    [SerializeField] protected AudioClip flyingSound;
+
     protected Rigidbody rb;
     protected XRGrabInteractable grabInteractable;
+    protected AudioSource audioSource;
     protected bool hasCollided = false;
     protected Coroutine returnCoroutine;
     protected Coroutine maxLifetimeCoroutine;
+    
+    // 현재 이 다트를 잡고 던지려는 핸들러 (주손)
+    protected DartThrowHandlerBase currentThrowHandler;
 
     protected virtual void Awake()
     {
         rb = GetComponent<Rigidbody>();
         grabInteractable = GetComponent<XRGrabInteractable>();
+        
+        audioSource = GetComponent<AudioSource>();
+        if (audioSource == null)
+        {
+            audioSource = gameObject.AddComponent<AudioSource>();
+        }
+        audioSource.playOnAwake = false;
+        audioSource.spatialBlend = 1.0f;
+        audioSource.loop = true;
     }
 
     protected virtual void OnEnable()
@@ -60,6 +76,38 @@ public abstract class ThrowingDartBase : MonoBehaviour
     {
         // 놓으면 최대 수명 타이머 시작
         StartMaxLifetimeCoroutine();
+
+        // 주손 핸들러가 등록되어 있었다면(던져짐) 소리 재생
+        if (currentThrowHandler != null)
+        {
+            PlayFlyingSound();
+            currentThrowHandler = null;
+        }
+    }
+
+    /// <summary>
+    /// 주손 핸들러가 잡았을 때 호출하여 등록
+    /// </summary>
+    public void SetThrowHandler(DartThrowHandlerBase handler)
+    {
+        currentThrowHandler = handler;
+    }
+
+    protected void PlayFlyingSound()
+    {
+        if (audioSource != null && flyingSound != null)
+        {
+            audioSource.clip = flyingSound;
+            audioSource.Play();
+        }
+    }
+
+    protected void StopFlyingSound()
+    {
+        if (audioSource != null && audioSource.isPlaying)
+        {
+            audioSource.Stop();
+        }
     }
 
     protected virtual void OnCollisionEnter(Collision collision)
