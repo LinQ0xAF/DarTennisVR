@@ -48,7 +48,7 @@ EditorBuildSettings:
     path: Assets/Scenes/AlphaBuild(WLAN)/Enterance_Alpha.unity
     guid: af9216922d395f74da1230cf0a3b7098
   - enabled: 1
-    path: Assets/Scenes/AlphaBuild(WLAN)/HostMulti_Alpha.unity
+    path: Assets/Scenes/AlphaBuild(WLAN)/MultiMatch_Alpha.unity
     guid: bb443bf85c7770b4ca99d966118f57f7
   - enabled: 1
     path: Assets/Scenes/AlphaBuild(WLAN)/SingleMatch_Alpha.unity

@@ -57,6 +57,7 @@ public class MatchManager : NetworkBehaviour
     public event Action OnSetStart;
     public int TimeLimitSeconds => setManager != null ? setManager.TimeLimitSeconds : configuredTimeLimitSeconds;
     public int TotalSets => setManager != null ? setManager.TotalSets : totalSets;
+    public float MatchEndWaitSeconds => matchEndWaitSeconds;
 
     private void Awake()
     {
@@ -398,6 +399,52 @@ public class MatchManager : NetworkBehaviour
     public bool HasSetStartTime() => setManager != null && setManager.HasSetStartTime();
     // UI에서 세트 시작 시각 조회
     public float GetSetStartTime() => setManager != null ? setManager.GetSetStartTime() : 0f;
+
+    // --- Rematch Logic ---
+    private readonly HashSet<ulong> rematchRequestedClients = new HashSet<ulong>();
+    public event Action<ulong, bool> OnRematchStatusChanged;
+
+    public void RequestRematch()
+    {
+        RequestRematchServerRpc();
+    }
+
+    [ServerRpc(RequireOwnership = false)]
+    private void RequestRematchServerRpc(ServerRpcParams rpcParams = default)
+    {
+        ulong clientId = rpcParams.Receive.SenderClientId;
+        if (!rematchRequestedClients.Contains(clientId))
+        {
+            rematchRequestedClients.Add(clientId);
+            RematchStatusChangedClientRpc(clientId, true);
+            CheckRematchCondition();
+        }
+    }
+
+    [ClientRpc]
+    private void RematchStatusChangedClientRpc(ulong clientId, bool requested)
+    {
+        OnRematchStatusChanged?.Invoke(clientId, requested);
+    }
+
+    private void CheckRematchCondition()
+    {
+        // 플레이어 목록이 비어있지 않고, 모든 플레이어가 재대결을 요청했는지 확인
+        if (playerClientIds.Count > 0 && rematchRequestedClients.Count >= playerClientIds.Count)
+        {
+            RestartMatch();
+        }
+    }
+
+    private void RestartMatch()
+    {
+        StopAllCoroutines();
+        // 현재 씬을 다시 로드하여 매치 재시작
+        string currentSceneName = SceneManager.GetActiveScene().name;
+        NetworkManager.SceneManager.LoadScene(currentSceneName, LoadSceneMode.Single);
+    }
+    // ---------------------
+
     /// <summary>서버 기준 흐른 시간(초). 시작 시각을 못 받았으면 0 반환.</summary>
     public float GetElapsedServerSeconds()
     {
