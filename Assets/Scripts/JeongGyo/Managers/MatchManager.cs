@@ -33,7 +33,7 @@ public class MatchManager : NetworkBehaviour
     [SerializeField] private bool returnToLobbyOnMatchEnd = true;
 
     [Header("Events (optional)")]
-    [SerializeField] private UnityEvent onSetEnd; // 세트 종료 알림(점수 집계, UI 등)
+    [SerializeField] public UnityEvent onSetEnd; // 세트 종료 알림(점수 집계, UI 등)
     [SerializeField] public UnityEvent onPrepareNextSet; // 다음 세트 준비 시 실행(풍선 리셋 등)
     [SerializeField] private UnityEvent onTimeUp; // 매치 종료/타임업 시 실행
 
