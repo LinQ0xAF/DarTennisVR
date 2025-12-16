@@ -28,7 +28,7 @@ public class SingleMatchManager : MonoBehaviour
     [SerializeField] private string _LobbySceneName = "Enterance_Alpha";
 
     [Header("Events (optional)")]
-    [SerializeField] private UnityEvent onRoundEnd;            // 세트 종료 시 알림
+    [SerializeField] public UnityEvent onRoundEnd;            // 세트 종료 시 알림
     [SerializeField] private UnityEvent onPrepareNextRound;    // 다음 세트 준비 시 알림
     [SerializeField] private UnityEvent onTimeUp;            // 제한 시간 만료 시 알림
 

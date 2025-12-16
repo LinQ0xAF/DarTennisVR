@@ -1245,6 +1245,14 @@ PrefabInstance:
       propertyPath: m_LinearLimit.bounciness
       value: 0.2
       objectReference: {fileID: 0}
+    - target: {fileID: 8981901381315789855, guid: e84a75613e465bd4e8ef51529b49cff2, type: 3}
+      propertyPath: _PopEffectPrefab
+      value: 
+      objectReference: {fileID: 5053655129435668827, guid: 5572aa4cd976fcc46a5f45ea9b2c8bd1, type: 3}
+    - target: {fileID: 8981901381315789855, guid: e84a75613e465bd4e8ef51529b49cff2, type: 3}
+      propertyPath: _PopEffectPoolSize
+      value: 3
+      objectReference: {fileID: 0}
     - target: {fileID: 9114864405520850395, guid: e84a75613e465bd4e8ef51529b49cff2, type: 3}
       propertyPath: m_Axis.x
       value: 1

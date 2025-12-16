@@ -136,6 +136,13 @@ public abstract class DartThrowHandlerBase : MonoBehaviour
             return;
 
         currentGrabbedInteractable = args.interactableObject;
+
+        // [공통] ThrowingDartBase라면 핸들러 등록
+        if (args.interactableObject.transform.TryGetComponent<ThrowingDartBase>(out var dartBase))
+        {
+            dartBase.SetThrowHandler(this);
+        }
+
         OnValidDartGrabbed(args);
         TryStartCharging();
     }

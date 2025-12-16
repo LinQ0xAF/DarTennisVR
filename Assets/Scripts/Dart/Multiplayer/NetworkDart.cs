@@ -6,8 +6,12 @@ using UnityEngine;
 public class NetworkDart : NetworkBehaviour
 {
     [SerializeField] private DartSettingsSO _settings;
+    [Header("Audio")]
+    [SerializeField] private AudioClip flyingSound;
+
     private Rigidbody _rb;
     private MeshRenderer[] _renderers;
+    private AudioSource _audioSource;
     private bool _HasHit = false; // 중복 충돌 방지용 변수
     private ulong _ThrowerId; // 던진 사람의 ClientId
 
@@ -15,6 +19,13 @@ public class NetworkDart : NetworkBehaviour
     {
         _rb = GetComponent<Rigidbody>();
         _renderers = GetComponentsInChildren<MeshRenderer>();
+        _audioSource = GetComponent<AudioSource>();
+        if (_audioSource == null)
+        {
+            _audioSource = gameObject.AddComponent<AudioSource>();
+        }
+        _audioSource.playOnAwake = false;
+        _audioSource.spatialBlend = 1.0f;
     }
 
     public override void OnNetworkSpawn()
@@ -26,6 +37,26 @@ public class NetworkDart : NetworkBehaviour
             _rb.isKinematic = true; 
         }
         _HasHit = false;
+        
+        // 스폰되자마자 소리 재생 (날아가는 중)
+        PlayFlyingSound();
+    }
+
+    private void PlayFlyingSound()
+    {
+        if (_audioSource != null && flyingSound != null)
+        {
+            _audioSource.clip = flyingSound;
+            _audioSource.Play();
+        }
+    }
+
+    private void StopFlyingSound()
+    {
+        if (_audioSource != null && _audioSource.isPlaying)
+        {
+            _audioSource.Stop();
+        }
     }
 
     // [Server Only] 서버가 직접 호출하는 초기화 함수
@@ -53,6 +84,8 @@ public class NetworkDart : NetworkBehaviour
         if (NetworkManager.Singleton.LocalClientId == throwerId)
         {
             SetVisuals(false);
+            // 본인은 로컬 다트 소리를 들을 테니 네트워크 다트 소리는 끔
+            StopFlyingSound();
         }
         else
         {
@@ -114,6 +147,8 @@ public class NetworkDart : NetworkBehaviour
         _rb.isKinematic = true;
         _rb.useGravity = false;
 
+        StopFlyingSound();
+
         // 충돌한 순간에는 모든 클라이언트(본인 포함)에게 네트워크 다트를 보여줍니다.
         SetVisuals(true);
     }
@@ -122,5 +157,11 @@ public class NetworkDart : NetworkBehaviour
     {
         yield return new WaitForSeconds(_settings.NetworkLifeTime);
         if(IsSpawned) GetComponent<NetworkObject>().Despawn();
+    }
+
+    public override void OnNetworkDespawn()
+    {
+        StopFlyingSound();
+        base.OnNetworkDespawn();
     }
 }

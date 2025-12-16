@@ -12,6 +12,11 @@ public class BalloonManager : MonoBehaviour
     [SerializeField] private int balloonCurrentNumber = 1;
     [SerializeField] public List<Balloons> BalloonList = new List<Balloons>(); // 인스펙터에서 넣은 순서를 유지
 
+    [Header("Effect Pool")]
+    [SerializeField] private GameObject _PopEffectPrefab;
+    [SerializeField] private int _PopEffectPoolSize = 3;
+    private List<GameObject> _PopEffectPool = new List<GameObject>();
+
     private int remainingCount = 0;
     private bool initialized = false;
 
@@ -39,12 +44,32 @@ public class BalloonManager : MonoBehaviour
     private void Awake()
     {
         InitializeBalloons();
+        InitializeEffectPool();
     }
 
-    // private void Start()
-    // {
-    //     ResetBalloons(balloonNumber);
-    // }
+    private void InitializeEffectPool()
+    {
+        if (_PopEffectPrefab == null) return;
+
+        for (int i = 0; i < _PopEffectPoolSize; i++)
+        {
+            GameObject obj = Instantiate(_PopEffectPrefab, transform);
+            obj.SetActive(false);
+            _PopEffectPool.Add(obj);
+        }
+    }
+
+    public GameObject GetEffectFromPool()
+    {
+        foreach (var obj in _PopEffectPool)
+        {
+            if (!obj.activeInHierarchy)
+            {
+                return obj;
+            }
+        }
+        return null;
+    }
 
     /// <summary>씬에 배치된 풍선에 인덱스를 부여한다.</summary>
     private void InitializeBalloons()
@@ -90,6 +115,13 @@ public class BalloonManager : MonoBehaviour
     {
         if (BalloonList == null || index < 0 || index >= BalloonList.Count)
             return;
+
+        GameObject effect = GetEffectFromPool();
+        if (effect != null)
+        {
+            effect.transform.position = BalloonList[index].transform.position;
+            effect.SetActive(true);
+        }
 
         BalloonList[index].gameObject.SetActive(false);
 
