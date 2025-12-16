@@ -29,19 +29,19 @@ EditorBuildSettings:
   - enabled: 0
     path: Assets/Scenes/JeongGyo/EnteranceCopy.unity
     guid: 08bc919a27a204974b7213d477e6f327
-  - enabled: 1
+  - enabled: 0
     path: Assets/Scenes/TempMultiBuild/EnteranceTemp.unity
     guid: 3a31148c28a8b414784ad61b99867bc1
-  - enabled: 1
+  - enabled: 0
     path: Assets/Scenes/TempMultiBuild/HostMultiTemp.unity
     guid: 4b98b30bb8716ba45b7bd6aaea6021e3
-  - enabled: 1
+  - enabled: 0
     path: Assets/Scenes/JeongGyo/SingleMatchCopy.unity
     guid: 69d7637f9356d442f9ed28203eaf03a2
-  - enabled: 1
+  - enabled: 0
     path: Assets/Scenes/Seungmin/EnteranceTemp 1.unity
     guid: 129c1538530905945994990d598ec5ab
-  - enabled: 1
+  - enabled: 0
     path: Assets/Scenes/Seungmin/HostMultiTemp 1.unity
     guid: 73f9b1996a7302e4f8b36f267d661019
   - enabled: 1

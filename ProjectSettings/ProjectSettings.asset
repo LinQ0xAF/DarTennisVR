@@ -12,7 +12,7 @@ PlayerSettings:
   targetDevice: 2
   useOnDemandResources: 0
   accelerometerFrequency: 60
-  companyName: DefaultCompany
+  companyName: Polaris_
   productName: DarTennisVR
   defaultCursor: {fileID: 0}
   cursorHotspot: {x: 0, y: 0}
@@ -140,7 +140,7 @@ PlayerSettings:
   loadStoreDebugModeEnabled: 0
   visionOSBundleVersion: 1.0
   tvOSBundleVersion: 1.0
-  bundleVersion: 9.2.0
+  bundleVersion: 0.5.0
   preloadedAssets:
   - {fileID: 0}
   - {fileID: 11400000, guid: b14db906f0e4b9243a946848a971c560, type: 2}
