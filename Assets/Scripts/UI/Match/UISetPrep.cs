@@ -1,53 +1,70 @@
 using UnityEngine;
 using System.Collections;
+using Gameplay.Match.Interfaces;
 
 /// <summary>
-/// 세트 시작 전 Prep 단계(카운트다운 등)를 표시하는 UI.
-/// SetManager의 이벤트를 받아 UI를 켜고 끈다.
+/// 세트/라운드 시작 전 Prep 단계(카운트다운 등)를 표시하는 통합 UI.
+/// MatchManager(멀티) 또는 SingleMatchManager(싱글)의 이벤트를 받아 UI를 제어한다.
 /// </summary>
 public class UISetPrep : MonoBehaviour
 {
+    [Header("Managers")]
+    [SerializeField] private MatchManager _multiManager;
+    [SerializeField] private SingleMatchManager _singleManager;
+
     [Header("UI Components")]
-    [SerializeField] private GameObject _SetPrepPanel;
+    [SerializeField] private GameObject _PrepPanel;
     [SerializeField] private GameObject _ReadyImage;
     [SerializeField] private GameObject _StartImage;
 
     [SerializeField] private float _StartMsgDuration = 1.5f;
 
-    [Header("References")]
-    [SerializeField] private MatchManager matchManager;
+    private IMatchManager _activeManager;
+
+    private void Awake()
+    {
+        _activeManager = (_multiManager as IMatchManager) ?? (_singleManager as IMatchManager);
+
+        if (_activeManager == null)
+        {
+            if (_multiManager == null) _multiManager = FindFirstObjectByType<MatchManager>();
+            if (_singleManager == null) _singleManager = FindFirstObjectByType<SingleMatchManager>();
+            
+            _activeManager = (_multiManager as IMatchManager) ?? (_singleManager as IMatchManager);
+        }
+    }
 
     private void Start()
     {
-        if (matchManager == null) matchManager = FindFirstObjectByType<MatchManager>();
-
-        if (matchManager != null)
+        if (_activeManager != null)
         {
-            matchManager.OnSetPreStart += ShowPrep;
-            matchManager.OnSetStart += HidePrep;
+            _activeManager.OnSetPreStart += ShowPrep;
+            _activeManager.OnSetStart += HidePrep;
         }
         
-        if (_SetPrepPanel != null) 
-            _SetPrepPanel.SetActive(false);
+        if (_PrepPanel != null) 
+            _PrepPanel.SetActive(false);
     }
 
     private void OnDestroy()
     {
-        if (matchManager != null)
+        if (_activeManager != null)
         {
-            matchManager.OnSetPreStart -= ShowPrep;
-            matchManager.OnSetStart -= HidePrep;
+            _activeManager.OnSetPreStart -= ShowPrep;
+            _activeManager.OnSetStart -= HidePrep;
         }
     }
 
     private void ShowPrep()
     {
-        if (_SetPrepPanel != null) 
-            _SetPrepPanel.SetActive(true);
+        if (_PrepPanel != null) 
+            _PrepPanel.SetActive(true);
             
         if (_ReadyImage != null && _StartImage != null) 
+        {
             _ReadyImage.SetActive(true);
             _StartImage.SetActive(false);
+        }
     }
 
     private void HidePrep()
@@ -65,7 +82,7 @@ public class UISetPrep : MonoBehaviour
 
         yield return new WaitForSeconds(_StartMsgDuration);
 
-        if (_SetPrepPanel != null) 
-            _SetPrepPanel.SetActive(false);
+        if (_PrepPanel != null) 
+            _PrepPanel.SetActive(false);
     }
 }

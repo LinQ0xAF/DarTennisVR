@@ -1,27 +1,40 @@
 using Unity.Netcode;
 using UnityEngine;
 using TMPro;
-using UnityEngine.InputSystem; // TextMeshPro 사용 시
+using UnityEngine.InputSystem;
 using UnityEngine.UI;
+using Gameplay.Match.Interfaces;
 
+/// <summary>
+/// 매치 종료 결과를 표시하는 통합 팝업 UI.
+/// 멀티(재대결)와 싱글(다시하기) 모드를 모두 지원한다.
+/// </summary>
 public class UIMatchResultPopUp : MonoBehaviour
 {
-    [Header("MatchManager Reference")]
-    [SerializeField] private MatchManager _MatchManager;
+    [Header("Managers")]
+    [SerializeField] private MatchManager _multiManager;
+    [SerializeField] private SingleMatchManager _singleManager;
     
     [Header("Display Settings")]
-    public float SpawnDistance = 1.8f;   // 눈앞 몇 미터?
-    public float HeightOffset = 0.0f;    // 눈높이 조절
+    public float SpawnDistance = 1.8f;
+    public float HeightOffset = 0.0f;
 
-    [Header("UI Components")]
+    [Header("Common UI")]
     [SerializeField] private GameObject _MatchResultPanel;
     [SerializeField] private GameObject _WinBanner;
     [SerializeField] private GameObject _LoseBanner;
-    [SerializeField] private GameObject _DrawBanner;
-    [SerializeField] private TextMeshProUGUI _ResultStatisticsText;
-    [SerializeField] private TextMeshProUGUI _OpponentRematchStatusText; // 상대방 재대결 요청 상태 표시 텍스트
-    [SerializeField] private Button _RematchButton;
     [SerializeField] private Button _ExitButton;
+    [SerializeField] private TextMeshProUGUI _ResultStatisticsText;
+
+    [Header("Multiplayer Specific")]
+    [SerializeField] private GameObject _DrawBanner;
+    [SerializeField] private TextMeshProUGUI _OpponentRematchStatusText;
+    [SerializeField] private Button _RematchButton;
+
+    [Header("Singleplayer Specific")]
+    [SerializeField] private Button _RetryButton;
+
+    private IMatchManager _activeManager;
 
     private TextMeshProUGUI _ExitButtonText;
     private float _AutoExitTime;
@@ -34,53 +47,85 @@ public class UIMatchResultPopUp : MonoBehaviour
     private void OnEnable()
     {
         if (_TestShowResultAction != null)
-        {
             _TestShowResultAction.action.performed += ShowResultUITest;
-        }
     }
     private void ShowResultUITest(InputAction.CallbackContext context)
     {
-        // 테스트용: 로컬 플레이어가 승리한 것으로 가정
-        ShowResultUI(NetworkManager.Singleton.LocalClientId);
+        // 테스트용: 멀티면 로컬 승리, 싱글이면 성공으로 가정
+        if (_multiManager != null) ShowMultiResult(NetworkManager.Singleton.LocalClientId);
+        else ShowSingleResult(true);
     }
 #endif
 
-// Matchmanager의 이벤트와 연결
     private void Start()
     {
-        if (_MatchManager != null)
+        // 1. 인스펙터 할당 우선
+        _activeManager = (_multiManager as IMatchManager) ?? (_singleManager as IMatchManager);
+
+        // 2. 없으면 구체적인 타입으로 검색
+        if (_activeManager == null)
         {
-            _MatchManager.OnMatchResult += ShowResultUI;
-            _MatchManager.OnRematchStatusChanged += HandleRematchStatusChanged;
+            if (_multiManager == null) _multiManager = FindFirstObjectByType<MatchManager>();
+            if (_singleManager == null) _singleManager = FindFirstObjectByType<SingleMatchManager>();
+            
+            _activeManager = (_multiManager as IMatchManager) ?? (_singleManager as IMatchManager);
         }
+
         if (_ExitButton != null)
         {
             _ExitButton.onClick.AddListener(OnExitButtonClicked);
             _ExitButtonText = _ExitButton.GetComponentInChildren<TextMeshProUGUI>();
         }
-        if( _RematchButton != null)
+
+        // 멀티플레이 설정
+        if (_multiManager != null)
         {
-            _RematchButton.onClick.AddListener(OnRematchButtonClicked);
+            _multiManager.OnMatchResult += ShowMultiResult;
+            _multiManager.OnRematchStatusChanged += HandleRematchStatusChanged;
+            
+            if (_RematchButton != null)
+            {
+                _RematchButton.gameObject.SetActive(true);
+                _RematchButton.onClick.AddListener(OnRematchButtonClicked);
+            }
+            if (_OpponentRematchStatusText != null)
+                _OpponentRematchStatusText.gameObject.SetActive(false);
+                
+            // 싱글 버튼 숨기기
+            if (_RetryButton != null) _RetryButton.gameObject.SetActive(false);
         }
-        
-        if (_OpponentRematchStatusText != null)
+        // 싱글플레이 설정
+        else if (_singleManager != null)
         {
-            _OpponentRematchStatusText.gameObject.SetActive(false);
+            _singleManager.OnMatchResult += ShowSingleResult;
+            
+            if (_RetryButton != null)
+            {
+                _RetryButton.gameObject.SetActive(true);
+                _RetryButton.onClick.AddListener(OnRetryButtonClicked);
+            }
+            
+            // 멀티 버튼 숨기기
+            if (_RematchButton != null) _RematchButton.gameObject.SetActive(false);
+            if (_OpponentRematchStatusText != null) _OpponentRematchStatusText.gameObject.SetActive(false);
         }
     }
 
     private void OnDestroy()
     {
-        if (_MatchManager != null)
+        if (_multiManager != null)
         {
-            _MatchManager.OnMatchResult -= ShowResultUI;
-            _MatchManager.OnRematchStatusChanged -= HandleRematchStatusChanged;
+            _multiManager.OnMatchResult -= ShowMultiResult;
+            _multiManager.OnRematchStatusChanged -= HandleRematchStatusChanged;
         }
+        else if (_singleManager != null)
+        {
+            _singleManager.OnMatchResult -= ShowSingleResult;
+        }
+
 #if UNITY_EDITOR
         if (_TestShowResultAction != null)
-        {
             _TestShowResultAction.action.performed -= ShowResultUITest;
-        }
 #endif
     }
 
@@ -99,97 +144,89 @@ public class UIMatchResultPopUp : MonoBehaviour
         }
     }
 
-    // 이벤트가 발생하면 호출됨
-    private void ShowResultUI(ulong? winnerId)
+    private void ShowPanel()
     {
-        if(_MatchResultPanel == null) return;
+        if (_MatchResultPanel == null) return;
 
         _IsMatchEnded = true;
         _LastDisplayedSeconds = -1;
-        if (_MatchManager != null)
-        {
-            _AutoExitTime = Time.time + _MatchManager.MatchEndWaitSeconds;
-        }
         
+        float waitSeconds = 5f;
+        if (_activeManager != null) waitSeconds = _activeManager.MatchEndWaitSeconds;
+        
+        _AutoExitTime = Time.time + waitSeconds;
+
+        _MatchResultPanel.SetActive(true);
+
+        Transform cameraTr = Camera.main.transform;
+        Vector3 spawnPos = cameraTr.position + (cameraTr.forward * SpawnDistance);
+        spawnPos.y += HeightOffset;
+
+        _MatchResultPanel.transform.position = spawnPos;
+
+        Vector3 lookPos = _MatchResultPanel.transform.position - cameraTr.position;
+        lookPos.y = 0;
+        if (lookPos != Vector3.zero)
+        {
+            _MatchResultPanel.transform.rotation = Quaternion.LookRotation(lookPos);
+        }
+    }
+
+    // 멀티플레이 결과 표시
+    private void ShowMultiResult(ulong? winnerId)
+    {
         if (winnerId == null)
         {
-            // 무승부 처리
             if (_WinBanner != null) _WinBanner.SetActive(false);
             if (_LoseBanner != null) _LoseBanner.SetActive(false);
             if (_DrawBanner != null) _DrawBanner.SetActive(true);
         }
         else
         {
-            // 승패 판정 (winnerId가 null이면 무승부 -> 승리 아님)
             bool isWinner = (winnerId.Value == NetworkManager.Singleton.LocalClientId);
-
-            // 승패 이미지 설정
-            if (_WinBanner != null  && _LoseBanner != null)
-            {
-                _WinBanner.gameObject.SetActive(isWinner);
-                _LoseBanner.gameObject.SetActive(!isWinner);
-            }
+            if (_WinBanner != null) _WinBanner.SetActive(isWinner);
+            if (_LoseBanner != null) _LoseBanner.SetActive(!isWinner);
+            if (_DrawBanner != null) _DrawBanner.SetActive(false);
         }
-        // VR 카메라(HMD) 위치 찾기
-        Transform cameraTr = Camera.main.transform;
+        ShowPanel();
+    }
+
+    // 싱글플레이 결과 표시
+    private void ShowSingleResult(bool isSuccess)
+    {
+        if (_WinBanner != null) _WinBanner.SetActive(isSuccess);
+        if (_LoseBanner != null) _LoseBanner.SetActive(!isSuccess);
+        if (_DrawBanner != null) _DrawBanner.SetActive(false);
         
-        // 패널 생성 위치 계산 (카메라 앞쪽)
-        // 시선 방향으로 거리만큼 띄우고, 수직 높이는 약간 보정하거나 그대로 둠
-        Vector3 spawnPos = cameraTr.position + (cameraTr.forward * SpawnDistance);
-        spawnPos.y += HeightOffset; 
-
-        _MatchResultPanel.transform.position = spawnPos;
-
-        // 패널이 플레이어를 바라보게 회전 (Billboarding)
-        // Y축 회전만 적용하여 패널이 기울어지지 않게 하는 것이 읽기 편함
-        Vector3 lookPos = _MatchResultPanel.transform.position - cameraTr.position;
-        lookPos.y = 0; // 수직 회전 제거
-        if (lookPos != Vector3.zero)
-        {
-            _MatchResultPanel.transform.rotation = Quaternion.LookRotation(lookPos);
-        }
-
-        // 표시될 내용 설정 완료 후 UI 패널 활성화
-        _MatchResultPanel.SetActive(true);
-
-
-        // 결과 통계 텍스트 설정 (각 세트 당 점수 등?)
-        if (_ResultStatisticsText != null)
-        {
-            // _ResultStatisticsText.text = 
-        }
-        
-        // (부가 기능) 다시하기 / 나가기 버튼 기능 활성화 등...
+        ShowPanel();
     }
 
     private void OnExitButtonClicked()
     {
-#if UNITY_EDITOR
-        _MatchResultPanel.SetActive(false); // 에디터에서는 그냥 UI 닫기
-#endif
-        // 매치 종료 처리 (매치메이커/네트워크 매니저 등과 연동 필요)
-        if (_MatchManager != null)
+        if (_activeManager != null)
         {
-            _MatchManager.ReturnToLobby();
+            _activeManager.ReturnToLobby();
         }
     }
 
+    // --- Multiplayer Rematch ---
     private void HandleRematchStatusChanged(ulong clientId, bool requested)
     {
         if (clientId == NetworkManager.Singleton.LocalClientId)
         {
-            // 내가 요청한 경우: 버튼 비활성화 및 텍스트 변경
             if (_RematchButton != null)
             {
                 _RematchButton.interactable = false;
-                _OpponentRematchStatusText.text = "Rematch Requested!";
-                _OpponentRematchStatusText.color = Color.white;
-                _OpponentRematchStatusText.gameObject.SetActive(true);
+                if (_OpponentRematchStatusText != null)
+                {
+                    _OpponentRematchStatusText.text = "Rematch Requested!";
+                    _OpponentRematchStatusText.color = Color.white;
+                    _OpponentRematchStatusText.gameObject.SetActive(true);
+                }
             }
         }
         else
         {
-            // 상대방이 요청한 경우: 텍스트 표시
             if (_OpponentRematchStatusText != null)
             {
                 _OpponentRematchStatusText.text = "Opponent wants a rematch!";
@@ -201,10 +238,13 @@ public class UIMatchResultPopUp : MonoBehaviour
 
     private void OnRematchButtonClicked()
     {
-        // 리매치 요청 처리
-        if (_MatchManager != null)
-        {
-            _MatchManager.RequestRematch();
-        }
+        if (_multiManager != null) _multiManager.RequestRematch();
+    }
+
+    // --- Singleplayer Retry ---
+    private void OnRetryButtonClicked()
+    {
+        if (_singleManager != null) _singleManager.RestartMatch();
+        if (_MatchResultPanel != null) _MatchResultPanel.SetActive(false);
     }
 }

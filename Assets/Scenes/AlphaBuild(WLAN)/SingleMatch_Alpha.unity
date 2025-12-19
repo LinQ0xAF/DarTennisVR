@@ -1317,14 +1317,15 @@ MonoBehaviour:
   m_GameObject: {fileID: 441956150}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 25f48c7dcf0df5d44acc01ea8fc8240a, type: 3}
+  m_Script: {fileID: 11500000, guid: 10e24024df19ad24fa3d6eea167242f2, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _RoundPrepPanel: {fileID: 115674032}
+  _multiManager: {fileID: 0}
+  _singleManager: {fileID: 1227572211}
+  _PrepPanel: {fileID: 115674032}
   _ReadyImage: {fileID: 935202859}
   _StartImage: {fileID: 1511038956}
   _StartMsgDuration: 1.5
-  _MatchManager: {fileID: 1227572211}
 --- !u!1 &445864269
 GameObject:
   m_ObjectHideFlags: 0
@@ -3046,7 +3047,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1202417923}
-  - component: {fileID: 1202417924}
+  - component: {fileID: 1202417925}
   m_Layer: 5
   m_Name: MatchResultUIWrapper
   m_TagString: Untagged
@@ -3070,7 +3071,7 @@ Transform:
   - {fileID: 395466036}
   m_Father: {fileID: 2046629159}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &1202417924
+--- !u!114 &1202417925
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -3079,18 +3080,22 @@ MonoBehaviour:
   m_GameObject: {fileID: 1202417922}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: ba507195fa08ab24ca09971e6c783e46, type: 3}
+  m_Script: {fileID: 11500000, guid: 14c1f562ec18fa94f888d5bf0d64f7a6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _MatchManager: {fileID: 1227572211}
-  SpawnDistance: 1.8
-  HeightOffset: 0
+  _multiManager: {fileID: 0}
+  _singleManager: {fileID: 1227572211}
+  SpawnDistance: 1.6
+  HeightOffset: -0.1
   _MatchResultPanel: {fileID: 395466035}
   _WinBanner: {fileID: 918076885}
   _LoseBanner: {fileID: 1581624799}
-  _ResultStatisticsText: {fileID: 0}
-  _RetryButton: {fileID: 180421707}
   _ExitButton: {fileID: 52349827}
+  _ResultStatisticsText: {fileID: 0}
+  _DrawBanner: {fileID: 0}
+  _OpponentRematchStatusText: {fileID: 0}
+  _RematchButton: {fileID: 0}
+  _RetryButton: {fileID: 180421707}
   _TestShowResultAction: {fileID: 1138464006474592474, guid: c348712bda248c246b8c49b3db54643f, type: 3}
 --- !u!1 &1227572210
 GameObject:
@@ -5079,8 +5084,8 @@ GameObject:
   - component: {fileID: 1946489585}
   - component: {fileID: 1946489584}
   - component: {fileID: 1946489583}
-  - component: {fileID: 1946489586}
   - component: {fileID: 1946489587}
+  - component: {fileID: 1946489586}
   m_Layer: 5
   m_Name: Canvas
   m_TagString: Untagged
@@ -5181,12 +5186,23 @@ MonoBehaviour:
   m_GameObject: {fileID: 1946489578}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: ca749cc2d23a34461a31677add0bb861, type: 3}
+  m_Script: {fileID: 11500000, guid: b851d64936e64443ebbfc2181e097e90, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _MatchManager: {fileID: 1227572211}
-  _TimerText: {fileID: 624825567}
-  _ClampToZero: 1
+  _multiManager: {fileID: 0}
+  _singleManager: {fileID: 1227572211}
+  roundDots:
+  - {fileID: 168123903}
+  - {fileID: 1055182241}
+  - {fileID: 1235224928}
+  - {fileID: 1060906005}
+  - {fileID: 29799022}
+  emptyColor: {r: 1, g: 1, b: 1, a: 1}
+  winColor: {r: 0, g: 1, b: 0, a: 1}
+  loseColor: {r: 1, g: 0, b: 0, a: 1}
+  drawColor: {r: 1, g: 0.92156863, b: 0.015686275, a: 1}
+  successColor: {r: 0, g: 1, b: 0, a: 1}
+  failColor: {r: 1, g: 0, b: 0, a: 1}
 --- !u!114 &1946489587
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -5196,19 +5212,13 @@ MonoBehaviour:
   m_GameObject: {fileID: 1946489578}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: f9cf8587e7e8847ab96d468a0f97339d, type: 3}
+  m_Script: {fileID: 11500000, guid: 67a2be59f893546deb701b869c39f557, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  roundDots:
-  - {fileID: 168123903}
-  - {fileID: 1055182241}
-  - {fileID: 1235224928}
-  - {fileID: 1060906005}
-  - {fileID: 29799022}
-  successColor: {r: 0, g: 1, b: 0, a: 1}
-  failColor: {r: 1, g: 0, b: 0, a: 1}
-  emptyColor: {r: 1, g: 1, b: 1, a: 1}
-  _MatchManager: {fileID: 1227572211}
+  _multiManager: {fileID: 0}
+  _singleManager: {fileID: 1227572211}
+  timerText: {fileID: 624825567}
+  clampToZero: 1
 --- !u!1 &2014607239
 GameObject:
   m_ObjectHideFlags: 0
@@ -6194,6 +6204,7 @@ MonoBehaviour:
   _SingleMatchManager: {fileID: 1227572211}
   _SetStartBuzzerAudioSource: {fileID: 815848376}
   _SetEndBuzzerAudioSource: {fileID: 638552433}
+  _SetEndDelay: 0.6
 --- !u!4 &3415065199419216384
 Transform:
   m_ObjectHideFlags: 0

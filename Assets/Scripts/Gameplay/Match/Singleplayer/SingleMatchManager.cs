@@ -58,6 +58,8 @@ public class SingleMatchManager : MonoBehaviour, IMatchManager<bool>
     #region IMatchManager Implementation
     public int TotalSets => TotalRounds;
     public int CurrentSetIndex => CurrentRoundIndex;
+    public float GetElapsedSeconds() => GetElapsedLocalSeconds();
+    public float MatchEndWaitSeconds => _MatchEndWaitSeconds;
 
     event Action IMatchManager.OnSetPreStart
     {

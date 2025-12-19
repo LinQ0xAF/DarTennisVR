@@ -62,6 +62,7 @@ public class MatchManager : NetworkBehaviour, IMatchManager<ulong?>
 
     #region IMatchManager Implementation
     public int CurrentSetIndex => currentSetIndex;
+    public float GetElapsedSeconds() => GetElapsedServerSeconds();
     #endregion
 
     private void Awake()

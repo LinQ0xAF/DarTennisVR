@@ -1,33 +1,47 @@
 using UnityEngine;
 using TMPro;
+using Gameplay.Match.Interfaces;
 
 /// <summary>
-/// 서버 시간 기반 남은 시간을 표시하는 간단한 UI 타이머.
-/// GameManager에서 제한 시간/시작 시각을 받아 서버 시계 기준으로 동일하게 움직인다.
+/// 매치(세트/라운드) 남은 시간을 표시하는 통합 UI 타이머.
+/// MatchManager(멀티) 또는 SingleMatchManager(싱글)를 자동으로 감지하여 작동한다.
 /// </summary>
 public class UIMatchTimer : MonoBehaviour
 {
-    [SerializeField] private MatchManager gameManager; // 씬에 존재하는 게임 매니저 참조
+    [Header("Managers")]
+    [SerializeField] private MatchManager _multiManager;
+    [SerializeField] private SingleMatchManager _singleManager;
+
+    [Header("UI Settings")]
     [SerializeField] private TMP_Text timerText; // mm:ss 표시용
     [SerializeField] private bool clampToZero = true; // 0 아래로 내려갈지 여부
-    // [SerializeField] private GamePersonalDataManager personalDataManager; // 네트워크 매니저가 담긴 오브젝트
 
-    void Awake()
+    private IMatchManager _activeManager;
+
+    private void Awake()
     {
-        // 인스펙터에 없으면 씬에서 자동 검색
-        if (gameManager == null)
-            gameManager = FindFirstObjectByType<MatchManager>();
-        // if (personalDataManager == null)
-        //     personalDataManager = FindFirstObjectByType<GamePersonalDataManager>();
+        // 1. 인스펙터 할당 우선
+        _activeManager = (_multiManager as IMatchManager) ?? (_singleManager as IMatchManager);
+
+        // 2. 없으면 구체적인 타입으로 검색 (가장 빠르고 안전함)
+        if (_activeManager == null)
+        {
+            if (_multiManager == null) _multiManager = FindFirstObjectByType<MatchManager>();
+            if (_singleManager == null) _singleManager = FindFirstObjectByType<SingleMatchManager>();
+            
+            _activeManager = (_multiManager as IMatchManager) ?? (_singleManager as IMatchManager);
+        }
     }
 
-    void Update()
+    private void Update()
     {
-        if (gameManager == null || timerText == null || !gameManager.HasSetStartTime())
+        if (_activeManager == null || timerText == null)
             return;
 
-        var elapsed = gameManager.GetElapsedServerSeconds();
-        var remain = gameManager.TimeLimitSeconds - elapsed;
+        // 인터페이스를 통해 경과 시간 및 제한 시간 조회
+        var elapsed = _activeManager.GetElapsedSeconds();
+        var remain = _activeManager.TimeLimitSeconds - elapsed;
+        
         if (clampToZero && remain < 0f)
             remain = 0f;
 

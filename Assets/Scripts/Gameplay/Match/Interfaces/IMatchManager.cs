@@ -24,6 +24,15 @@ namespace Gameplay.Match.Interfaces
         
         /// <summary>총 세트 수가 설정되었을 때 이벤트</summary>
         event Action<int> OnSetsConfigured;
+
+        /// <summary>현재 진행 시간(초)을 반환</summary>
+        float GetElapsedSeconds();
+
+        /// <summary>매치 종료 후 대기 시간(초)</summary>
+        float MatchEndWaitSeconds { get; }
+
+        /// <summary>로비로 돌아가기</summary>
+        void ReturnToLobby();
     }
 
     /// <summary>

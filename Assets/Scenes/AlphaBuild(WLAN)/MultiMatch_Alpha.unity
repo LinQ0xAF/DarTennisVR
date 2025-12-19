@@ -169,6 +169,7 @@ MonoBehaviour:
   _SingleMatchManager: {fileID: 0}
   _SetStartBuzzerAudioSource: {fileID: 1587919653}
   _SetEndBuzzerAudioSource: {fileID: 454393130}
+  _SetEndDelay: 0.6
 --- !u!1 &10739808
 GameObject:
   m_ObjectHideFlags: 0
@@ -2446,17 +2447,19 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 14c1f562ec18fa94f888d5bf0d64f7a6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _MatchManager: {fileID: 1909114170}
+  _multiManager: {fileID: 1909114170}
+  _singleManager: {fileID: 0}
   SpawnDistance: 1.6
   HeightOffset: -0.1
   _MatchResultPanel: {fileID: 2145304749}
   _WinBanner: {fileID: 1579320924}
   _LoseBanner: {fileID: 865247276}
-  _DrawBanner: {fileID: 505957487}
+  _ExitButton: {fileID: 1746203263}
   _ResultStatisticsText: {fileID: 0}
+  _DrawBanner: {fileID: 505957487}
   _OpponentRematchStatusText: {fileID: 458308574}
   _RematchButton: {fileID: 1362845931}
-  _ExitButton: {fileID: 1746203263}
+  _RetryButton: {fileID: 0}
   _TestShowResultAction: {fileID: 1138464006474592474, guid: c348712bda248c246b8c49b3db54643f, type: 3}
 --- !u!1 &982227712
 GameObject:
@@ -2617,11 +2620,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 10e24024df19ad24fa3d6eea167242f2, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _SetPrepPanel: {fileID: 1678559728}
+  _multiManager: {fileID: 1909114170}
+  _singleManager: {fileID: 0}
+  _PrepPanel: {fileID: 1678559728}
   _ReadyImage: {fileID: 1681539719}
   _StartImage: {fileID: 2131193137}
   _StartMsgDuration: 1.5
-  matchManager: {fileID: 1909114170}
 --- !u!114 &1071183992
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2889,7 +2893,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 67a2be59f893546deb701b869c39f557, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  gameManager: {fileID: 1909114170}
+  _multiManager: {fileID: 1909114170}
+  _singleManager: {fileID: 0}
   timerText: {fileID: 1255604109}
   clampToZero: 1
 --- !u!114 &1269147746
@@ -2980,17 +2985,20 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b851d64936e64443ebbfc2181e097e90, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  _multiManager: {fileID: 1909114170}
+  _singleManager: {fileID: 0}
   roundDots:
   - {fileID: 53432481}
   - {fileID: 896555215}
   - {fileID: 210410299}
   - {fileID: 765117315}
   - {fileID: 462798749}
+  emptyColor: {r: 1, g: 1, b: 1, a: 1}
   winColor: {r: 0, g: 1, b: 0, a: 1}
   loseColor: {r: 1, g: 0, b: 0, a: 1}
   drawColor: {r: 1, g: 0.92156863, b: 0.015686275, a: 1}
-  emptyColor: {r: 1, g: 1, b: 1, a: 1}
-  matchManager: {fileID: 1909114170}
+  successColor: {r: 0, g: 1, b: 0, a: 1}
+  failColor: {r: 1, g: 0, b: 0, a: 1}
 --- !u!1 &1362845929
 GameObject:
   m_ObjectHideFlags: 0
