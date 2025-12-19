@@ -1,13 +1,14 @@
 using System;
 using System.Collections;
 using UnityEngine;
+using Gameplay.Match.Interfaces;
 
 /// <summary>
 /// 라운드 진행/승패 판정/타이머 관리 전담.
 /// - 매치 승패나 다음 라운드 진행 여부는 MatchManager가 결정한다.
 /// </summary>
 
-public class SingleRoundManager : MonoBehaviour
+public class SingleRoundManager : MonoBehaviour, ISetManager<bool>
 {
     [Header("Refs")]
     [SerializeField] private BalloonManager _TargetBalloonManager;
@@ -40,6 +41,32 @@ public class SingleRoundManager : MonoBehaviour
     public event Action OnRoundStart;
 
     public int TimeLimitSeconds => _ConfiguredTimeLimitSeconds;
+
+    #region ISetManager Implementation
+    event Action ISetManager.OnSetPreStart
+    {
+        add => OnRoundPreStart += value;
+        remove => OnRoundPreStart -= value;
+    }
+
+    event Action ISetManager.OnSetStart
+    {
+        add => OnRoundStart += value;
+        remove => OnRoundStart -= value;
+    }
+
+    event Action ISetManager.OnSetEnd
+    {
+        add => OnRoundEnd += value;
+        remove => OnRoundEnd -= value;
+    }
+
+    event Action<bool> ISetManager<bool>.OnSetResult
+    {
+        add => OnRoundResult += value;
+        remove => OnRoundResult -= value;
+    }
+    #endregion
 
     private void Awake()
     {

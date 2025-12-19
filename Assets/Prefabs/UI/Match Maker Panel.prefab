@@ -231,7 +231,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ea70bfc676cdc4f1890e611743b06063, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  gamePlaySceneName: HostMulti_Alpha
+  gamePlaySceneName: MultiMatch_Alpha
   setCountDropdown: {fileID: 1473540924411560273}
   balloonCountSlider: {fileID: 2130400295407524662}
   timeLimitSlider: {fileID: 2851496222412865756}
@@ -3538,7 +3538,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7fdc37f848c4a4adea4e4d69bdd9d293, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  SingeleUIPanelObj: {fileID: 3250620092470996879}
+  SingleUIPanelObj: {fileID: 3250620092470996879}
   MultiUIPanelObj: {fileID: 1039246998013889277}
   _MainUIPanelObj: {fileID: 8592518940581988105}
   isSingleUI: 0
@@ -4603,7 +4603,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7fdc37f848c4a4adea4e4d69bdd9d293, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  SingeleUIPanelObj: {fileID: 3250620092470996879}
+  SingleUIPanelObj: {fileID: 3250620092470996879}
   MultiUIPanelObj: {fileID: 1039246998013889277}
   _MainUIPanelObj: {fileID: 8592518940581988105}
   isSingleUI: 1

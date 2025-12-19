@@ -3,14 +3,14 @@ using System.Collections;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.Events;
-using System.Text.RegularExpressions;
+using Gameplay.Match.Interfaces;
 
 /// <summary>
 /// 싱글 플레이용 매치 상태 매니저.
 /// - BalloonManager의 풍선 소진을 감시해 세트 종료
 /// - 세트가 남아 있으면 다음 세트로 넘어가고, 없으면 매치 종료 후 메인 씬으로 복귀 옵션 제공
 /// </summary>
-public class SingleMatchManager : MonoBehaviour
+public class SingleMatchManager : MonoBehaviour, IMatchManager<bool>
 {
     [Header("Refs")]
     [SerializeField] private RoomConfigSO _RoomConfig; // 룸 설정(Runtime 포함)
@@ -55,6 +55,28 @@ public class SingleMatchManager : MonoBehaviour
     /// <summary>라운드 당 시간 제한(초).</summary>
     public int TimeLimitSeconds => _RoundManager != null ? _RoundManager.TimeLimitSeconds : _TimeLimitSeconds;
 
+    #region IMatchManager Implementation
+    public int TotalSets => TotalRounds;
+    public int CurrentSetIndex => CurrentRoundIndex;
+
+    event Action IMatchManager.OnSetPreStart
+    {
+        add => OnRoundPreStart += value;
+        remove => OnRoundPreStart -= value;
+    }
+
+    event Action IMatchManager.OnSetStart
+    {
+        add => OnRoundStart += value;
+        remove => OnRoundStart -= value;
+    }
+
+    event Action<int> IMatchManager.OnSetsConfigured
+    {
+        add => OnRoundsConfigured += value;
+        remove => OnRoundsConfigured -= value;
+    }
+    #endregion
 
     private void Awake()
     {

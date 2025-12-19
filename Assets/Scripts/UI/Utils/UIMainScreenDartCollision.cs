@@ -1,14 +1,9 @@
-using System.Collections.Generic;
-using System.Runtime.ExceptionServices;
 using UnityEngine;
-using UnityEngine.InputSystem.OnScreen;
-using UnityEngine.UIElements;
 
-
-public class UIControllPanel : MonoBehaviour
+public class UIMainScreenDartCollision : MonoBehaviour
 {
     [SerializeField]
-    private GameObject SingeleUIPanelObj;
+    private GameObject SingleUIPanelObj;
 
     [SerializeField]
     private GameObject MultiUIPanelObj;
@@ -35,13 +30,13 @@ public class UIControllPanel : MonoBehaviour
 
             if (isSingleUI)
             {
-                SingeleUIPanelObj.SetActive(true);
+                SingleUIPanelObj.SetActive(true);
                 MultiUIPanelObj.SetActive(false);
                 _MainUIPanelObj.SetActive(false);
             }
             else
             {
-                SingeleUIPanelObj.SetActive(false);
+                SingleUIPanelObj.SetActive(false);
                 MultiUIPanelObj.SetActive(true);
                 _MainUIPanelObj.SetActive(false);
             }

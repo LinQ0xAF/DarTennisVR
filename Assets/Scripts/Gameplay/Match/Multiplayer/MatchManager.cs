@@ -5,6 +5,7 @@ using Unity.Netcode;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.SceneManagement;
+using Gameplay.Match.Interfaces;
 
 /// <summary>
 /// 서버 기준으로 세트/매치 흐름을 관리하고, 풍선 잔여 수 기반 승패를 판정해 모든 클라이언트에 브로드캐스트한다.
@@ -12,7 +13,7 @@ using UnityEngine.SceneManagement;
 /// - 풍선이 먼저 0이 된 쪽이 패배, 타임업이면 잔여 풍선이 많은 쪽 승리(동점은 무승부)
 /// - 세트가 남아 있으면 잠시 멈췄다가 다음 세트 준비, 없으면 매치 종료
 /// </summary>
-public class MatchManager : NetworkBehaviour
+public class MatchManager : NetworkBehaviour, IMatchManager<ulong?>
 {
     [Header("Refs")]
     [SerializeField] private RoomConfigSO roomConfig; // 룸 설정(Runtime 포함)
@@ -58,6 +59,10 @@ public class MatchManager : NetworkBehaviour
     public int TimeLimitSeconds => setManager != null ? setManager.TimeLimitSeconds : configuredTimeLimitSeconds;
     public int TotalSets => setManager != null ? setManager.TotalSets : totalSets;
     public float MatchEndWaitSeconds => matchEndWaitSeconds;
+
+    #region IMatchManager Implementation
+    public int CurrentSetIndex => currentSetIndex;
+    #endregion
 
     private void Awake()
     {

@@ -3,13 +3,14 @@ using System.Collections;
 using System.Collections.Generic;
 using Unity.Netcode;
 using UnityEngine;
+using Gameplay.Match.Interfaces;
 
 /// <summary>
 /// 세트 진행/승패 판정/타이머 관리 전담.
 /// - 서버에서 세트 흐름을 결정하고 ClientRpc로 동기화한다.
 /// - 매치 승패나 다음 세트 진행 여부는 MatchManager가 결정한다.
 /// </summary>
-public class SetManager : NetworkBehaviour
+public class SetManager : NetworkBehaviour, ISetManager<ulong?>
 {
     [Header("Defaults (fallback if MatchManager doesn't override)")]
     [SerializeField, Min(1)] private int initialTotalSets = 1;
